@@ -26,17 +26,57 @@ public class Ajustes extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jPanel1 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        nameText = new javax.swing.JTextField();
+        saveButton = new javax.swing.JButton();
+        redButton = new javax.swing.JButton();
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jPanel1.setBackground(new java.awt.Color(32, 51, 75));
+        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        jLabel1.setFont(new java.awt.Font("Sitka Banner", 1, 24)); // NOI18N
+        jLabel1.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel1.setText("Nombre del jugador:");
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(530, 180, -1, -1));
+
+        jLabel2.setFont(new java.awt.Font("Sitka Banner", 1, 24)); // NOI18N
+        jLabel2.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel2.setText("Color de las naves:");
+        jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 180, -1, -1));
+
+        nameText.setBackground(new java.awt.Color(67, 68, 84));
+        nameText.setBorder(null);
+        jPanel1.add(nameText, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 220, 340, 30));
+
+        saveButton.setBackground(new java.awt.Color(67, 68, 84));
+        saveButton.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        saveButton.setForeground(new java.awt.Color(255, 255, 255));
+        saveButton.setText("GUARDAR");
+        saveButton.setBorderPainted(false);
+        jPanel1.add(saveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(580, 260, -1, -1));
+
+        redButton.setBackground(new java.awt.Color(255, 0, 51));
+        redButton.setBorder(null);
+        redButton.setBorderPainted(false);
+        jPanel1.add(redButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 243, 50, 30));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 883, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 470, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
 
         pack();
@@ -78,5 +118,11 @@ public class Ajustes extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JTextField nameText;
+    private javax.swing.JButton redButton;
+    private javax.swing.JButton saveButton;
     // End of variables declaration//GEN-END:variables
 }

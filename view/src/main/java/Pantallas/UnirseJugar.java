@@ -31,7 +31,7 @@ public class UnirseJugar extends javax.swing.JFrame {
         jPanel2 = new javax.swing.JPanel();
         createButton = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
-        jTextField1 = new javax.swing.JTextField();
+        ipText = new javax.swing.JTextField();
         joinButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -71,10 +71,10 @@ public class UnirseJugar extends javax.swing.JFrame {
 
         jPanel2.add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, -1, 100));
 
-        jTextField1.setBackground(new java.awt.Color(67, 68, 84));
-        jTextField1.setForeground(new java.awt.Color(255, 255, 255));
-        jTextField1.setBorder(null);
-        jPanel2.add(jTextField1, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 240, 250, 30));
+        ipText.setBackground(new java.awt.Color(67, 68, 84));
+        ipText.setForeground(new java.awt.Color(255, 255, 255));
+        ipText.setBorder(null);
+        jPanel2.add(ipText, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 240, 250, 30));
 
         joinButton.setBackground(new java.awt.Color(67, 68, 84));
         joinButton.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
@@ -149,10 +149,10 @@ public class UnirseJugar extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton createButton;
+    private javax.swing.JTextField ipText;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
-    private javax.swing.JTextField jTextField1;
     private javax.swing.JButton joinButton;
     // End of variables declaration//GEN-END:variables
 }
