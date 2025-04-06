@@ -31,7 +31,11 @@ public class Ajustes extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         nameText = new javax.swing.JTextField();
         saveButton = new javax.swing.JButton();
+        whiteButton = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
         redButton = new javax.swing.JButton();
+        blueButton = new javax.swing.JButton();
+        blackButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -59,10 +63,37 @@ public class Ajustes extends javax.swing.JFrame {
         saveButton.setBorderPainted(false);
         jPanel1.add(saveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(580, 260, -1, -1));
 
+        whiteButton.setBorder(null);
+        whiteButton.setBorderPainted(false);
+        jPanel1.add(whiteButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 240, 50, 30));
+
+        jButton1.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jButton1.setForeground(new java.awt.Color(255, 255, 255));
+        jButton1.setText("<");
+        jButton1.setBorderPainted(false);
+        jButton1.setContentAreaFilled(false);
+        jButton1.setFocusPainted(false);
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+        jPanel1.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 10, -1, -1));
+
         redButton.setBackground(new java.awt.Color(255, 0, 51));
         redButton.setBorder(null);
         redButton.setBorderPainted(false);
-        jPanel1.add(redButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 243, 50, 30));
+        jPanel1.add(redButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 240, 50, 30));
+
+        blueButton.setBackground(new java.awt.Color(0, 0, 255));
+        blueButton.setBorder(null);
+        blueButton.setBorderPainted(false);
+        jPanel1.add(blueButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 240, 50, 30));
+
+        blackButton.setBackground(new java.awt.Color(0, 0, 0));
+        blackButton.setBorder(null);
+        blackButton.setBorderPainted(false);
+        jPanel1.add(blackButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 240, 50, 30));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -81,6 +112,13 @@ public class Ajustes extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+        PantallaInicio pI=new PantallaInicio();
+        pI.show();
+        this.dispose();
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -118,11 +156,15 @@ public class Ajustes extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton blackButton;
+    private javax.swing.JButton blueButton;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JTextField nameText;
     private javax.swing.JButton redButton;
     private javax.swing.JButton saveButton;
+    private javax.swing.JButton whiteButton;
     // End of variables declaration//GEN-END:variables
 }
