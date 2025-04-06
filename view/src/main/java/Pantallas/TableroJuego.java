@@ -4,17 +4,56 @@
  */
 package Pantallas;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.Timer;
+
 /**
  *
  * @author javie
  */
 public class TableroJuego extends javax.swing.JFrame {
 
+    //Solo para simular
+    private Timer timer;
+    private int contadorSegundos;
+    
     /**
      * Creates new form TableroJuego
      */
     public TableroJuego() {
         initComponents();
+        this.setLocationRelativeTo(null);
+    }
+    
+    //Es Solo para simular y navegar entre pantallas
+    private void contador() {
+        contadorSegundos = 0;
+
+        timer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int label = 5 - contadorSegundos;
+                if (label >= 0) {
+                    numberLabel.setText("La partida empezará en: " + label);
+                    contadorSegundos++;
+                } else {
+                    timer.stop();
+                    Partida p = new Partida();
+                    p.setVisible(true);
+                    dispose();
+                }
+            }
+        });
+
+        timer.start();
+    }
+    
+    private void cancelarContador() {
+        if (timer != null && timer.isRunning()) {
+            timer.stop();
+            numberLabel.setText("");
+        }
     }
 
     /**
@@ -26,21 +65,117 @@ public class TableroJuego extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jPanel1 = new javax.swing.JPanel();
+        tableroJPanel = new javax.swing.JPanel();
+        numberLabel = new javax.swing.JLabel();
+        jPanel2 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        cancelButton = new javax.swing.JButton();
+        readyButton = new javax.swing.JButton();
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        tableroJPanel.setBackground(new java.awt.Color(204, 204, 204));
+        tableroJPanel.setPreferredSize(new java.awt.Dimension(450, 450));
+
+        numberLabel.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+
+        javax.swing.GroupLayout tableroJPanelLayout = new javax.swing.GroupLayout(tableroJPanel);
+        tableroJPanel.setLayout(tableroJPanelLayout);
+        tableroJPanelLayout.setHorizontalGroup(
+            tableroJPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(tableroJPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(numberLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 422, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(22, Short.MAX_VALUE))
+        );
+        tableroJPanelLayout.setVerticalGroup(
+            tableroJPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(tableroJPanelLayout.createSequentialGroup()
+                .addGap(179, 179, 179)
+                .addComponent(numberLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(213, Short.MAX_VALUE))
+        );
+
+        jPanel1.add(tableroJPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 10, 450, 450));
+
+        jPanel2.setBackground(new java.awt.Color(204, 204, 204));
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 150, Short.MAX_VALUE)
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 390, Short.MAX_VALUE)
+        );
+
+        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 50, 150, 390));
+
+        jLabel1.setFont(new java.awt.Font("Segoe UI Symbol", 1, 24)); // NOI18N
+        jLabel1.setText("NAVES:");
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 10, -1, -1));
+
+        cancelButton.setBackground(new java.awt.Color(255, 105, 97));
+        cancelButton.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        cancelButton.setText("Cancelar");
+        cancelButton.setBorder(null);
+        cancelButton.setEnabled(false);
+        cancelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cancelButtonActionPerformed(evt);
+            }
+        });
+        jPanel1.add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(690, 260, 120, 40));
+
+        readyButton.setBackground(new java.awt.Color(189, 236, 182));
+        readyButton.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        readyButton.setText("Listo");
+        readyButton.setBorder(null);
+        readyButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                readyButtonActionPerformed(evt);
+            }
+        });
+        jPanel1.add(readyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(690, 160, 120, 40));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 833, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 470, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
+        // TODO add your handling code here:
+        readyButton.setEnabled(true);
+        cancelButton.setEnabled(false);
+        cancelarContador();
+    }//GEN-LAST:event_cancelButtonActionPerformed
+
+    private void readyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_readyButtonActionPerformed
+        // TODO add your handling code here:
+        readyButton.setEnabled(false);
+        cancelButton.setEnabled(true);
+        cancelarContador();
+        contador(); 
+        
+    }//GEN-LAST:event_readyButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -78,5 +213,12 @@ public class TableroJuego extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton cancelButton;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JLabel numberLabel;
+    private javax.swing.JButton readyButton;
+    private javax.swing.JPanel tableroJPanel;
     // End of variables declaration//GEN-END:variables
 }
