@@ -36,6 +36,7 @@ public class Ajustes extends javax.swing.JFrame {
         redButton = new javax.swing.JButton();
         blueButton = new javax.swing.JButton();
         blackButton = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -94,6 +95,10 @@ public class Ajustes extends javax.swing.JFrame {
         blackButton.setBorder(null);
         blackButton.setBorderPainted(false);
         jPanel1.add(blackButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 240, 50, 30));
+
+        jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jLabel3.setText("Personalización");
+        jPanel1.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(320, 20, -1, -1));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -161,6 +166,7 @@ public class Ajustes extends javax.swing.JFrame {
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JTextField nameText;
     private javax.swing.JButton redButton;

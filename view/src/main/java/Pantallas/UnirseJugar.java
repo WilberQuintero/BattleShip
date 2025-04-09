@@ -31,6 +31,7 @@ public class UnirseJugar extends javax.swing.JFrame {
         jPanel2 = new javax.swing.JPanel();
         createButton = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
         ipText = new javax.swing.JTextField();
         joinButton = new javax.swing.JButton();
 
@@ -54,27 +55,41 @@ public class UnirseJugar extends javax.swing.JFrame {
                 createButtonActionPerformed(evt);
             }
         });
-        jPanel2.add(createButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(540, 240, -1, -1));
+        jPanel2.add(createButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 260, -1, -1));
 
         jPanel3.setBackground(new java.awt.Color(36, 37, 56));
+
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jLabel1.setText("Únete a una partida o creala tu mismo");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 884, Short.MAX_VALUE)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGap(129, 129, 129)
+                .addComponent(jLabel1)
+                .addContainerGap(163, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                .addContainerGap(41, Short.MAX_VALUE)
+                .addComponent(jLabel1)
+                .addGap(27, 27, 27))
         );
 
-        jPanel2.add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, -1, 100));
+        jPanel2.add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 730, 100));
 
         ipText.setBackground(new java.awt.Color(67, 68, 84));
         ipText.setForeground(new java.awt.Color(255, 255, 255));
         ipText.setBorder(null);
-        jPanel2.add(ipText, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 240, 250, 30));
+        ipText.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ipTextActionPerformed(evt);
+            }
+        });
+        jPanel2.add(ipText, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 260, 250, 30));
 
         joinButton.setBackground(new java.awt.Color(67, 68, 84));
         joinButton.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
@@ -87,9 +102,9 @@ public class UnirseJugar extends javax.swing.JFrame {
                 joinButtonActionPerformed(evt);
             }
         });
-        jPanel2.add(joinButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(165, 280, -1, -1));
+        jPanel2.add(joinButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 320, -1, -1));
 
-        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 890, 500));
+        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 750, 490));
 
         getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 880, 490));
 
@@ -111,6 +126,10 @@ public class UnirseJugar extends javax.swing.JFrame {
         this.dispose();  
         
     }//GEN-LAST:event_joinButtonActionPerformed
+
+    private void ipTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ipTextActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ipTextActionPerformed
 
     /**
      * @param args the command line arguments
@@ -150,6 +169,7 @@ public class UnirseJugar extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton createButton;
     private javax.swing.JTextField ipText;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
