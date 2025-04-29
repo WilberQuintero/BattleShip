@@ -1,5 +1,7 @@
 View\UnirseJugar$1.class
 View\PantallaInicio.class
+Model\EstadoPartida.class
+Model\Jugador.class
 View\PartidaEspera$2.class
 View\TableroJuego$1.class
 View\PartidaEspera.class
@@ -12,14 +14,19 @@ View\PantallaInicio$1.class
 View\Ajustes$2.class
 View\Partida$1.class
 View\TableroJuego$3.class
+Model\Partida.class
 View\Ajustes.class
 View\Partida$2.class
 View\Victoria.class
+Model\Tablero.class
 View\PartidaEspera$1.class
 View\Victoria$2.class
 View\UnirseJugar$2.class
 View\PantallaInicio$3.class
 View\TableroJuego.class
+Model\Barco.class
+Model\Posicion.class
+Model\Disparo.class
 View\PartidaEspera$3.class
 View\PantallaInicio$2.class
 View\TableroJuego$2.class
