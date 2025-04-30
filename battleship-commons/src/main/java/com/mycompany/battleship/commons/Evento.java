@@ -25,6 +25,7 @@ public class Evento {
         this.datos = new HashMap<>();
     }
 
+    
     public String getTipo() {
         return tipo;
     }

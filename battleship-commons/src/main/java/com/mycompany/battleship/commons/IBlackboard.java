@@ -5,6 +5,7 @@
 package com.mycompany.battleship.commons;
 
 import java.net.Socket;
+import java.util.Map;
 
 /**
  *
@@ -14,5 +15,7 @@ import java.net.Socket;
 public interface IBlackboard {
     // Método principal que el Server usará:
     void enviarEventoBlackBoard(Socket cliente, Evento evento);
+    boolean existeSala(String idSala);
+    void agregarSala(String id, Map<String, Object> datosSala);
     // Añade otros métodos si el Server necesita interactuar más con el Blackboard
 }

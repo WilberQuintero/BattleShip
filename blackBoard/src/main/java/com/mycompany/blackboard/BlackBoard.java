@@ -19,6 +19,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 // Quitamos los Map<> de Dominio por ahora, nos centramos en la conexión
 
 /**
@@ -31,6 +33,7 @@ public class BlackBoard implements IBlackboard { // Implementa la interfaz
     // --- Estado Principal ---
     // Lista sincronizada de sockets de clientes cuya conexión fue procesada por una KS
     private final List<Socket> clientesConectados;
+    private final Map<String, Map<String, Object>> salas = new ConcurrentHashMap<>();
     // Podríamos añadir Map<Socket, PlayerData> o Map<String, Game> aquí más adelante
 
     // --- Componentes del Sistema ---
@@ -51,7 +54,10 @@ public class BlackBoard implements IBlackboard { // Implementa la interfaz
         this.knowledgeSources = new ArrayList<>();
         // El controller se asigna después con setController
     }
-
+        public void agregarSala(String id, Map<String, Object> datosSala) {
+            salas.put(id, datosSala);
+            System.out.println("BLACKBOARD: Sala " + id + " registrada.");
+        }
     /**
      * Asigna el Controller al BlackBoard. Llama a registrarFuentesDeConocimiento.
      * @param controller La instancia del Controller.
@@ -179,7 +185,9 @@ public class BlackBoard implements IBlackboard { // Implementa la interfaz
          }
      }
 
-
+public boolean existeSala(String idSala) {
+    return salas.containsKey(idSala);
+}
      /**
      * Obtiene una copia de la lista de sockets de clientes conectados.
      */

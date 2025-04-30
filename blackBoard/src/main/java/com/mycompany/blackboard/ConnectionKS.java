@@ -14,6 +14,8 @@ import com.mycompany.battleship.commons.Evento;
 import com.mycompany.battleship.commons.IServer;
 
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Knowledge Source para manejar el evento de conexión inicial de un usuario.
@@ -36,10 +38,10 @@ public class ConnectionKS implements IKnowledgeSource {
      * @param evento El evento a evaluar.
      * @return true si es un evento de conexión, false en caso contrario.
      */
-    @Override
-    public boolean puedeProcesar(Evento evento) {
-        return evento != null && "CONECTAR_USUARIO_SERVER".equals(evento.getTipo());
-    }
+@Override
+public boolean puedeProcesar(Evento evento) {
+    return evento != null && ("CONECTAR_USUARIO_SERVER".equals(evento.getTipo()) || "CREAR_SALA".equals(evento.getTipo()));
+}
 
     /**
      * Procesa el evento de conexión.
@@ -48,27 +50,51 @@ public class ConnectionKS implements IKnowledgeSource {
      */
     @Override
     public void procesarEvento(Socket cliente, Evento evento) {
-        if (cliente == null) {
-            System.err.println("ConnectionKS ERROR: Se recibió un socket nulo para procesar.");
-            return;
-        }
-        System.out.println("ConnectionKS: Procesando evento '" + evento.getTipo() + "' para " + cliente.getInetAddress().getHostAddress());
-
-        // Acción principal: Registrar el socket del cliente en el BlackBoard
-        blackboard.agregarClienteSocket(cliente);
-
-        // Acción secundaria: Notificar al BlackBoard que se completó (Estilo Dominó)
-        // Podríamos crear un evento de respuesta si fuera necesario
-        Evento eventoRespuesta = new Evento("CONEXION_PROCESADA");
-        eventoRespuesta.agregarDato("clienteHost", cliente.getInetAddress().getHostAddress());
-        blackboard.respuestaFuenteC(cliente, eventoRespuesta);
-
-        // Acción terciaria (Opcional aquí, podría ir en el Controller al recibir
-        // la notificación de "CLIENTE_CONECTADO_REGISTRADO"): Enviar bienvenida
-        // try {
-        //     server.enviarMensajeACliente(cliente, "EVENTO;TIPO=BIENVENIDA;MSG=Conectado al servidor de Batalla Naval!");
-        // } catch (IOException e) {
-        //     System.err.println("ConnectionKS ERROR: No se pudo enviar mensaje de bienvenida a " + cliente.getInetAddress().getHostAddress());
-        // }
+    if (cliente == null) {
+        System.err.println("ConnectionKS ERROR: Se recibió un socket nulo para procesar.");
+        return;
     }
+    
+    System.out.println("ConnectionKS: Procesando evento '" + evento.getTipo() + "' para " + cliente.getInetAddress().getHostAddress());
+    
+    // Registrar el socket del cliente en el BlackBoard (acción principal)
+    blackboard.agregarClienteSocket(cliente);
+
+    // Procesar diferentes tipos de eventos
+    switch (evento.getTipo()) {
+        case "CREAR_SALA":
+            System.out.println("KS: Procesando solicitud de creación de sala.");
+            
+            String idSala = (String) evento.obtenerDato("idSala");
+            String jugador = (String) evento.obtenerDato("jugador");
+
+            if (idSala != null && jugador != null) {
+                // Crear objeto de sala
+                Map<String, Object> nuevaSala = new HashMap<>();
+                nuevaSala.put("id", idSala);
+                nuevaSala.put("jugadorCreador", jugador);
+                nuevaSala.put("socket", cliente); // Guardamos el socket del creador
+
+                // Guardar en el Blackboard
+                blackboard.agregarSala(idSala, nuevaSala);
+
+                // Notificar al cliente
+                server.enviarMensajeACliente(cliente, "SALA_CREADA;id=" + idSala);
+            } else {
+                server.enviarMensajeACliente(cliente, "ERROR;detalle=Faltan datos para crear la sala");
+            }
+            break;
+            
+        case "CONECTAR_USUARIO_SERVER":  // Manejo de conexión básica (tu lógica original)
+            // Acción secundaria: Notificar al BlackBoard
+            Evento eventoRespuesta = new Evento("CONEXION_PROCESADA");
+            eventoRespuesta.agregarDato("clienteHost", cliente.getInetAddress().getHostAddress());
+            blackboard.respuestaFuenteC(cliente, eventoRespuesta);
+            break;
+            
+        default:
+            System.err.println("ConnectionKS ERROR: Tipo de evento no reconocido: " + evento.getTipo());
+            break;
+    }
+}
 }

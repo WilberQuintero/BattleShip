@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -59,6 +60,52 @@ public class Server implements Runnable, IServer { // Implementa IServer
         System.out.println("SERVER: IBlackboard asignado.");
     }
 
+private Evento parsearEvento(String linea) {
+    if (linea == null || !linea.startsWith("EVENTO;")) {
+        return null;
+    }
+
+    // Eliminar el prefijo "EVENTO;"
+    String contenido = linea.substring("EVENTO;".length());
+    String[] partes = contenido.split(";");
+    
+    if (partes.length == 0) {
+        return null;
+    }
+
+    // Procesar el tipo (primera parte)
+    String tipo = null;
+    try {
+        String[] tipoPart = partes[0].split("=", 2); // Limitamos a 2 partes
+        if (!"TIPO".equals(tipoPart[0])) {
+            System.err.println("Formato inválido: El primer campo debe ser TIPO");
+            return null;
+        }
+        tipo = tipoPart[1];
+    } catch (ArrayIndexOutOfBoundsException e) {
+        System.err.println("Formato inválido para el TIPO del evento");
+        return null;
+    }
+
+    Evento evento = new Evento(tipo);
+
+    // Procesar el resto de los datos
+    for (int i = 1; i < partes.length; i++) {
+        try {
+            String[] kv = partes[i].split("=", 2); // Limitamos a 2 partes
+            if (kv.length == 2) {
+                evento.agregarDato(kv[0], kv[1]);
+            } else {
+                System.err.println("Formato inválido en campo: " + partes[i]);
+            }
+        } catch (Exception e) {
+            System.err.println("Error procesando campo: " + partes[i]);
+        }
+    }
+
+    return evento;
+}
+
     @Override
     public void run() {
         if (this.blackboard == null) {
@@ -86,7 +133,25 @@ public class Server implements Runnable, IServer { // Implementa IServer
                          try { clientSocket.close(); } catch (IOException ioex) { /* Ignorar */ }
                          continue; // Saltar este cliente
                     }
+                       
+                    // Después de crear el PrintWriter...
+                    new Thread(() -> {
+                        try (Scanner scanner = new Scanner(clientSocket.getInputStream(), StandardCharsets.UTF_8)) {
+                            while (scanner.hasNextLine()) {
+                                String linea = scanner.nextLine();
+                                System.out.println("SERVER: Mensaje recibido: " + linea);
 
+                                // Parsear mensaje recibido como evento
+                                Evento evento = parsearEvento(linea); // implementar este método
+                                                             
+                                blackboard.enviarEventoBlackBoard(clientSocket, evento);
+                            }
+                        } catch (IOException e) {
+                            System.err.println("SERVER ERROR: Error leyendo del cliente: " + e.getMessage());
+                        }
+                    }).start();
+
+                    
                     // Crear el Evento de conexión
                     Evento eventoConexion = new Evento("CONECTAR_USUARIO_SERVER"); // Usa la clase Evento de commons
 
