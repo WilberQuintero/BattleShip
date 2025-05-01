@@ -102,8 +102,10 @@ private Evento parsearEvento(String linea) {
             System.err.println("Error procesando campo: " + partes[i]);
         }
     }
+ System.out.println("DEBUG [parsearEvento]: Evento creado -> Tipo: " + evento.getTipo() + ", Datos: " + evento.getDatos());
 
-    return evento;
+        return evento;
+    
 }
 
     @Override

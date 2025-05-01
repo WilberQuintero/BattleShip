@@ -50,43 +50,85 @@ public class Controller {
         System.out.println("CONTROLLER: IBlackboard asignado.");
     }
 
-    /**
+/**
      * Método llamado por el BlackBoard o las KS cuando ocurre un cambio
      * relevante que requiere una notificación al/los cliente(s) vía Server.
-     * @param tipoNotificacion Un string que identifica el tipo de cambio/notificación.
+     * @param tipoNotificacion Un string que identifica el tipo de cambio/notificación,
+     * puede contener un payload separado por ';'. Ej: "SALA_LLENA;idDeLaSala"
      */
     public void notificarCambio(String tipoNotificacion) {
         System.out.println("CONTROLLER: Notificación recibida: " + tipoNotificacion);
 
+        // Separar el tipo base de la notificación y el posible payload (ej. ID de sala)
+        String tipoBase = tipoNotificacion;
+        String payload = null;
+        if (tipoNotificacion != null && tipoNotificacion.contains(";")) {
+            String[] parts = tipoNotificacion.split(";", 2);
+            tipoBase = parts[0];
+            payload = parts[1]; // Contendrá el ID de la sala u otra información
+        }
+
         // Lógica para determinar qué hacer basado en la notificación
-        switch (tipoNotificacion) {
+        switch (tipoBase) {
             case "CLIENTE_REGISTRADO":
                 // Un cliente completó la conexión inicial y fue registrado por la KS.
                 System.out.println("CONTROLLER: Cliente registrado en BlackBoard.");
                 // Podríamos pedir al servidor que envíe la lista actualizada de jugadores/salas.
-                // Ejemplo: server.enviarMensajeATodos("Update;Jugadores=" + obtenerListaJugadores());
-                // O enviar un mensaje de bienvenida sólo al nuevo (necesitaríamos el Socket)
-                // Esto muestra la necesidad de pasar más contexto en notificarCambio o
-                // que la KS envíe directamente mensajes específicos.
+                // server.enviarMensajeATodos("Update;Tipo=ListaSalas;Datos=" + obtenerListaSalas());
                 break;
 
             case "CLIENTE_ELIMINADO":
                 // Un cliente se desconectó y fue eliminado del BlackBoard.
                 System.out.println("CONTROLLER: Cliente eliminado del BlackBoard.");
-                // Notificar a los demás jugadores.
-                // Ejemplo: server.enviarMensajeATodos("Update;JugadorDesconectado=" + idJugador);
+                // Notificar a los demás jugadores relevantes (ej. en la misma sala/partida).
+                // server.enviarMensajeATodos("Update;JugadorDesconectado=" + payload); // payload podría ser ID del jugador
                 break;
 
-            case "PARTIDA_INICIADA":
-                 System.out.println("CONTROLLER: Partida iniciada.");
+            // --- NUEVO CASO ---
+            case "SALA_LLENA":
+                // La KS UnirseSalaKS notificó que una sala alcanzó la capacidad máxima.
+                // El payload debería ser el ID de la sala.
+                System.out.println("CONTROLLER: Sala '" + payload + "' está llena y lista para iniciar partida.");
+                // Aquí el controller podría orquestar el inicio de la partida.
+                // Opción 1: Enviar un evento "INICIAR_PARTIDA" al Blackboard para que una KS lo maneje.
+                // Evento eventoInicio = new Evento("INICIAR_PARTIDA");
+                // eventoInicio.agregarDato("idSala", payload);
+                // if (blackboard != null) {
+                //     blackboard.enviarEventoBlackBoard(null, eventoInicio); // null como cliente origen
+                // }
+                // Opción 2: Llamar a un método específico del IServer o IBlackboard si existe.
+                // Opción 3: Directamente enviar mensajes a los clientes de la sala.
+                //           (Necesitaría obtener los sockets de los clientes de esa sala desde el blackboard)
+                // List<Socket> jugadoresSala = blackboard.getJugadoresEnSala(payload); // Necesitaría este método en IBlackboard
+                // server.enviarMensajeAClientes(jugadoresSala, "Mensaje;Tipo=PartidaLista;Sala="+payload); // Necesitaría este método en IServer
+                break;
+
+             // --- NUEVO CASO ---
+             case "SALA_ACTUALIZADA":
+                  // Una KS actualizó los datos de una sala (ej. se unió/salió un jugador).
+                  // El payload debería ser el ID de la sala.
+                  System.out.println("CONTROLLER: Datos de la sala '" + payload + "' actualizados.");
+                  // Podría ser útil reenviar el estado actualizado de la sala a los clientes en ella.
+                  // Map<String, Object> datosSala = blackboard.getDatosSala(payload); // Necesitaría este método en IBlackboard
+                  // List<Socket> clientesEnSala = (List<Socket>) datosSala.get("jugadores"); // Asumiendo estructura
+                  // String datosJson = convertirMapaAJson(datosSala); // Necesitaría un método para convertir
+                  // server.enviarMensajeAClientes(clientesEnSala, "Update;Tipo=EstadoSala;Datos=" + datosJson);
+                  break;
+
+            case "PARTIDA_INICIADA": // Este caso ya existía
+                 // Una KS (quizás una 'IniciarPartidaKS') notificó que la partida comenzó.
+                 // El payload podría ser el ID de la partida o sala.
+                 System.out.println("CONTROLLER: Partida iniciada para sala/partida: " + payload);
                  // Notificar a todos los involucrados en la partida.
-                 // server.enviarMensajeAParticipantes(partidaId, "MensajeInicioPartida");
+                 // List<Socket> jugadoresPartida = blackboard.getJugadoresEnPartida(payload); // Necesitaría método en IBlackboard
+                 // server.enviarMensajeAClientes(jugadoresPartida, "Mensaje;Tipo=PartidaIniciada;Detalles=...");
                  break;
 
             // Añadir más casos según los eventos y cambios de estado del juego...
+            // Ej: TURNO_CAMBIADO, DISPARO_REALIZADO, NAVE_HUNDIDA, JUEGO_TERMINADO, etc.
 
             default:
-                System.out.println("CONTROLLER: Notificación tipo '" + tipoNotificacion + "' sin acción definida.");
+                System.out.println("CONTROLLER: Notificación tipo '" + tipoBase + "' sin acción específica definida.");
                 break;
         }
     }

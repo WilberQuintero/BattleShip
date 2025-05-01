@@ -38,10 +38,13 @@ public class ConnectionKS implements IKnowledgeSource {
      * @param evento El evento a evaluar.
      * @return true si es un evento de conexión, false en caso contrario.
      */
-@Override
-public boolean puedeProcesar(Evento evento) {
-    return evento != null && ("CONECTAR_USUARIO_SERVER".equals(evento.getTipo()) || "CREAR_SALA".equals(evento.getTipo()));
-}
+
+
+    @Override
+    public boolean puedeProcesar(Evento evento) {
+        // Debe retornar true SOLAMENTE para el evento de conexión inicial.
+        return evento != null && "CONECTAR_USUARIO_SERVER".equals(evento.getTipo());
+    }
 
     /**
      * Procesa el evento de conexión.

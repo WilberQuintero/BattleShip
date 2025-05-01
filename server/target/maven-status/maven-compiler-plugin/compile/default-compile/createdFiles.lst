@@ -1,3 +1,4 @@
 testDeServercomprobar\SimulacionCliente.class
 server\Server.class
+testDeServercomprobar\TestFlujoUnirseSala.class
 testDeServercomprobar\ServerTest.class
