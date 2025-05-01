@@ -24,6 +24,15 @@ public class Barco {
         this.posicionesImpactadas = new ArrayList<>();
     }
 
+    public Barco(String tipo, int tamanio, List<Posicion> posiciones, List<Posicion> posicionesImpactadas) {
+        this.tipo = tipo;
+        this.tamanio = tamanio;
+        this.posiciones = posiciones;
+        this.posicionesImpactadas = posicionesImpactadas;
+    }
+    
+    
+
     public void colocar(Posicion inicio, boolean horizontal) {
         posiciones.clear();
         for (int i = 0; i < tamanio; i++) {

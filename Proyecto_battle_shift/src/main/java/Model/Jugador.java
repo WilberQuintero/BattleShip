@@ -4,6 +4,10 @@
  */
 package Model;
 
+import java.io.IOException;
+import server.Server;
+
+
 /**
  *
  * @author javie
@@ -12,13 +16,21 @@ public class Jugador {
     private String nombre;
     private Tablero tablero;
     private boolean enTurno;
+    private Server servidor;
 
     public Jugador(String nombre) {
         this.nombre = nombre;
         this.tablero = new Tablero();
         this.enTurno = false;
     }
-
+    
+    //Crear servidor sera cuando le de A jugar
+    public Server crearServidor(int puerto) throws IOException {
+        servidor=new Server(puerto);
+        servidor.run();
+        return servidor;
+    }
+    
     public boolean todosLosBarcosHundidos() {
         return tablero.getBarcos().stream().allMatch(Barco::estaHundido);
     }
@@ -51,6 +63,14 @@ public class Jugador {
 
     public void setEnTurno(boolean enTurno) {
         this.enTurno = enTurno;
+    }
+
+    public Server getServidor() {
+        return servidor;
+    }
+
+    public void setServidor(Server servidor) {
+        this.servidor = servidor;
     }
     
     

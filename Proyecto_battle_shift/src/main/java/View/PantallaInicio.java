@@ -4,6 +4,11 @@
  */
 package View;
 
+import Controler.Controlador;
+import Controler.JugadorDTO;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 
 /**
@@ -11,13 +16,15 @@ import javax.swing.ImageIcon;
  * @author javie
  */
 public class PantallaInicio extends javax.swing.JFrame {
-
+    Controlador controlador;
+    
     /**
      * Creates new form PantallaInicio
      */
     public PantallaInicio() {
         initComponents();
         this.setLocationRelativeTo(null);
+        controlador=new Controlador();
     }
 
     /**
@@ -121,7 +128,20 @@ public class PantallaInicio extends javax.swing.JFrame {
 
     private void playButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playButtonActionPerformed
         // TODO add your handling code here:
-        UnirseJugar uJ=new UnirseJugar();
+        
+        JugadorDTO jugador=new JugadorDTO();
+        jugador.setNombre("Jugador1_Prueba");
+        try {
+            
+            
+            //no se que IP debe ser
+            controlador.crearServidor(jugador, 123);
+            
+            
+        } catch (IOException ex) {
+            Logger.getLogger(PantallaInicio.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        UnirseJugar uJ=new UnirseJugar(controlador);
         uJ.show();
         this.dispose();
     }//GEN-LAST:event_playButtonActionPerformed

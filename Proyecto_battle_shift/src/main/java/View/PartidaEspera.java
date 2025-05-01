@@ -4,6 +4,7 @@
  */
 package View;
 
+import Controler.Controlador;
 import javax.swing.SwingUtilities;
 
 /**
@@ -14,14 +15,16 @@ public class PartidaEspera extends javax.swing.JFrame {
 
     private javax.swing.Timer tiempo;
     private int posicion = 0;
+    Controlador controlador;
     
     /**
      * Creates new form PartidaEspera
      */
-    public PartidaEspera() {
+    public PartidaEspera(Controlador controlador) {
         initComponents();
         this.setLocationRelativeTo(null);
         tiempo();
+        this.controlador=controlador;
     }
     
     
@@ -131,7 +134,7 @@ public class PartidaEspera extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
-        UnirseJugar uJ=new UnirseJugar();
+        UnirseJugar uJ=new UnirseJugar(controlador);
         uJ.show();
         this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
@@ -142,41 +145,6 @@ public class PartidaEspera extends javax.swing.JFrame {
         tJ.show();
         this.dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(PartidaEspera.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(PartidaEspera.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(PartidaEspera.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(PartidaEspera.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new PartidaEspera().setVisible(true);
-            }
-        });
-    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;

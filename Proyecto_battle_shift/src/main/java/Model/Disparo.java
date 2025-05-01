@@ -19,6 +19,11 @@ public class Disparo {
         this.impacto = false;
     }
 
+    public Disparo(Posicion posicion, boolean impacto) {
+        this.posicion = posicion;
+        this.impacto = impacto;
+    }
+    
     public void evaluarImpacto(List<Barco> barcos) {
         for (Barco barco : barcos) {
             if (barco.contiene(posicion)) {

@@ -19,10 +19,26 @@ public class Partida {
 
     public Partida() {
         jugadores = new ArrayList<>();
-        estado = EstadoPartida.ESPERANDO_JUGADORES;
         turnoActual = 0;
     }
-
+    
+    //CREAR PARTIDA
+    public boolean crearPartida(Jugador jugador){
+        jugadores.add(jugador);
+        estado = EstadoPartida.ESPERANDO_JUGADORES;
+        
+        
+        
+        //si la partida se creo (true)
+        return true;
+    }
+    
+    //UNIRSE A PARTIDA
+    public boolean unirsePartida(Jugador jugador, int ipPartida){
+        Partida partida=new Partida();
+        return true;
+    }
+    
     public boolean estaCompleta() {
         return jugadores.size() == 2;
     }
@@ -58,6 +74,5 @@ public class Partida {
     public void setTurnoActual(int turnoActual) {
         this.turnoActual = turnoActual;
     }
-    
     
 }
