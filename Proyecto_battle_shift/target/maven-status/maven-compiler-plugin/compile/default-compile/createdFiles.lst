@@ -1,6 +1,7 @@
 View\UnirseJugar$1.class
 View\PantallaInicio.class
 Model\EstadoPartida.class
+View\UnirseJugar$6.class
 Model\Jugador.class
 View\PartidaEspera$2.class
 View\TableroJuego$1.class
@@ -22,10 +23,11 @@ Model\Tablero.class
 View\PartidaEspera$1.class
 View\Victoria$2.class
 View\UnirseJugar$2.class
-View\PantallaInicio$3.class
 View\TableroJuego.class
 Model\Barco.class
+View\Ajustes$3.class
 Model\Posicion.class
+View\UnirseJugar$5.class
 Model\Disparo.class
 View\PartidaEspera$3.class
 View\PantallaInicio$2.class
