@@ -51,6 +51,7 @@ public class TestFlujoUnirseSala {
 
         System.out.println("\n--- TEST DE FLUJO FINALIZADO ---");
         System.out.println("Revisa la consola donde corre ServerTest para ver los logs detallados.");
+
     }
 
     /**

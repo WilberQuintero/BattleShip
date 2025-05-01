@@ -135,6 +135,9 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
             System.out.println("UNIRSE_SALA_KS: ¡Sala '" + idSala + "' llena! Notificando para iniciar partida.");
             // Notificar al controller o directamente enviar un evento para iniciar la partida
              controller.notificarCambio("SALA_LLENA;" + idSala); // Pasar ID de sala al controller
+               Evento iniciarPartida = new Evento("INICIAR_PARTIDA_SALA");
+            iniciarPartida.agregarDato("idSala", idSala);
+            blackboard.enviarEventoBlackBoard(cliente, iniciarPartida);
 
             // O podrías crear un nuevo evento y enviarlo al blackboard
              // Evento iniciarPartidaEvento = new Evento("INICIAR_PARTIDA_SALA");
