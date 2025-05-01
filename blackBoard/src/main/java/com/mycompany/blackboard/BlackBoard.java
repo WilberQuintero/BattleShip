@@ -5,6 +5,9 @@
 package com.mycompany.blackboard; // Asegúrate que el paquete sea el correcto
 
 // --- Importaciones Correctas ---
+import ks.CrearSalaKS;
+import ks.UnirseSalaKS;
+import ks.ConnectionKS;
 import com.mycompany.battleship.commons.Evento;
 import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;

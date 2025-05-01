@@ -2,11 +2,13 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.mycompany.blackboard; // O tu paquete de knowledge sources
+package ks; // O tu paquete de knowledge sources
 
 import com.mycompany.battleship.commons.Evento;
 import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
+import com.mycompany.blackboard.Controller;
+import com.mycompany.blackboard.IKnowledgeSource;
 
 import java.net.Socket;
 import java.util.ArrayList;
