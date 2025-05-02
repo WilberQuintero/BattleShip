@@ -4,21 +4,20 @@
  */
 package View;
 
-import Controler.Controlador;
+
 
 /**
  *
  * @author javie
  */
 public class UnirseJugar extends javax.swing.JFrame {
-    Controlador controlador;
+  
     /**
      * Creates new form UnirseJugar
      */
-    public UnirseJugar(Controlador controlador) {
+    public UnirseJugar( ) {
         initComponents();
-        this.setLocationRelativeTo(null);
-        this.controlador=controlador;
+       
     }
 
     /**
@@ -144,24 +143,13 @@ public class UnirseJugar extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void createButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createButtonActionPerformed
-        // TODO add your handling code here:
-        //CREA LA PARTIDA
-        controlador.crearPartida();
-        
-        PartidaEspera pE=new PartidaEspera(controlador);
-        pE.show();
+       
         this.dispose();  
         
     }//GEN-LAST:event_createButtonActionPerformed
 
     private void joinButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_joinButtonActionPerformed
-        // TODO add your handling code here:
-        
-        //Unirse a partida con la ip que escribio
-        controlador.unirsePartida(Integer.valueOf(ipText.getText()));
-        
-        PartidaEspera pE=new PartidaEspera(controlador);
-        pE.show();
+       
         this.dispose();  
         
     }//GEN-LAST:event_joinButtonActionPerformed

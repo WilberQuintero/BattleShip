@@ -4,7 +4,7 @@
  */
 package View;
 
-import Controler.Controlador;
+
 import javax.swing.SwingUtilities;
 
 /**
@@ -15,17 +15,12 @@ public class PartidaEspera extends javax.swing.JFrame {
 
     private javax.swing.Timer tiempo;
     private int posicion = 0;
-    Controlador controlador;
+  
     
     /**
      * Creates new form PartidaEspera
      */
-    public PartidaEspera(Controlador controlador) {
-        initComponents();
-        this.setLocationRelativeTo(null);
-        tiempo();
-        this.controlador=controlador;
-    }
+   
     
     
     private void tiempo() {
@@ -134,8 +129,7 @@ public class PartidaEspera extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
-        UnirseJugar uJ=new UnirseJugar(controlador);
-        uJ.show();
+
         this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 

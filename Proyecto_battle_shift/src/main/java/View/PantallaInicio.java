@@ -4,19 +4,14 @@
  */
 package View;
 
-import Controler.Controlador;
-import Controler.JugadorDTO;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.ImageIcon;
+
 
 /**
  *
  * @author javie
  */
 public class PantallaInicio extends javax.swing.JFrame {
-    Controlador controlador;
+
     
     /**
      * Creates new form PantallaInicio
@@ -24,7 +19,7 @@ public class PantallaInicio extends javax.swing.JFrame {
     public PantallaInicio() {
         initComponents();
         this.setLocationRelativeTo(null);
-        controlador=new Controlador();
+   
     }
 
     /**
@@ -114,7 +109,7 @@ public class PantallaInicio extends javax.swing.JFrame {
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(115, 115, 115)
                 .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 97, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 109, Short.MAX_VALUE)
                 .addComponent(playButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(67, 67, 67)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -127,22 +122,7 @@ public class PantallaInicio extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void playButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playButtonActionPerformed
-        // TODO add your handling code here:
-        
-        JugadorDTO jugador=new JugadorDTO();
-        jugador.setNombre("Jugador1_Prueba");
-        try {
-            
-            
-            //no se que IP debe ser
-            controlador.crearServidor(jugador, 123);
-            
-            
-        } catch (IOException ex) {
-            Logger.getLogger(PantallaInicio.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        UnirseJugar uJ=new UnirseJugar(controlador);
-        uJ.show();
+       
         this.dispose();
     }//GEN-LAST:event_playButtonActionPerformed
 
