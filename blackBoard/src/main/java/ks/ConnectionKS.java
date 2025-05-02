@@ -85,7 +85,7 @@ public class ConnectionKS implements IKnowledgeSource {
                 blackboard.agregarSala(idSala, nuevaSala);
 
                 // Notificar al cliente
-                server.enviarMensajeACliente(cliente, "SALA_CREADA;id=" + idSala);
+                server.enviarMensajeACliente(cliente, "SALA_CREADAConecctionKS;id=" + idSala);
             } else {
                 server.enviarMensajeACliente(cliente, "ERROR;detalle=Faltan datos para crear la sala");
             }

@@ -6,6 +6,7 @@ package ks;
 import com.mycompany.battleship.commons.Evento;
 import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
+import com.mycompany.blackboard.Controller;
 import com.mycompany.blackboard.IKnowledgeSource;
 
 import java.net.Socket;
@@ -16,12 +17,19 @@ import java.util.*;
  */
 public class IniciarPartidaKS implements IKnowledgeSource{
     
-    private final IBlackboard blackboard;
+    // Dependencias (final hace que deban asignarse en el constructor)
     private final IServer server;
+    private final IBlackboard blackboard;
+    private final Controller controller; // Hacerlo final si siempre se requiere
 
-    public IniciarPartidaKS(IBlackboard blackboard, IServer server) {
+    public IniciarPartidaKS(IBlackboard blackboard, IServer server, Controller controller) {
+          // Es buena práctica verificar que las dependencias no sean nulas
+        if (blackboard == null || server == null || controller == null) {
+            throw new IllegalArgumentException("Las dependencias (Blackboard, Server, Controller) no pueden ser nulas.");
+        }
         this.blackboard = blackboard;
         this.server = server;
+        this.controller = controller;
     }
 
     @Override

@@ -1,7 +1,8 @@
+ks\IniciarPartidaKS.class
 com\mycompany\blackboard\BlackBoard.class
 com\mycompany\blackboard\Controller.class
-com\mycompany\blackboard\CrearSalaKS.class
 com\mycompany\blackboard\IKnowledgeSource.class
-com\mycompany\blackboard\UnirseSalaKS.class
-com\mycompany\blackboard\ConnectionKS.class
+ks\ConnectionKS.class
 com\mycompany\blackboard\Sala.class
+ks\CrearSalaKS.class
+ks\UnirseSalaKS.class

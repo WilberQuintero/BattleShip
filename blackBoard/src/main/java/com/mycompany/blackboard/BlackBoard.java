@@ -8,6 +8,7 @@ package com.mycompany.blackboard; // Asegúrate que el paquete sea el correcto
 import ks.CrearSalaKS;
 import ks.UnirseSalaKS;
 import ks.ConnectionKS;
+import ks.IniciarPartidaKS;
 import com.mycompany.battleship.commons.Evento;
 import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
@@ -20,6 +21,7 @@ import java.util.HashMap; // Añadido para getDatosSala
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 
 
 /**
@@ -98,6 +100,9 @@ public class BlackBoard implements IBlackboard { // Implementa la interfaz de co
 
         // 3. UnirseSalaKS: También necesita las 3 dependencias.
         knowledgeSources.add(new UnirseSalaKS(this, this.server, this.controller));
+        
+        // 3. IniciarPartidaKS: También necesita las 3 dependencias.
+        knowledgeSources.add(new IniciarPartidaKS(this, this.server, this.controller));
 
         // TODO: Añadir aquí el registro de futuras KS (Disparo, ColocarBarcos, etc.)
         // Ejemplo: knowledgeSources.add(new DisparoKS(this, this.server, this.controller));
@@ -132,6 +137,7 @@ public class BlackBoard implements IBlackboard { // Implementa la interfaz de co
                 System.err.println("BLACKBOARD ERROR: Excepción al procesar evento por " + ks.getClass().getSimpleName() + " - " + e.getMessage());
                 e.printStackTrace();
             }
+            
         }
 
         if (!eventoProcesado) { /* ... (código existente) ... */ }

@@ -28,29 +28,41 @@ public class TestFlujoUnirseSala {
     private static final int PUERTO = 5000;
     // Nombre de la sala para la prueba
     private static final String ID_SALA_PRUEBA = "SalaBatallaAlfa";
+    
+    private static final String JUGADOR = "Juan";
 
     public static void main(String[] args) {
-        System.out.println("--- INICIANDO TEST DE FLUJO: UNIRSE A SALA ---");
-        System.out.println("Asegúrate de que ServerTest esté corriendo en el puerto " + PUERTO);
+   System.out.println("--- INICIANDO TEST DE FLUJO: UNIRSE A SALA + INICIO MANUAL ---");
+    System.out.println("Asegúrate de que ServerTest esté corriendo en el puerto " + PUERTO);
 
-        // --- Simulación Cliente 1: Crear Sala ---
-        System.out.println("\n[TEST] Simulando Cliente 1 (Host) creando sala...");
-        simularClienteCreaSala(ID_SALA_PRUEBA);
+    // --- Simulación Cliente 1: Crear Sala ---
+    System.out.println("\n[TEST] Simulando Cliente 1 (Host) creando sala...");
+    simularClienteCreaSala(ID_SALA_PRUEBA,JUGADOR);
 
-        // Pequeña pausa para dar tiempo al servidor a procesar
-        try {
-            System.out.println("\n[TEST] Pausa breve (1 segundo)...");
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+    try {
+        System.out.println("\n[TEST] Pausa breve (1 segundo)...");
+        Thread.sleep(1000);
+    } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+    }
 
-        // --- Simulación Cliente 2: Unirse a Sala ---
-        System.out.println("\n[TEST] Simulando Cliente 2 uniéndose a la sala...");
-        simularClienteSeUneASala(ID_SALA_PRUEBA);
+    // --- Simulación Cliente 2: Unirse a Sala ---
+    System.out.println("\n[TEST] Simulando Cliente 2 uniéndose a la sala...");
+    simularClienteSeUneASala(ID_SALA_PRUEBA);
 
-        System.out.println("\n--- TEST DE FLUJO FINALIZADO ---");
-        System.out.println("Revisa la consola donde corre ServerTest para ver los logs detallados.");
+    try {
+        System.out.println("\n[TEST] Pausa breve (1 segundo)...");
+        Thread.sleep(1000);
+    } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+    }
+
+    // --- Simulación Cliente 3: Iniciar partida manualmente ---
+    System.out.println("\n[TEST] Simulando Cliente 3 iniciando la partida manualmente...");
+    simularInicioManualDePartida(ID_SALA_PRUEBA);
+
+    System.out.println("\n--- TEST DE FLUJO FINALIZADO ---");
+    System.out.println("Revisa la consola donde corre ServerTest para ver los logs detallados.");
 
     }
 
@@ -58,9 +70,8 @@ public class TestFlujoUnirseSala {
      * Simula un cliente que se conecta y envía el comando para crear una sala.
      * @param idSala El ID de la sala a crear.
      */
-    private static void simularClienteCreaSala(String idSala) {
-        String mensaje = "EVENTO;TIPO=CREAR_SALA;idSala=" + idSala;
-
+    private static void simularClienteCreaSala(String idSala, String Jugador) {
+        String mensaje = "EVENTO;TIPO=CREAR_SALA;idSala=" + idSala +";jugador="+Jugador;
         try (
             Socket socket = new Socket(HOST, PUERTO);
             PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
@@ -119,4 +130,35 @@ public class TestFlujoUnirseSala {
             System.err.println("[CLIENTE 2 ERROR] No se pudo conectar o comunicar: " + e.getMessage());
         }
     }
+    
+    
+    private static void simularInicioManualDePartida(String idSala) {
+    String mensaje = "EVENTO;TIPO=INICIAR_PARTIDA_SALA;idSala=" + idSala;
+
+    try (
+        Socket socket = new Socket(HOST, PUERTO);
+        PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+    ) {
+        System.out.println("[CLIENTE 3] Conectado al servidor.");
+        System.out.println("[CLIENTE 3] Enviando: " + mensaje);
+        out.println(mensaje);
+
+        try {
+            socket.setSoTimeout(2000);
+            String respuesta = in.readLine();
+            System.out.println("[CLIENTE 3] Respuesta recibida: " + (respuesta != null ? respuesta : "(sin respuesta/timeout)"));
+        } catch (java.net.SocketTimeoutException e) {
+            System.out.println("[CLIENTE 3] No se recibió respuesta del servidor (timeout).");
+        }
+
+        System.out.println("[CLIENTE 3] Desconectando.");
+
+    } catch (IOException e) {
+        System.err.println("[CLIENTE 3 ERROR] No se pudo conectar o comunicar: " + e.getMessage());
+    }
+}
+
+    
+    
 }
