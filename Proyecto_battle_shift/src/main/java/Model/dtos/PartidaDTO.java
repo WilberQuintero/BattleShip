@@ -2,11 +2,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package Controler;
+package Model.dtos;
 
-import Model.EstadoPartida;
-import Model.Jugador;
-import Model.Partida;
+import Model.entidades.EstadoPartida;
+import Model.entidades.Jugador;
+import Model.entidades.Partida;
 import java.util.ArrayList;
 import java.util.List;
 

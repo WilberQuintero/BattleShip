@@ -2,11 +2,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package Controler;
+package Model.dtos;
 
-import Model.Barco;
-import Model.Disparo;
-import Model.Tablero;
+import Model.entidades.Barco;
+import Model.entidades.Disparo;
+import Model.entidades.Tablero;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -2,10 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package Controler;
+package Model.dtos;
 
-import Model.Disparo;
-import Model.Posicion;
+import Model.entidades.Disparo;
+import Model.entidades.Posicion;
 
 /**
  *
