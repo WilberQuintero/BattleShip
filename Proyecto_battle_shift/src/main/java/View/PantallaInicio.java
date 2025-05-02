@@ -150,28 +150,32 @@ public class PantallaInicio extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void playButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playButtonActionPerformed
-     System.out.println("VIEW [PantallaInicio]: Botón Jugar presionado.");
+ System.out.println("VIEW [PantallaInicio]: Botón Jugar presionado.");
 
-        // TODO (Opcional): Recoger nombre de usuario u otros datos de la UI si los hubiera
-        // String nombre = txtNombreUsuario.getText();
-        // if (!nombre.isBlank()) {
-        //     controlador.setNombreUsuario(nombre);
-        // }
+     // --- NUEVO: Obtener y validar nombre de usuario ---
+     String nombreUsuario = txtNombreUsu.getText().trim(); // Obtiene y limpia espacios
+     if (nombreUsuario.isBlank()) {
+         System.out.println("VIEW [PantallaInicio]: Nombre de usuario vacío.");
+         JOptionPane.showMessageDialog(this, "Por favor, ingresa un nombre de usuario.", "Nombre Requerido", JOptionPane.WARNING_MESSAGE);
+         return; // Detener si no hay nombre
+     }
+     System.out.println("VIEW [PantallaInicio]: Nombre de usuario ingresado: " + nombreUsuario);
+     // --- FIN NUEVO ---
 
-        // Deshabilitar botón para evitar múltiples clics y dar feedback
-        playButton.setEnabled(false);
-        playButton.setText("Conectando...");
-        System.out.println("VIEW [PantallaInicio]: Botón deshabilitado. Llamando a controlador.botonJugarPresionado().");
+     // Deshabilitar botón para evitar múltiples clics y dar feedback
+     playButton.setEnabled(false);
+     playButton.setText("Conectando...");
+     System.out.println("VIEW [PantallaInicio]: Botón deshabilitado. Llamando al controlador...");
 
-        // Llamar al método del controlador para iniciar la conexión
-        if (controlador != null) {
-            controlador.botonJugarPresionado();
-        } else {
-            // Esto no debería pasar si el constructor funciona bien
-             System.err.println("VIEW [PantallaInicio] ERROR: Controlador es nulo al presionar el botón.");
-             mostrarError("Error interno: Controlador no disponible.");
-             reactivarBotonPlay(); // Reactivar si hay error grave
-        }
+     // Llamar al método del controlador para iniciar conexión Y LUEGO registrar
+     if (controlador != null) {
+         // Pasamos el nombre al controlador AHORA
+         controlador.intentarConectarYRegistrar(nombreUsuario);
+     } else {
+         System.err.println("VIEW [PantallaInicio] ERROR: Controlador es nulo al presionar el botón.");
+         mostrarError("Error interno: Controlador no disponible.");
+         reactivarBotonPlay();
+     }
 
         // IMPORTANTE: NO navegar a la siguiente pantalla aquí.
         // La navegación se hará desde el método navegarASiguientePantalla(),

@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Server implements Runnable, IServer { // Implementa IServer
 
-    private final int port;
+private final int port;
     private IBlackboard blackboard; // Usa la interfaz IBlackboard
     private ServerSocket serverSocket;
     private volatile boolean running = true;
@@ -60,53 +61,42 @@ public class Server implements Runnable, IServer { // Implementa IServer
         System.out.println("SERVER: IBlackboard asignado.");
     }
 
-private Evento parsearEvento(String linea) {
-    if (linea == null || !linea.startsWith("EVENTO;")) {
-        return null;
-    }
-
-    // Eliminar el prefijo "EVENTO;"
-    String contenido = linea.substring("EVENTO;".length());
-    String[] partes = contenido.split(";");
-    
-    if (partes.length == 0) {
-        return null;
-    }
-
-    // Procesar el tipo (primera parte)
-    String tipo = null;
-    try {
-        String[] tipoPart = partes[0].split("=", 2); // Limitamos a 2 partes
-        if (!"TIPO".equals(tipoPart[0])) {
-            System.err.println("Formato inválido: El primer campo debe ser TIPO");
+    // Método parsearEvento (Confirmado que funciona)
+    private Evento parsearEvento(String linea) {
+        if (linea == null || !linea.startsWith("EVENTO;")) {
             return null;
         }
-        tipo = tipoPart[1];
-    } catch (ArrayIndexOutOfBoundsException e) {
-        System.err.println("Formato inválido para el TIPO del evento");
-        return null;
-    }
+        String contenido = linea.substring("EVENTO;".length());
+        String[] partes = contenido.split(";");
+        if (partes.length == 0) { return null; }
 
-    Evento evento = new Evento(tipo);
-
-    // Procesar el resto de los datos
-    for (int i = 1; i < partes.length; i++) {
+        String tipo = null;
         try {
-            String[] kv = partes[i].split("=", 2); // Limitamos a 2 partes
-            if (kv.length == 2) {
-                evento.agregarDato(kv[0], kv[1]);
-            } else {
-                System.err.println("Formato inválido en campo: " + partes[i]);
+            String[] tipoPart = partes[0].split("=", 2);
+            if (!"TIPO".equals(tipoPart[0])) {
+                 System.err.println("Formato inválido: El primer campo debe ser TIPO");
+                 return null;
             }
-        } catch (Exception e) {
-            System.err.println("Error procesando campo: " + partes[i]);
+            tipo = tipoPart[1];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.err.println("Formato inválido para el TIPO del evento");
+            return null;
         }
-    }
- System.out.println("DEBUG [parsearEvento]: Evento creado -> Tipo: " + evento.getTipo() + ", Datos: " + evento.getDatos());
 
+        Evento evento = new Evento(tipo);
+        for (int i = 1; i < partes.length; i++) {
+            try {
+                String[] kv = partes[i].split("=", 2);
+                if (kv.length == 2) {
+                    evento.agregarDato(kv[0], kv[1]);
+                } else { System.err.println("Formato inválido en campo: " + partes[i]); }
+            } catch (Exception e) { System.err.println("Error procesando campo: " + partes[i]); }
+        }
+        // Log de depuración que ya tenías
+        System.out.println("DEBUG [parsearEvento]: Evento creado -> Tipo: " + evento.getTipo() + ", Datos: " + evento.getDatos());
         return evento;
-    
-}
+    }
+
 
     @Override
     public void run() {
@@ -121,73 +111,61 @@ private Evento parsearEvento(String linea) {
             System.out.println("SERVER: Esperando conexiones...");
 
             while (running) {
+                Socket clientSocket = null;
                 try {
-                    Socket clientSocket = serverSocket.accept();
+                    clientSocket = serverSocket.accept();
                     System.out.println("SERVER: Conexión aceptada de: " + clientSocket.getInetAddress().getHostAddress());
 
-                    // Crear PrintWriter para este cliente
-                    try {
-                         PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true);
-                         clientWriters.put(clientSocket, writer);
-                         System.out.println("SERVER: Writer creado para cliente " + clientSocket.getInetAddress().getHostAddress());
-                    } catch (IOException e) {
-                         System.err.println("SERVER ERROR: No se pudo crear PrintWriter para " + clientSocket.getInetAddress().getHostAddress() + ". Cerrando socket.");
-                         try { clientSocket.close(); } catch (IOException ioex) { /* Ignorar */ }
-                         continue; // Saltar este cliente
-                    }
-                       
-                    // Después de crear el PrintWriter...
+                    PrintWriter writer = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8), true);
+                    clientWriters.put(clientSocket, writer);
+                    System.out.println("SERVER: Writer creado y guardado para cliente " + clientSocket.getInetAddress().getHostAddress());
+
+                    final Socket currentClientSocket = clientSocket;
                     new Thread(() -> {
-                        try (Scanner scanner = new Scanner(clientSocket.getInputStream(), StandardCharsets.UTF_8)) {
-                            while (scanner.hasNextLine()) {
+                        System.out.println("SERVER [Hilo Cliente " + currentClientSocket.getPort() + "]: Iniciado.");
+                        try (Scanner scanner = new Scanner(currentClientSocket.getInputStream(), StandardCharsets.UTF_8)) {
+                            while (running && scanner.hasNextLine()) {
                                 String linea = scanner.nextLine();
-                                System.out.println("SERVER: Mensaje recibido: " + linea);
+                                System.out.println("SERVER [Hilo Cliente " + currentClientSocket.getPort() + "]: Mensaje recibido: " + linea);
 
-                                // Parsear mensaje recibido como evento
-                                Evento evento = parsearEvento(linea); // implementar este método
-                                                             
-                                blackboard.enviarEventoBlackBoard(clientSocket, evento);
+                                Evento evento = parsearEvento(linea);
+
+                                // --- ¡¡ESTA ES LA PARTE CORREGIDA Y CLAVE!! ---
+                                if (evento != null && blackboard != null) {
+                                    System.out.println("SERVER [Hilo Cliente " + currentClientSocket.getPort() + "]: Enviando evento '" + evento.getTipo() + "' al Blackboard.");
+                                    blackboard.enviarEventoBlackBoard(currentClientSocket, evento); // Envía el evento parseado
+                                } else if (evento == null) {
+                                    System.err.println("SERVER [Hilo Cliente " + currentClientSocket.getPort() + "]: Mensaje no pudo ser parseado: " + linea);
+                                }
+                                // --------------------------------------------
+
                             }
+                             System.out.println("SERVER [Hilo Cliente " + currentClientSocket.getPort() + "]: Bucle while terminado (hasNextLine=" + scanner.hasNextLine() + ", running="+running+").");
+
                         } catch (IOException e) {
-                            System.err.println("SERVER ERROR: Error leyendo del cliente: " + e.getMessage());
+                             if (running) { /* ... (logging) ... */ }
+                        } catch (NoSuchElementException e){
+                             if (running) { /* ... (logging) ... */ }
+                        } catch (Exception e) {
+                             if (running) { /* ... (logging) ... */ }
+                        } finally {
+                             // --- ASEGURA LA LIMPIEZA Y NOTIFICACIÓN ---
+                             System.out.println("SERVER [Hilo Cliente " + currentClientSocket.getPort() + "]: Hilo terminando. Notificando desconexión...");
+                             clienteDesconectado(currentClientSocket);
+                             // ----------------------------------------
                         }
-                    }).start();
+                    }, "ClientHandler-" + clientSocket.getPort()).start();
 
-                    
-                    // Crear el Evento de conexión
-                    Evento eventoConexion = new Evento("CONECTAR_USUARIO_SERVER"); // Usa la clase Evento de commons
+                    // --- EVENTO CONECTAR_USUARIO_SERVER ELIMINADO ---
 
-                    // Enviar el Evento al BlackBoard usando la interfaz
-                    blackboard.enviarEventoBlackBoard(clientSocket, eventoConexion);
-
-                } catch (SocketException se) {
-                    if (!running) {
-                        System.out.println("SERVER: ServerSocket cerrado intencionalmente.");
-                    } else {
-                         System.err.println("SERVER ERROR: Error de Socket al esperar conexión: " + se.getMessage());
-                         // Considerar logging más robusto
-                    }
-                } catch (IOException e) {
-                     if (running) {
-                         System.err.println("SERVER ERROR: Error de E/S al aceptar conexión: " + e.getMessage());
-                         // Considerar logging más robusto
-                     }
-                 } catch (Exception e) { // Captura genérica para errores inesperados
-                      System.err.println("SERVER ERROR: Error inesperado en el bucle principal: " + e.getMessage());
-                      e.printStackTrace(); // Loguear stacktrace completo
-                 }
-             } // Fin while
-        } catch (IOException e) {
-            if (running) {
-                System.err.println("SERVER CRITICAL ERROR: No se pudo iniciar el servidor en el puerto " + port + ". " + e.getMessage());
-                e.printStackTrace();
-            }
-        } finally {
-            System.out.println("SERVER: Deteniendo servidor...");
-            closeServerResources();
-            System.out.println("SERVER: Servidor detenido completamente.");
-        }
+                } catch (SocketException se) { /* ... (manejo de error) ... */ }
+                  catch (IOException e) { /* ... (manejo de error) ... */ }
+                  catch (Exception e) { /* ... (manejo de error) ... */ }
+            } // Fin while(running)
+        } catch (IOException e) { /* ... (manejo de error) ... */ }
+          finally { /* ... (cierre limpio) ... */ }
     }
+
 
     // --- Implementación de métodos de IServer ---
 

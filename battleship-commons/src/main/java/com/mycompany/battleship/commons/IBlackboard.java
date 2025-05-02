@@ -20,94 +20,52 @@ import java.util.Map;  // Necesario para los métodos de sala
  */
 public interface IBlackboard {
 
-    // --- Métodos de Interacción Principal (Entrada de Eventos) ---
-
-    /**
-     * Método principal que el Server (u otros) usa para enviar un evento
-     * al Blackboard para su procesamiento por las Knowledge Sources.
-     * @param cliente El socket asociado al origen del evento (puede ser null).
-     * @param evento El evento a procesar.
-     */
+    // --- Entrada de Eventos ---
     void enviarEventoBlackBoard(Socket cliente, Evento evento);
 
-
-    // --- Métodos para Gestión de Salas ---
-
-    /**
-     * Verifica si una sala con el ID especificado existe en el Blackboard.
-     * @param idSala El ID de la sala a verificar.
-     * @return true si la sala existe, false en caso contrario.
-     */
+    // --- Gestión de Salas ---
     boolean existeSala(String idSala);
-
-    /**
-     * Registra una nueva sala en el Blackboard.
-     * Llamado típicamente por una CrearSalaKS.
-     * @param id El ID único para la nueva sala.
-     * @param datosSala Un mapa que contiene la información inicial de la sala (ej. host, lista de jugadores vacía).
-     */
     void agregarSala(String id, Map<String, Object> datosSala);
+    Map<String, Object> getDatosSala(String idSala);
+    void actualizarDatosSala(String idSala, Map<String, Object> nuevosDatosSala);
 
-    /**
-     * Obtiene los datos asociados a una sala específica.
-     * Devuelve una copia o una vista inmutable para proteger el estado interno.
-     * @param idSala El ID de la sala a consultar.
-     * @return Un Map con los datos de la sala, o null si la sala no existe.
-     */
-    Map<String, Object> getDatosSala(String idSala); // <-- MÉTODO NUEVO
-
-    /**
-     * Actualiza (sobrescribe) los datos de una sala existente en el Blackboard.
-     * Llamado por KSs después de modificar el estado de una sala (ej. añadir jugador).
-     * @param idSala El ID de la sala a actualizar.
-     * @param nuevosDatosSala El Map con los datos actualizados de la sala.
-     */
-    void actualizarDatosSala(String idSala, Map<String, Object> nuevosDatosSala); // <-- MÉTODO NUEVO
-
-
-    // --- Métodos para Gestión de Clientes/Jugadores (Estado General) ---
-
-    /**
-     * Añade un socket a la lista interna de clientes cuya conexión fue
-     * validada y procesada por la KS correspondiente.
-     * ¡Nota: Generalmente llamado DESDE la KS, no HACIA la KS! Podría
-     * considerarse un detalle de implementación y no ir en la interfaz,
-     * pero lo incluimos si otras KS necesitan llamar a esto explícitamente.
-     * Si solo ConnectionKS lo llama, podría quitarse de la interfaz.
-     * @param clienteSocket El socket del cliente a registrar como activo.
-     */
+    // --- Gestión de Clientes/Usuarios ---
     void agregarClienteSocket(Socket clienteSocket);
-
-     /**
-      * Elimina un socket de la lista interna de clientes activos.
-      * Útil para KS que manejan desconexiones.
-      * @param clienteSocket El socket a eliminar.
-      */
-     void removerClienteSocket(Socket clienteSocket); // <-- MÉTODO NUEVO (para KS de desconexión)
+    void removerClienteSocket(Socket clienteSocket); // Maneja limpieza interna de mapas
+    List<Socket> getClientesConectados();
 
     /**
-     * Obtiene una lista (preferiblemente una copia o inmutable) de los sockets
-     * de los clientes actualmente considerados activos/conectados por el Blackboard.
-     * @return Una lista de Sockets.
+     * Verifica si un nombre de usuario ya está registrado en el sistema.
+     * Necesario para evitar nombres duplicados.
+     * @param nombre El nombre a verificar.
+     * @return true si el nombre ya está en uso, false en caso contrario.
      */
-    List<Socket> getClientesConectados(); // <-- MÉTODO NUEVO (útil para broadcasting, etc.)
-
-
-    // --- Métodos de Callback (Opcional en interfaz) ---
+    boolean isNombreEnUso(String nombre); // <-- NUEVO
 
     /**
-     * Método de callback (estilo Dominó) que una KS puede llamar para
-     * señalar que ha terminado de procesar un evento. Su utilidad en la
-     * interfaz pública es debatible, podría ser un método interno.
-     * @param cliente Socket asociado.
-     * @param eventoRespuesta Evento que representa la respuesta o finalización.
+     * Registra la asociación entre un socket de cliente y un nombre de usuario.
+     * Debe ser llamado por la KS después de validar el nombre.
+     * @param cliente El socket del cliente.
+     * @param nombre El nombre de usuario validado.
      */
+    void registrarUsuario(Socket cliente, String nombre); // <-- NUEVO
+
+    /**
+     * Obtiene el nombre de usuario asociado a un socket específico.
+     * @param cliente El socket del cliente.
+     * @return El nombre de usuario, o null si el socket no está registrado con un nombre.
+     */
+    String getNombreDeUsuario(Socket cliente); // <-- NUEVO (Útil)
+
+    /**
+     * Obtiene el socket asociado a un nombre de usuario específico.
+     * @param nombre El nombre de usuario.
+     * @return El Socket, o null si el nombre no está registrado.
+     */
+    Socket getSocketDeUsuario(String nombre); // <-- NUEVO (Útil)
+
+
+    // --- Callback ---
     void respuestaFuenteC(Socket cliente, Evento eventoRespuesta);
-
-
-    // --- NO incluimos getServer() ni getController() ---
-    // porque esas dependencias se inyectan directamente en las KS
-    // durante su construcción por el BlackBoard concreto, no necesitan
-    // pasar a través de la interfaz IBlackboard para obtenerlas.
 
 }

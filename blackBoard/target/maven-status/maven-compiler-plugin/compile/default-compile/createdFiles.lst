@@ -4,5 +4,6 @@ com\mycompany\blackboard\Controller.class
 com\mycompany\blackboard\IKnowledgeSource.class
 ks\ConnectionKS.class
 com\mycompany\blackboard\Sala.class
+ks\RegistrarUsuarioKS.class
 ks\CrearSalaKS.class
 ks\UnirseSalaKS.class
