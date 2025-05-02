@@ -4,7 +4,10 @@
  */
 package View;
 
+import Controler.controladorCrearPartida;
 import Controler.controladorInicio;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 
 
@@ -12,15 +15,130 @@ import Controler.controladorInicio;
  *
  * @author javie
  */
+/**
+ * Pantalla donde el usuario puede crear una nueva sala o unirse a una existente.
+ */
 public class UnirseJugar extends javax.swing.JFrame {
-  
+
+
+    // --- Atributos ---
+    // Controlador específico para las acciones de ESTA pantalla
+    private final controladorCrearPartida controlador;
+    // Referencia al controlador principal (útil para desconectar al cerrar)
+    private final controladorInicio controladorPrincipal;
+
+
     /**
-     * Creates new form UnirseJugar
+     * Creates new form UnirseJugar.
+     * @param ctrlInicio El controlador principal desde el que se navega,
+     * necesario para obtener la instancia de ServerComunicacion.
      */
-    public UnirseJugar( controladorInicio controlador) {
-        initComponents();
-       
+    public UnirseJugar(controladorInicio ctrlInicio) {
+        initComponents(); // Inicializa componentes Swing (generado por NetBeans)
+        this.setLocationRelativeTo(null); // Centrar ventana
+        this.controladorPrincipal = ctrlInicio; // Guardar referencia
+
+        // --- Crear e inicializar el controlador específico ---
+        controladorCrearPartida ctrlSecundario = null;
+        if (ctrlInicio != null && ctrlInicio.getServerComunicacion() != null) {
+            System.out.println("VIEW [UnirseJugar]: Creando controladorCrearPartida...");
+            ctrlSecundario = new controladorCrearPartida(ctrlInicio.getServerComunicacion());
+            ctrlSecundario.setVista(this); // El nuevo controlador conoce esta vista
+            // Informar al controlador principal sobre este controlador secundario activo
+            ctrlInicio.setControladorCrearPartidaActual(ctrlSecundario);
+            System.out.println("VIEW [UnirseJugar]: Controlador específico creado y asignado.");
+        } else {
+            // Error grave si no podemos obtener la comunicación
+            System.err.println("VIEW [UnirseJugar] ERROR CRÍTICO: No se pudo obtener ServerComunicacion.");
+            mostrarError("Error crítico de inicialización. Cierre la aplicación.");
+            // Deshabilitar funcionalidad si falla
+            btnCrearSala.setEnabled(false);
+            btnUnirseSala.setEnabled(false);
+        }
+        this.controlador = ctrlSecundario; // Asignar el controlador creado a la variable de instancia
     }
+
+    // --- Métodos llamados por el Controlador para actualizar esta UI ---
+
+    /**
+     * Navega a la siguiente pantalla (Lobby de espera).
+     * Llamado por controladorCrearPartida después de crear o unirse exitosamente.
+     * @param idSala El ID de la sala a la que se entró.
+     */
+    public void navegarAPantallaEspera(String idSala) {
+         // Asegurar que se ejecuta en el hilo de Swing
+         SwingUtilities.invokeLater(() -> {
+             System.out.println("VIEW [UnirseJugar]: Navegando a PantallaEspera para sala: " + idSala);
+             // TODO: Implementar la navegación real
+             // Ejemplo:
+             // PantallaEspera pantallaEspera = new PantallaEspera(this.controladorPrincipal, idSala);
+             // pantallaEspera.setVisible(true);
+             JOptionPane.showMessageDialog(this, "¡Entraste a la sala '" + idSala + "'!\n(Implementa la pantalla de espera)");
+             // Limpiar referencia en controlador principal al navegar fuera
+             if (controladorPrincipal != null) {
+                 controladorPrincipal.clearControladorCrearPartidaActual();
+             }
+             this.dispose(); // Cierra esta ventana
+         });
+    }
+
+    /**
+     * Muestra un mensaje de error en un diálogo.
+     * Llamado por controladorCrearPartida.
+     * @param mensaje El mensaje de error.
+     */
+    public void mostrarError(String mensaje) {
+        // Asegurar que se ejecuta en el hilo de Swing
+        SwingUtilities.invokeLater(() -> {
+             System.out.println("VIEW [UnirseJugar]: Mostrando error: " + mensaje);
+             JOptionPane.showMessageDialog(this, mensaje, "Error", JOptionPane.ERROR_MESSAGE);
+             // Como hubo un error, reactivar botones para que el usuario intente de nuevo
+             reactivarBotones();
+        });
+    }
+
+    /** Método helper para deshabilitar botones y mostrar estado */
+    private void deshabilitarBotones(String textoEstado) {
+         btnCrearSala.setEnabled(false);
+         btnUnirseSala.setEnabled(false);
+         btnCrearSala.setText(textoEstado); // Mostrar estado en un botón
+         btnUnirseSala.setText("...");
+    }
+
+    /** Método helper para reactivar ambos botones */
+    public void reactivarBotones() {
+        reactivarBotonCrear();
+        reactivarBotonUnirse();
+    }
+
+    /** Reactiva el botón de Crear Sala */
+    public void reactivarBotonCrear() {
+        // Asegurar que se ejecuta en el hilo de Swing
+        SwingUtilities.invokeLater(() -> {
+            btnCrearSala.setEnabled(true);
+            btnCrearSala.setText("Crear Sala");
+             // Reactivar el otro botón también si no hay acción en curso
+             if (btnUnirseSala.getText().equals("...")) {
+                 btnUnirseSala.setEnabled(true);
+                 btnUnirseSala.setText("Unirse a Sala");
+             }
+        });
+    }
+
+     /** Reactiva el botón de Unirse a Sala */
+    public void reactivarBotonUnirse() {
+         // Asegurar que se ejecuta en el hilo de Swing
+         SwingUtilities.invokeLater(() -> {
+             btnUnirseSala.setEnabled(true);
+             btnUnirseSala.setText("Unirse a Sala");
+              // Reactivar el otro botón también si no hay acción en curso
+             if (btnCrearSala.getText().equals("...")) {
+                 btnCrearSala.setEnabled(true);
+                 btnCrearSala.setText("Crear Sala");
+             }
+         });
+    }
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -33,14 +151,15 @@ public class UnirseJugar extends javax.swing.JFrame {
 
         jPanel1 = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
-        createButton = new javax.swing.JButton();
+        btnCrearSala = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
-        joinButton = new javax.swing.JButton();
+        btnUnirseSala = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
-        ipText = new javax.swing.JTextField();
+        txtCrearSala = new javax.swing.JTextField();
+        txtNombreSalaUnirse = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -51,18 +170,18 @@ public class UnirseJugar extends javax.swing.JFrame {
         jPanel2.setForeground(new java.awt.Color(32, 51, 75));
         jPanel2.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        createButton.setBackground(new java.awt.Color(67, 68, 84));
-        createButton.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        createButton.setForeground(new java.awt.Color(255, 255, 255));
-        createButton.setText("CREAR PARTIDA");
-        createButton.setAutoscrolls(true);
-        createButton.setBorderPainted(false);
-        createButton.addActionListener(new java.awt.event.ActionListener() {
+        btnCrearSala.setBackground(new java.awt.Color(67, 68, 84));
+        btnCrearSala.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        btnCrearSala.setForeground(new java.awt.Color(255, 255, 255));
+        btnCrearSala.setText("CREAR PARTIDA");
+        btnCrearSala.setAutoscrolls(true);
+        btnCrearSala.setBorderPainted(false);
+        btnCrearSala.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                createButtonActionPerformed(evt);
+                btnCrearSalaActionPerformed(evt);
             }
         });
-        jPanel2.add(createButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 270, -1, -1));
+        jPanel2.add(btnCrearSala, new org.netbeans.lib.awtextra.AbsoluteConstraints(480, 310, -1, -1));
 
         jPanel3.setBackground(new java.awt.Color(36, 37, 56));
 
@@ -106,18 +225,18 @@ public class UnirseJugar extends javax.swing.JFrame {
 
         jPanel2.add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 730, 100));
 
-        joinButton.setBackground(new java.awt.Color(67, 68, 84));
-        joinButton.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        joinButton.setForeground(new java.awt.Color(255, 255, 255));
-        joinButton.setText("UNIRSE");
-        joinButton.setAutoscrolls(true);
-        joinButton.setBorderPainted(false);
-        joinButton.addActionListener(new java.awt.event.ActionListener() {
+        btnUnirseSala.setBackground(new java.awt.Color(67, 68, 84));
+        btnUnirseSala.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        btnUnirseSala.setForeground(new java.awt.Color(255, 255, 255));
+        btnUnirseSala.setText("UNIRSE");
+        btnUnirseSala.setAutoscrolls(true);
+        btnUnirseSala.setBorderPainted(false);
+        btnUnirseSala.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                joinButtonActionPerformed(evt);
+                btnUnirseSalaActionPerformed(evt);
             }
         });
-        jPanel2.add(joinButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 320, -1, -1));
+        jPanel2.add(btnUnirseSala, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 320, -1, -1));
 
         jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel2.setText("Unirse a una partida existente");
@@ -125,17 +244,27 @@ public class UnirseJugar extends javax.swing.JFrame {
 
         jLabel3.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel3.setText("Crea una partida");
-        jPanel2.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(490, 230, -1, -1));
+        jPanel2.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(490, 200, -1, -1));
 
-        ipText.setBackground(new java.awt.Color(67, 68, 84));
-        ipText.setForeground(new java.awt.Color(255, 255, 255));
-        ipText.setBorder(null);
-        ipText.addActionListener(new java.awt.event.ActionListener() {
+        txtCrearSala.setBackground(new java.awt.Color(67, 68, 84));
+        txtCrearSala.setForeground(new java.awt.Color(255, 255, 255));
+        txtCrearSala.setBorder(null);
+        txtCrearSala.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ipTextActionPerformed(evt);
+                txtCrearSalaActionPerformed(evt);
             }
         });
-        jPanel2.add(ipText, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 260, 230, 30));
+        jPanel2.add(txtCrearSala, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 250, 230, 30));
+
+        txtNombreSalaUnirse.setBackground(new java.awt.Color(67, 68, 84));
+        txtNombreSalaUnirse.setForeground(new java.awt.Color(255, 255, 255));
+        txtNombreSalaUnirse.setBorder(null);
+        txtNombreSalaUnirse.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtNombreSalaUnirseActionPerformed(evt);
+            }
+        });
+        jPanel2.add(txtNombreSalaUnirse, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 260, 230, 30));
 
         jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 730, 490));
 
@@ -144,24 +273,48 @@ public class UnirseJugar extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void createButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createButtonActionPerformed
-       
-        this.dispose();  
-        
-    }//GEN-LAST:event_createButtonActionPerformed
+    private void btnCrearSalaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCrearSalaActionPerformed
+       String nombreSala = txtCrearSala.getText().trim();
+        System.out.println("VIEW [UnirseJugar]: Botón Crear presionado. Nombre: " + nombreSala);
+        if (nombreSala.isBlank()) {
+            mostrarError("Ingresa un nombre para crear la sala.");
+            return;
+        }
+        // Deshabilitar botones mientras se procesa
+        deshabilitarBotones("Creando...");
+        if (controlador != null) {
+             System.out.println("VIEW [UnirseJugar]: Llamando a controladorCrearPartida.solicitarCreacionSala...");
+             controlador.solicitarCreacionSala(nombreSala);
+        } else {
+             mostrarError("Error interno: Controlador no disponible.");
+             reactivarBotones();
+        }
+    }//GEN-LAST:event_btnCrearSalaActionPerformed
 
-    private void joinButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_joinButtonActionPerformed
-       
-        this.dispose();  
-        
-    }//GEN-LAST:event_joinButtonActionPerformed
+    private void btnUnirseSalaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUnirseSalaActionPerformed
+        String nombreSala = txtNombreSalaUnirse.getText().trim();
+         System.out.println("VIEW [UnirseJugar]: Botón Unirse presionado. Nombre: " + nombreSala);
+         if (nombreSala.isBlank()) {
+             mostrarError("Ingresa el nombre de la sala para unirte.");
+             return;
+         }
+          // Deshabilitar botones mientras se procesa
+         deshabilitarBotones("Uniendo...");
+         if (controlador != null) {
+             System.out.println("VIEW [UnirseJugar]: Llamando a controladorCrearPartida.solicitarUnirseSala...");
+              controlador.solicitarUnirseSala(nombreSala);
+         } else {
+             mostrarError("Error interno: Controlador no disponible.");
+             reactivarBotones();
+         }
+    }//GEN-LAST:event_btnUnirseSalaActionPerformed
 
-    private void ipTextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ipTextActionPerformed
+    private void txtCrearSalaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtCrearSalaActionPerformed
         // TODO add your handling code here:
         
         
         
-    }//GEN-LAST:event_ipTextActionPerformed
+    }//GEN-LAST:event_txtCrearSalaActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
@@ -170,10 +323,14 @@ public class UnirseJugar extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 
+    private void txtNombreSalaUnirseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtNombreSalaUnirseActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtNombreSalaUnirseActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton createButton;
-    private javax.swing.JTextField ipText;
+    private javax.swing.JButton btnCrearSala;
+    private javax.swing.JButton btnUnirseSala;
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -181,6 +338,7 @@ public class UnirseJugar extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
-    private javax.swing.JButton joinButton;
+    private javax.swing.JTextField txtCrearSala;
+    private javax.swing.JTextField txtNombreSalaUnirse;
     // End of variables declaration//GEN-END:variables
 }

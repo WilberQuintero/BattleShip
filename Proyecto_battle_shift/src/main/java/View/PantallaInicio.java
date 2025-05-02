@@ -32,7 +32,7 @@ public class PantallaInicio extends javax.swing.JFrame {
         // Crear la instancia del controlador que manejará la lógica
         controlador = new controladorInicio();
         // Pasar una referencia de esta vista al controlador para que pueda llamarla
-        controlador.setVista(this);
+        controlador.setVistaInicio(this);
         System.out.println("VIEW [PantallaInicio]: Controlador asignado a la vista.");
     }
 
@@ -183,20 +183,30 @@ public class PantallaInicio extends javax.swing.JFrame {
         // this.dispose(); // ¡NO AQUI!
     }//GEN-LAST:event_playButtonActionPerformed
 
-   /**
-     * Navega a la siguiente pantalla (probablemente Unirse/Crear Sala).
-     * Este método es llamado por el Controlador desde onConectado().
-     */
-    public void navegarASiguientePantalla() {
-        // Asegurarse de que la actualización de UI ocurra en el hilo de eventos de Swing
-        SwingUtilities.invokeLater(() -> {
-            System.out.println("VIEW [PantallaInicio]: Navegando a la siguiente pantalla (UnirseJugar)...");
-            // Asegúrate de que la clase UnirseJugar exista y acepte el controlador
-            UnirseJugar pantallaUnirse = new UnirseJugar(controlador); // Pasa el mismo controlador
-            pantallaUnirse.setVisible(true);
-            this.dispose(); // Cierra esta ventana de inicio
-        });
-    }
+
+     /**
+      * Método llamado por el Controlador cuando la conexión y registro son exitosos.
+      * Crea la pantalla UnirseJugar, crea su controlador específico, y los enlaza.
+      */
+      public void navegarASiguientePantalla() {
+          // Asegurarse de que esto se ejecute en el hilo de despacho de eventos de Swing
+          SwingUtilities.invokeLater(() -> {
+               System.out.println("VIEW [PantallaInicio]: Navegando a la pantalla Unirse/Jugar...");
+
+               // Crear la siguiente vista (UnirseJugar) y pasarle el controlador INICIAL
+               // para que pueda obtener ServerComunicacion y notificar cierre.
+               UnirseJugar pantallaUnirse = new UnirseJugar(this.controlador);
+
+               // --- La creación del controlador secundario y las asociaciones
+               // --- se hacen DENTRO del constructor de UnirseJugar ahora. ---
+
+               // Mostrar la nueva ventana y cerrar la actual
+               pantallaUnirse.setVisible(true);
+               this.dispose(); // Cierra esta ventana de inicio
+          });
+      }
+
+    
 
     /**
      * Muestra un mensaje de error al usuario.
@@ -227,6 +237,8 @@ public class PantallaInicio extends javax.swing.JFrame {
                JOptionPane.showMessageDialog(this, "Desconectado: " + motivo, "Desconexión", JOptionPane.WARNING_MESSAGE);
           });
      }
+     
+     
 
 
     /**
