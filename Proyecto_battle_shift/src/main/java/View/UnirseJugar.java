@@ -4,6 +4,8 @@
  */
 package View;
 
+import Controler.controladorInicio;
+
 
 
 /**
@@ -15,7 +17,7 @@ public class UnirseJugar extends javax.swing.JFrame {
     /**
      * Creates new form UnirseJugar
      */
-    public UnirseJugar( ) {
+    public UnirseJugar( controladorInicio controlador) {
         initComponents();
        
     }
