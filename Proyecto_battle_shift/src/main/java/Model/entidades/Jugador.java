@@ -5,7 +5,7 @@
 package Model.entidades;
 
 import java.io.IOException;
-import server.Server;
+
 
 
 /**
@@ -16,7 +16,7 @@ public class Jugador {
     private String nombre;
     private Tablero tablero;
     private boolean enTurno;
-    private Server servidor;
+   
 
     public Jugador(String nombre) {
         this.nombre = nombre;
@@ -24,12 +24,7 @@ public class Jugador {
         this.enTurno = false;
     }
     
-    //Crear servidor sera cuando le de A jugar
-    public Server crearServidor(int puerto) throws IOException {
-        servidor=new Server(puerto);
-        servidor.run();
-        return servidor;
-    }
+    
     
     public boolean todosLosBarcosHundidos() {
         return tablero.getBarcos().stream().allMatch(Barco::estaHundido);
@@ -65,13 +60,7 @@ public class Jugador {
         this.enTurno = enTurno;
     }
 
-    public Server getServidor() {
-        return servidor;
-    }
-
-    public void setServidor(Server servidor) {
-        this.servidor = servidor;
-    }
+   
     
     
 }

@@ -6,7 +6,6 @@ package Model.dtos;
 
 import Model.entidades.Jugador;
 import Model.entidades.Tablero;
-import server.Server;
 
 /**
  *
@@ -16,16 +15,16 @@ public class JugadorDTO {
     private String nombre;
     private TableroDTO tablero;
     private boolean enTurno;
-    private Server servidor;
+    
 
     public JugadorDTO() {
     }
 
-    public JugadorDTO(String nombre, TableroDTO tablero, boolean enTurno, Server servidor) {
+    public JugadorDTO(String nombre, TableroDTO tablero, boolean enTurno) {
         this.nombre = nombre;
         this.tablero = tablero;
         this.enTurno = enTurno;
-        this.servidor = servidor;
+        
     }
     
     
@@ -54,21 +53,15 @@ public class JugadorDTO {
         this.enTurno = enTurno;
     }
 
-    public Server getServidor() {
-        return servidor;
-    }
-
-    public void setServidor(Server servidor) {
-        this.servidor = servidor;
-    }
+   
     
     public static JugadorDTO convertir(Jugador jugador) {
         TableroDTO tableroDTO = TableroDTO.convertir(jugador.getTablero());
         return new JugadorDTO(
             jugador.getNombre(),
             tableroDTO,
-            jugador.isEnTurno(),
-            jugador.getServidor()
+            jugador.isEnTurno()
+            
         );
     }
     
@@ -77,7 +70,7 @@ public class JugadorDTO {
         Jugador jugador = new Jugador(jugadorDTO.getNombre());
         jugador.setTablero(tablero);
         jugador.setEnTurno(jugadorDTO.isEnTurno());
-        jugador.setServidor(jugadorDTO.getServidor());
+      
         return jugador;
     }
     
