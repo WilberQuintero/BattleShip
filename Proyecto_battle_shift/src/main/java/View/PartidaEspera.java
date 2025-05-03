@@ -2,40 +2,107 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-package View;
+package View; // O tu paquete de Vistas
 
-
-import javax.swing.SwingUtilities;
+// --- Imports Necesarios ---
+import Controler.controladorInicio;
+import Controler.controladorPartidaEspera; // El controlador específico
+import java.util.List; // Para la lista de nombres
+import javax.swing.DefaultListModel; // Modelo para JList
+import javax.swing.JOptionPane;     // Para diálogos
+import javax.swing.SwingUtilities; // Para seguridad de hilos en UI
+import java.awt.Color; // Para cambiar color de texto en errores (opcional)
 
 /**
- *
- * @author javie
+ * Vista que muestra la sala de espera antes de iniciar la partida.
+ * Permite al jugador marcarse como listo o salir.
+ * Es actualizada por el controladorPartidaEspera.
+ * (Versión integrada con código existente del usuario)
  */
 public class PartidaEspera extends javax.swing.JFrame {
 
-    private javax.swing.Timer tiempo;
-    private int posicion = 0;
-  
-    
-    /**
-     * Creates new form PartidaEspera
-     */
-   
-    
-    
-    private void tiempo() {
-        tiempo = new javax.swing.Timer(100, e -> barraCarga());
-        tiempo.start();
-    }
-    
-    private void barraCarga() {
-        posicion += 10;
+    // --- Tus Variables Existentes ---
+    private javax.swing.Timer tiempo; // Timer para tu animación
+    private int posicion = 0;         // Posición para tu animación
 
-        if (posicion > 380) {
-            posicion = 0; 
+    // --- Nuevas Variables Necesarias ---
+    private final controladorInicio controladorPrincipal;
+//    private final controladorPartidaEspera controlador;
+    private final String idSala;
+    private final String miNombreUsuario;
+    private DefaultListModel<String> listModelJugadores; // Modelo para el JList
+
+    /**
+     * Constructor de la Pantalla de Espera.
+     * @param ctrlPrincipal Controlador principal para obtener comunicación y manejar cierre.
+     * @param idSala ID de la sala a la que se entró.
+     * @param miNombre Nombre del jugador local.
+     */
+    public PartidaEspera(controladorInicio ctrlPrincipal, String idSala, String miNombre) {
+        initComponents(); // <<-- IMPORTANTE: Llama primero a esto
+        this.setLocationRelativeTo(null);
+        this.setTitle("Sala: " + idSala + " | Esperando - Battleship");
+
+        // Guardar referencias
+        this.controladorPrincipal = ctrlPrincipal;
+        this.idSala = idSala;
+        this.miNombreUsuario = miNombre;
+
+//        // Crear e inicializar el controlador específico
+//        controladorPartidaEspera ctrlEspera = null;
+//        if (ctrlPrincipal != null && ctrlPrincipal.getServerComunicacion() != null) {
+//            System.out.println("VIEW [PartidaEspera]: Creando controladorPartidaEspera para sala: " + idSala);
+//            ctrlEspera = new controladorPartidaEspera(ctrlPrincipal.getServerComunicacion(), idSala, this);
+//            ctrlPrincipal.setControladorEsperaActual(ctrlEspera);
+//             System.out.println("VIEW [PartidaEspera]: Controlador específico creado y asignado.");
+//        } else {
+//             System.err.println("VIEW [PartidaEspera] ERROR CRÍTICO: No se pudo obtener ServerComunicacion.");
+//             mostrarError("Error crítico de inicialización.", true);
+//             ctrlEspera = null;
+//             if(btnListo != null) btnListo.setEnabled(false); // Usar nombre de variable correcto
+//             if(btnSalir != null) btnSalir.setEnabled(false); // Usar nombre de variable correcto
+//        }
+//        this.controlador = ctrlEspera;
+//
+//        // Configurar la UI inicial
+//        configurarUIInicial();
+//
+//        // Iniciar tu animación de carga
+//        tiempo(); // Llama a tu método existente para iniciar el Timer
+    }
+
+     /**
+     * Configura el estado inicial de los componentes de la UI.
+     */
+    private void configurarUIInicial() {
+        if(lblNombreSala != null) {
+             lblNombreSala.setText("Sala: " + idSala);
+        } else {
+             System.err.println("VIEW [PartidaEspera] WARN: JLabel 'lblNombreSala' no encontrado.");
+        }
+//
+//        // Configurar el modelo para el JList (DEBES AÑADIR 'listaJugadores' EN EL DISEÑADOR)
+//        listModelJugadores = new DefaultListModel<>();
+//        if(listaJugadores != null) {
+//            listaJugadores.setModel(listModelJugadores);
+//        } else {
+//             System.err.println("VIEW [PartidaEspera] WARN: JList 'listaJugadores' no encontrado en initComponents. Debes añadirlo al diseñador.");
+//        }
+
+        // Añadir al jugador local a la lista
+        if (this.miNombreUsuario != null && listModelJugadores != null) {
+            listModelJugadores.addElement(this.miNombreUsuario + " (Tú)");
         }
 
-        jPanel4.setSize(posicion, 30);
+        // Usar jLabel3 para mensajes de estado
+        if (jLabel3 != null) {
+            jLabel3.setText("Esperando oponente...");
+        } else {
+            System.err.println("VIEW [PartidaEspera] WARN: JLabel 'jLabel3' no encontrado para mostrar estado.");
+        }
+
+        
+         if(btnSalir != null) btnSalir.setEnabled(true);
     }
 
     /**
@@ -54,8 +121,7 @@ public class PartidaEspera extends javax.swing.JFrame {
         jPanel4 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
+        btnSalir = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -102,26 +168,18 @@ public class PartidaEspera extends javax.swing.JFrame {
 
         jPanel1.add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 80, 680, 330));
 
-        jButton1.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        jButton1.setForeground(new java.awt.Color(255, 255, 255));
-        jButton1.setText("<");
-        jButton1.setBorderPainted(false);
-        jButton1.setContentAreaFilled(false);
-        jButton1.setFocusPainted(false);
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        btnSalir.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        btnSalir.setForeground(new java.awt.Color(255, 255, 255));
+        btnSalir.setText("<");
+        btnSalir.setBorderPainted(false);
+        btnSalir.setContentAreaFilled(false);
+        btnSalir.setFocusPainted(false);
+        btnSalir.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                btnSalirActionPerformed(evt);
             }
         });
-        jPanel1.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 10, -1, -1));
-
-        jButton2.setText("Temporal");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
-            }
-        });
-        jPanel1.add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(380, 430, -1, -1));
+        jPanel1.add(btnSalir, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 10, -1, -1));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -139,22 +197,14 @@ public class PartidaEspera extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalirActionPerformed
         // TODO add your handling code here:
 
         this.dispose();
-    }//GEN-LAST:event_jButton1ActionPerformed
-
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        // TODO add your handling code here:
-        TableroJuego tJ=new TableroJuego();
-        tJ.show();
-        this.dispose();
-    }//GEN-LAST:event_jButton2ActionPerformed
+    }//GEN-LAST:event_btnSalirActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
+    private javax.swing.JButton btnSalir;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;

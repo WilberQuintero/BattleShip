@@ -74,7 +74,13 @@ public class controladorInicio implements ServerEventListener {
         // this.vistaInicio = null;
     }
 
-    // --- Getters para dependencias compartidas ---
+   /**
+ * Devuelve el nombre de usuario confirmado por el servidor.
+ * @return El nombre del usuario registrado, o null si aún no se ha registrado.
+ */
+public String getNombreUsuarioRegistrado() {
+    return nombreUsuarioRegistrado;
+}
 
     /**
      * Devuelve la instancia compartida de ServerComunicacion.

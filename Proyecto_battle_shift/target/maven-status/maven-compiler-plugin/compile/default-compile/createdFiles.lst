@@ -2,7 +2,6 @@ View\UnirseJugar$1.class
 Model\dtos\TableroDTO.class
 View\PantallaInicio.class
 Model\dtos\JugadorDTO.class
-View\PartidaEspera$2.class
 View\TableroJuego$1.class
 Model\dtos\PartidaDTO.class
 Model\entidades\Barco.class
@@ -17,6 +16,7 @@ Model\dtos\DisparoDTO.class
 Model\entidades\Tablero.class
 View\UnirseJugar.class
 View\PantallaInicio$1.class
+Controler\controladorPartidaEspera.class
 View\Ajustes$2.class
 Model\dtos\PosicionDTO.class
 View\Partida$1.class
