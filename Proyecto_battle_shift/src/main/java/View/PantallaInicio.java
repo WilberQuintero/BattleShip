@@ -17,23 +17,23 @@ import javax.swing.JOptionPane; // Para mostrar errores simples
  */
 public class PantallaInicio extends javax.swing.JFrame {
 
-    // Referencia al controlador específico para esta vista
-    private controladorInicio controlador;
+    // Referencia al controlador principal
+    private final controladorInicio controlador;
 
     /**
-     * Creates new form PantallaInicio
+     * Constructor de PantallaInicio.
      */
     public PantallaInicio() {
         System.out.println("VIEW [PantallaInicio]: Inicializando componentes UI...");
-        initComponents(); // Inicializa componentes de Swing (autogenerado)
-        this.setLocationRelativeTo(null); // Centrar ventana
+        initComponents(); // Generado por NetBeans
+        this.setLocationRelativeTo(null); // Centrar
 
         System.out.println("VIEW [PantallaInicio]: Creando instancia del controladorInicio...");
-        // Crear la instancia del controlador que manejará la lógica
+        // Crear la única instancia del controlador principal aquí
         controlador = new controladorInicio();
-        // Pasar una referencia de esta vista al controlador para que pueda llamarla
+        // Pasar una referencia de esta vista al controlador
         controlador.setVistaInicio(this);
-        System.out.println("VIEW [PantallaInicio]: Controlador asignado a la vista.");
+        System.out.println("VIEW [PantallaInicio]: Controlador creado y vista asignada al controlador.");
     }
 
     /**
@@ -151,102 +151,78 @@ public class PantallaInicio extends javax.swing.JFrame {
 
     private void playButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playButtonActionPerformed
  System.out.println("VIEW [PantallaInicio]: Botón Jugar presionado.");
+System.out.println("VIEW [PantallaInicio]: Botón Jugar presionado.");
 
-     // --- NUEVO: Obtener y validar nombre de usuario ---
-     String nombreUsuario = txtNombreUsu.getText().trim(); // Obtiene y limpia espacios
-     if (nombreUsuario.isBlank()) {
-         System.out.println("VIEW [PantallaInicio]: Nombre de usuario vacío.");
-         JOptionPane.showMessageDialog(this, "Por favor, ingresa un nombre de usuario.", "Nombre Requerido", JOptionPane.WARNING_MESSAGE);
-         return; // Detener si no hay nombre
-     }
-     System.out.println("VIEW [PantallaInicio]: Nombre de usuario ingresado: " + nombreUsuario);
-     // --- FIN NUEVO ---
+        String nombreUsuario = txtNombreUsu.getText().trim();
+        if (nombreUsuario.isBlank()) {
+            System.out.println("VIEW [PantallaInicio]: Nombre de usuario vacío.");
+            JOptionPane.showMessageDialog(this, "Por favor, ingresa un nombre de usuario.", "Nombre Requerido", JOptionPane.WARNING_MESSAGE);
+            return; // Detener si no hay nombre
+        }
+        System.out.println("VIEW [PantallaInicio]: Nombre de usuario ingresado: " + nombreUsuario);
 
-     // Deshabilitar botón para evitar múltiples clics y dar feedback
-     playButton.setEnabled(false);
-     playButton.setText("Conectando...");
-     System.out.println("VIEW [PantallaInicio]: Botón deshabilitado. Llamando al controlador...");
-
-     // Llamar al método del controlador para iniciar conexión Y LUEGO registrar
-     if (controlador != null) {
-         // Pasamos el nombre al controlador AHORA
-         controlador.intentarConectarYRegistrar(nombreUsuario);
-     } else {
-         System.err.println("VIEW [PantallaInicio] ERROR: Controlador es nulo al presionar el botón.");
-         mostrarError("Error interno: Controlador no disponible.");
-         reactivarBotonPlay();
-     }
-
-        // IMPORTANTE: NO navegar a la siguiente pantalla aquí.
-        // La navegación se hará desde el método navegarASiguientePantalla(),
-        // que será llamado por el controlador cuando la conexión sea exitosa (onConectado).
-        // this.dispose(); // ¡NO AQUI!
+        // Deshabilitar botón y llamar al controlador
+        playButton.setEnabled(false);
+        playButton.setText("Conectando...");
+        System.out.println("VIEW [PantallaInicio]: Botón deshabilitado. Llamando a controlador.intentarConectarYRegistrar().");
+        if (controlador != null) {
+            controlador.intentarConectarYRegistrar(nombreUsuario);
+        } else {
+             System.err.println("VIEW [PantallaInicio] ERROR: Controlador es nulo.");
+             mostrarError("Error interno: Controlador no disponible."); // Llama a método helper
+             reactivarBotonPlay();
+        }
     }//GEN-LAST:event_playButtonActionPerformed
 
 
-     /**
-      * Método llamado por el Controlador cuando la conexión y registro son exitosos.
-      * Crea la pantalla UnirseJugar, crea su controlador específico, y los enlaza.
-      */
-      public void navegarASiguientePantalla() {
-          // Asegurarse de que esto se ejecute en el hilo de despacho de eventos de Swing
-          SwingUtilities.invokeLater(() -> {
-               System.out.println("VIEW [PantallaInicio]: Navegando a la pantalla Unirse/Jugar...");
-
-               // Crear la siguiente vista (UnirseJugar) y pasarle el controlador INICIAL
-               // para que pueda obtener ServerComunicacion y notificar cierre.
-               UnirseJugar pantallaUnirse = new UnirseJugar(this.controlador);
-
-               // --- La creación del controlador secundario y las asociaciones
-               // --- se hacen DENTRO del constructor de UnirseJugar ahora. ---
-
-               // Mostrar la nueva ventana y cerrar la actual
-               pantallaUnirse.setVisible(true);
-               this.dispose(); // Cierra esta ventana de inicio
-          });
-      }
-
-    
-
-    /**
-     * Muestra un mensaje de error al usuario.
-     * Llamado por el Controlador desde onError() o onDesconectado().
-     * @param mensaje El mensaje de error a mostrar.
+      /**
+     * Navega a la pantalla UnirseJugar.
+     * Llamado por controladorInicio desde onMensajeServidor -> REGISTRO_OK.
      */
-    public void mostrarError(String mensaje) {
+    public void navegarASiguientePantalla() {
         // Asegurarse de que se ejecute en el hilo de eventos de Swing
         SwingUtilities.invokeLater(() -> {
-            System.out.println("VIEW [PantallaInicio]: Mostrando error: " + mensaje);
-            JOptionPane.showMessageDialog(this, mensaje, "Error", JOptionPane.ERROR_MESSAGE);
-            // Podríamos querer reactivar el botón si el error impide continuar
-            reactivarBotonPlay();
+            System.out.println("VIEW [PantallaInicio]: Navegando a la pantalla Unirse/Jugar...");
+            // Crear la siguiente vista y pasarle el controlador INICIAL
+            UnirseJugar pantallaUnirse = new UnirseJugar(this.controlador);
+            // Mostrar la nueva pantalla
+            pantallaUnirse.setVisible(true);
+            // Cerrar esta ventana de inicio
+            this.dispose();
         });
     }
 
-     /**
-     * Muestra un estado de desconexión (podría ser en un JLabel o similar).
-     * Llamado por el Controlador desde onDesconectado().
-     * @param motivo Razón de la desconexión.
+    
+/**
+     * Muestra un mensaje de error al usuario.
+     * Llamado por el Controlador desde onError() o si falla el registro.
+     */
+    public void mostrarError(String mensaje) {
+        // Este método puede ser llamado desde otro hilo (listener), usar invokeLater
+        SwingUtilities.invokeLater(() -> {
+            System.out.println("VIEW [PantallaInicio]: Mostrando error: " + mensaje);
+            JOptionPane.showMessageDialog(this, mensaje, "Error", JOptionPane.ERROR_MESSAGE);
+            // reactivarBotonPlay(); // Reactivar aquí o en onDesconectado/onError
+        });
+    }
+
+    /**
+     * Muestra un estado de desconexión.
      */
      public void mostrarEstadoDesconectado(String motivo) {
           SwingUtilities.invokeLater(() -> {
                System.out.println("VIEW [PantallaInicio]: Mostrando estado desconectado: " + motivo);
-               // Actualizar algún componente de la UI, ej. un JLabel
-               // lblEstadoConexion.setText("Desconectado: " + motivo);
-               // Por ahora, mostramos un diálogo simple
+               // Podrías tener un JLabel para mostrar esto o usar un diálogo
                JOptionPane.showMessageDialog(this, "Desconectado: " + motivo, "Desconexión", JOptionPane.WARNING_MESSAGE);
           });
      }
-     
-     
 
 
     /**
      * Reactiva el botón 'Jugar' y restaura su texto.
-     * Llamado por el Controlador si la conexión falla o se desconecta.
+     * Llamado por el Controlador si la conexión/registro falla o se desconecta.
      */
     public void reactivarBotonPlay() {
-        // Asegurarse de que se ejecute en el hilo de eventos de Swing
         SwingUtilities.invokeLater(() -> {
             System.out.println("VIEW [PantallaInicio]: Reactivando botón Jugar.");
             playButton.setEnabled(true);
@@ -261,9 +237,6 @@ public class PantallaInicio extends javax.swing.JFrame {
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
-         */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -271,7 +244,7 @@ public class PantallaInicio extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (Exception ex) { // Captura genérica más simple
+        } catch (Exception ex) {
             java.util.logging.Logger.getLogger(PantallaInicio.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>

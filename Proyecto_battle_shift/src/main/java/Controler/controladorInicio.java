@@ -4,31 +4,36 @@
  */
 package Controler;
 
+// --- Imports ---
 
 import View.PantallaInicio;
 import View.UnirseJugar;
+import View.PartidaEspera; // Necesario si se maneja su cierre aquí
 import com.mycompany.servercomunicacion.ServerComunicacion;
 import com.mycompany.servercomunicacion.ServerEventListener;
-import java.awt.Component;
+// Utilidades
+import java.awt.Component; // Para saber qué vista está activa en onError
 import java.util.Map;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
+import javax.swing.SwingUtilities; // Para actualizaciones de UI seguras
+import javax.swing.JOptionPane;   // Para mostrar mensajes simples
 
 /**
  * Controlador principal para el flujo inicial de la aplicación cliente.
  * Responsable de manejar la conexión inicial y el registro del usuario.
  * Actúa como el listener principal para ServerComunicacion y delega
- * eventos específicos a otros controladores cuando sea apropiado.
+ * eventos específicos a otros controladores (controladorCrearPartida, controladorPartidaEspera).
  */
 public class controladorInicio implements ServerEventListener {
 
     // --- Atributos ---
     private final ServerComunicacion serverComunicacion; // Instancia única de comunicación
     private PantallaInicio vistaInicio;         // Referencia a la vista de inicio
-    private UnirseJugar vistaUnirseJugar;       // Referencia a la vista de unirse/crear (se asigna al navegar)
+    private UnirseJugar vistaUnirseJugar;       // Referencia a la vista de unirse/crear
+    private PartidaEspera vistaPartidaEspera;   // Referencia a la vista de espera
 
-    // Referencia al controlador secundario que está activo (si lo hay)
+    // Referencias a los controladores secundarios que pueden estar activos
     private controladorCrearPartida controladorCrearPartidaActual;
+    private controladorPartidaEspera controladorEsperaActual;
 
     // Estado temporal
     private String nombreUsuarioPendiente = null; // Nombre guardado mientras conecta/registra
@@ -40,9 +45,8 @@ public class controladorInicio implements ServerEventListener {
      */
     public controladorInicio() {
         System.out.println("CONTROLLER [Inicio]: Inicializando...");
-        String hostServidor = "localhost"; // O IP/DNS del servidor
-        int puertoServidor = 5000;       // Puerto del servidor
-        // Instanciar ServerComunicacion (manejar posible error)
+        String hostServidor = "localhost";
+        int puertoServidor = 5000;
         ServerComunicacion tempCom = null;
         try {
             tempCom = new ServerComunicacion(hostServidor, puertoServidor);
@@ -50,116 +54,107 @@ public class controladorInicio implements ServerEventListener {
             System.out.println("CONTROLLER [Inicio]: ServerComunicacion creado y listener asignado.");
         } catch (Exception e) {
              System.err.println("CONTROLLER [Inicio]: ERROR CRÍTICO al inicializar ServerComunicacion: " + e.getMessage());
-             // Podríamos mostrar un error fatal aquí o dejar serverComunicacion como null
         }
-        this.serverComunicacion = tempCom; // Asignar la instancia (puede ser null si falló)
+        this.serverComunicacion = tempCom; // Asignar la instancia
     }
 
     // --- Setters para Vistas ---
-
-    /**
-     * Establece la referencia a la vista de inicio.
-     */
+    // Estos permiten a las vistas registrarse con este controlador si es necesario,
+    // aunque principalmente es este controlador el que necesita referencias a ellas.
     public void setVistaInicio(PantallaInicio vista) {
         this.vistaInicio = vista;
     }
-
-    /**
-     * Establece la referencia a la vista de unirse/jugar.
-     * Útil si necesitamos interactuar con ella directamente más tarde.
-     */
     public void setVistaUnirseJugar(UnirseJugar vista) {
         this.vistaUnirseJugar = vista;
-        // Podríamos limpiar la referencia a vistaInicio aquí si ya no se usa
-        // this.vistaInicio = null;
+    }
+     public void setVistaPartidaEspera(PartidaEspera vista) {
+        this.vistaPartidaEspera = vista;
     }
 
-   /**
- * Devuelve el nombre de usuario confirmado por el servidor.
- * @return El nombre del usuario registrado, o null si aún no se ha registrado.
- */
-public String getNombreUsuarioRegistrado() {
-    return nombreUsuarioRegistrado;
-}
+    // --- Getters para dependencias compartidas ---
 
     /**
      * Devuelve la instancia compartida de ServerComunicacion.
-     * Necesario para que otras partes (como la Vista al crear otros controladores)
-     * puedan acceder a ella.
-     * @return La instancia de ServerComunicacion, o null si falló la inicialización.
      */
     public ServerComunicacion getServerComunicacion() {
         return serverComunicacion;
     }
 
+    /**
+     * Devuelve el nombre de usuario confirmado por el servidor.
+     */
+    public String getNombreUsuarioRegistrado() {
+        return nombreUsuarioRegistrado;
+    }
+
     // --- Métodos llamados por la Vista de Inicio ---
 
     /**
-     * Inicia el proceso de conexión al servidor y guarda el nombre
-     * para el registro posterior. Llamado desde PantallaInicio.
-     * @param nombreUsuario El nombre ingresado.
+     * Inicia el proceso de conexión al servidor y guarda el nombre para registrarlo después.
      */
     public void intentarConectarYRegistrar(String nombreUsuario) {
         System.out.println("CONTROLLER [Inicio]: Solicitud para conectar y registrar usuario: " + nombreUsuario);
-
         if (serverComunicacion == null) {
-             System.err.println("CONTROLLER [Inicio]: ServerComunicacion no inicializado.");
              if (vistaInicio != null) vistaInicio.mostrarError("Error interno: Comunicación no disponible.");
              return;
         }
         if (serverComunicacion.isConectado()) {
-             System.out.println("CONTROLLER [Inicio]: Ya está conectado.");
-             // Si ya está conectado pero no registrado, intentar registrar
-             if (this.nombreUsuarioRegistrado == null) {
-                  System.out.println("CONTROLLER [Inicio]: Ya conectado, intentando registrar nombre: " + nombreUsuario);
+             System.out.println("CONTROLLER [Inicio]: Ya conectado.");
+             if (this.nombreUsuarioRegistrado == null) { // Si conectado pero no registrado
+                  System.out.println("CONTROLLER [Inicio]: Intentando registrar nombre: " + nombreUsuario);
                   this.nombreUsuarioPendiente = nombreUsuario;
-                  // Llamar directamente al envío (onConectado no se llamará de nuevo)
-                   if (nombreUsuarioPendiente != null && serverComunicacion.isConectado()) {
+                   if (nombreUsuarioPendiente != null) { // Enviar registro directamente
                        serverComunicacion.enviarRegistroUsuario(nombreUsuarioPendiente);
-                   } else {
-                        // Mostrar error si el estado es inconsistente
-                         if (vistaInicio != null) vistaInicio.mostrarError("Error de estado al intentar registrar.");
                    }
-             } else {
-                  // Ya conectado Y registrado, quizás navegar directamente?
+             } else { // Ya conectado y registrado
                   System.out.println("CONTROLLER [Inicio]: Ya conectado y registrado como " + this.nombreUsuarioRegistrado);
-                  if (vistaInicio != null) vistaInicio.navegarASiguientePantalla();
+                  if (vistaInicio != null) vistaInicio.navegarASiguientePantalla(); // Navegar directamente
              }
              return;
         }
-        // Si no está conectado, iniciar conexión
+        // Iniciar conexión si no está conectado
         this.nombreUsuarioPendiente = nombreUsuario;
-        System.out.println("CONTROLLER [Inicio]: Nombre guardado. Solicitando conexión a ServerComunicacion...");
-        serverComunicacion.conectar(); // Inicia la conexión asíncrona
+        System.out.println("CONTROLLER [Inicio]: Nombre guardado. Solicitando conexión...");
+        serverComunicacion.conectar();
     }
 
     /**
-     * Solicita el cierre de la conexión. Llamado desde la UI.
+     * Solicita el cierre de la conexión.
      */
      public void solicitarDesconexion() {
          System.out.println("CONTROLLER [Inicio]: Solicitando desconexión...");
          if (serverComunicacion != null) {
-              serverComunicacion.desconectar();
+              serverComunicacion.desconectar(); // El callback onDesconectado manejará la limpieza
          }
      }
 
-    // --- Gestión del Controlador Secundario ---
+    // --- Gestión de Controladores Secundarios ---
 
-    /**
-     * Guarda la referencia al controlador que maneja la pantalla de Crear/Unirse Sala.
-     * @param controlador El controlador secundario activo.
-     */
+    /** Guarda referencia al controlador de Crear/Unir activo */
     public void setControladorCrearPartidaActual(controladorCrearPartida controlador) {
          System.out.println("CONTROLLER [Inicio]: Estableciendo controladorCrearPartidaActual: " + (controlador != null ? controlador.getClass().getSimpleName() : "null"));
+         clearControladorEsperaActual(); // Asegura que solo uno esté activo
          this.controladorCrearPartidaActual = controlador;
     }
-
-    /**
-     * Limpia la referencia al controlador secundario.
-     */
+    /** Limpia la referencia al controlador de Crear/Unir */
     public void clearControladorCrearPartidaActual() {
-         System.out.println("CONTROLLER [Inicio]: Limpiando controladorCrearPartidaActual.");
-         this.controladorCrearPartidaActual = null;
+         if (this.controladorCrearPartidaActual != null) {
+              System.out.println("CONTROLLER [Inicio]: Limpiando controladorCrearPartidaActual.");
+              this.controladorCrearPartidaActual = null;
+         }
+    }
+    /** Guarda referencia al controlador de Espera activo */
+     public void setControladorEsperaActual(controladorPartidaEspera controlador) {
+         System.out.println("CONTROLLER [Inicio]: Estableciendo controladorEsperaActual: " + (controlador != null ? controlador.getClass().getSimpleName() : "null"));
+         clearControladorCrearPartidaActual(); // Asegura que solo uno esté activo
+         this.controladorEsperaActual = controlador;
+    }
+    /** Limpia la referencia al controlador de Espera */
+    public void clearControladorEsperaActual() {
+         if (this.controladorEsperaActual != null) {
+              System.out.println("CONTROLLER [Inicio]: Limpiando controladorEsperaActual.");
+              this.controladorEsperaActual = null;
+         }
     }
 
     // --- Implementación de ServerEventListener ---
@@ -167,14 +162,14 @@ public String getNombreUsuarioRegistrado() {
     @Override
     public void onConectado() {
         System.out.println("CONTROLLER [Inicio]: ¡CONECTADO! Callback onConectado recibido.");
-        // Ahora que conectó, enviar el registro si hay un nombre pendiente
+        // Intentar enviar registro si hay nombre pendiente y estamos conectados
         if (nombreUsuarioPendiente != null && serverComunicacion != null && serverComunicacion.isConectado()) {
             System.out.println("CONTROLLER [Inicio][onConectado]: Estado verificado OK. Enviando registro para: " + nombreUsuarioPendiente);
             serverComunicacion.enviarRegistroUsuario(nombreUsuarioPendiente);
-            // NO NAVEGAR AÚN - Esperar a REGISTRO_OK
+            // NO NAVEGAR AQUÍ - Esperar a REGISTRO_OK
         } else {
-             System.err.println("CONTROLLER [Inicio][onConectado]: ERROR DE ESTADO - Conectado pero no se puede enviar registro.");
-             nombreUsuarioPendiente = null; // Limpiar
+             System.err.println("CONTROLLER [Inicio][onConectado]: ERROR DE ESTADO INESPERADO al intentar registrar.");
+             nombreUsuarioPendiente = null;
              if (vistaInicio != null) {
                  SwingUtilities.invokeLater(() -> {
                       vistaInicio.mostrarError("Error interno post-conexión.");
@@ -185,121 +180,167 @@ public String getNombreUsuarioRegistrado() {
         }
     }
 
-
-
     @Override
     public void onDesconectado(String motivo) {
         System.out.println("CONTROLLER [Inicio]: DESCONECTADO. Motivo: " + motivo);
-        clearControladorCrearPartidaActual(); // Limpiar referencia al secundario
+        // Limpiar todo el estado relevante
+        clearControladorCrearPartidaActual();
+        clearControladorEsperaActual();
         nombreUsuarioPendiente = null;
-        nombreUsuarioRegistrado = null; // Limpiar nombre registrado
+        nombreUsuarioRegistrado = null;
 
-        // Aseguramos actualizar la UI desde el hilo de Swing
+        // Volver a la pantalla inicial o mostrar estado desconectado
         SwingUtilities.invokeLater(() -> {
-            // 1. Cerrar o resetear la vista secundaria si estaba abierta
-            if (vistaUnirseJugar != null && vistaUnirseJugar.isDisplayable()) {
-                 System.out.println("CONTROLLER [Inicio][onDesconectado]: Cerrando vista UnirseJugar.");
-                 vistaUnirseJugar.setVisible(false);
-                 vistaUnirseJugar.dispose(); // Liberar recursos
-                 this.vistaUnirseJugar = null; // Limpiar referencia
-            }
+             // Cerrar vistas secundarias si existen y están visibles
+             if (vistaUnirseJugar != null && vistaUnirseJugar.isDisplayable()) { vistaUnirseJugar.dispose(); this.vistaUnirseJugar = null; }
+             if (vistaPartidaEspera != null && vistaPartidaEspera.isDisplayable()) { vistaPartidaEspera.dispose(); this.vistaPartidaEspera = null; }
 
-            // 2. Actualizar la vista de inicio si todavía existe y es visible
-            //    (o volver a mostrarla si la lógica de la app lo requiere)
-            if (vistaInicio != null) {
-                // Si no está visible, quizás queramos mostrarla de nuevo
-                if (!vistaInicio.isDisplayable()) {
-                    System.out.println("CONTROLLER [Inicio][onDesconectado]: Haciendo visible PantallaInicio.");
-                    vistaInicio.setVisible(true);
-                }
-                // Actualizar su estado para reflejar desconexión
-                System.out.println("CONTROLLER [Inicio][onDesconectado]: Actualizando estado de PantallaInicio.");
-                vistaInicio.mostrarEstadoDesconectado(motivo); // Método en PantallaInicio
-                vistaInicio.reactivarBotonPlay();           // Método en PantallaInicio
-            } else {
-                // Si no hay referencia a vistaInicio (quizás se cerró antes),
-                // mostramos un mensaje genérico. No intentamos recrearla aquí.
-                System.out.println("CONTROLLER [Inicio][onDesconectado]: No hay referencia a vistaInicio. Mostrando JOptionPane.");
-                JOptionPane.showMessageDialog(null, "Desconectado: " + motivo, "Desconexión", JOptionPane.INFORMATION_MESSAGE);
-            }
+             // Asegurar que la vista inicial esté visible y actualizada
+             if (vistaInicio != null) {
+                 if (!vistaInicio.isDisplayable()) vistaInicio.setVisible(true);
+                 vistaInicio.mostrarEstadoDesconectado(motivo);
+                 vistaInicio.reactivarBotonPlay();
+             } else {
+                 // Si incluso la vista inicial se cerró, no podemos hacer mucho más que loguear
+                 System.out.println("CONTROLLER [Inicio][onDesconectado]: No hay vista de inicio para actualizar.");
+                 // Podría mostrar un JOptionPane global como último recurso
+                 // JOptionPane.showMessageDialog(null, "Desconectado: " + motivo, "Desconexión", JOptionPane.INFORMATION_MESSAGE);
+             }
         });
     }
+
+    // Dentro de controladorInicio.java
 
     @Override
     public void onError(String mensajeError) {
         System.err.println("CONTROLLER [Inicio]: ERROR recibido: " + mensajeError);
-        // No limpiar controlador secundario necesariamente, podría ser temporal
-        nombreUsuarioPendiente = null; // Limpiar si el error ocurrió durante registro/conexión
+        nombreUsuarioPendiente = null;
         SwingUtilities.invokeLater(() -> {
-             // Mostrar error en la vista activa
-             Component vistaActiva = vistaUnirseJugar != null && vistaUnirseJugar.isDisplayable() ? vistaUnirseJugar : vistaInicio;
-             if (vistaActiva instanceof UnirseJugar) {
-                 ((UnirseJugar)vistaActiva).mostrarError(mensajeError);
-                 ((UnirseJugar)vistaActiva).reactivarBotones(); // Método hipotético
+             Component vistaActiva = null;
+             // Determinar qué vista está activa (puede necesitar lógica más robusta)
+             if (vistaPartidaEspera != null && vistaPartidaEspera.isDisplayable()) vistaActiva = vistaPartidaEspera;
+             else if (vistaUnirseJugar != null && vistaUnirseJugar.isDisplayable()) vistaActiva = vistaUnirseJugar;
+             else vistaActiva = vistaInicio;
+
+             // Llamar al método mostrarError correcto en cada vista
+             if (vistaActiva instanceof PartidaEspera) {
+                 
+                   ((PartidaEspera)vistaActiva).volverAPantallaAnterior(mensajeError); 
+                   
+                   
+             } else if (vistaActiva instanceof UnirseJugar) {
+                  ((UnirseJugar)vistaActiva).mostrarError(mensajeError);
+                  ((UnirseJugar)vistaActiva).reactivarBotones(); // Asumiendo que existe este método
              } else if (vistaActiva instanceof PantallaInicio) {
-                 ((PantallaInicio)vistaActiva).mostrarError(mensajeError);
-                 ((PantallaInicio)vistaActiva).reactivarBotonPlay();
+                  ((PantallaInicio)vistaActiva).mostrarError(mensajeError);
+                  ((PantallaInicio)vistaActiva).reactivarBotonPlay();
              } else {
+                  // Fallback si no hay vista conocida
                   JOptionPane.showMessageDialog(null, mensajeError, "Error", JOptionPane.ERROR_MESSAGE);
              }
         });
     }
 
+
+
     @Override
     public void onMensajeServidor(String tipo, Map<String, Object> datos) {
         System.out.println("CONTROLLER [Inicio]: Mensaje genérico recibido - Tipo: " + tipo + ", Datos: " + datos);
 
-        // Delegar a controlador secundario si existe y el tipo de mensaje es relevante para él
-        if (controladorCrearPartidaActual != null &&
-            (tipo.equals("SALA_CREADA_OK") || tipo.equals("ERROR_CREAR_SALA") ||
-             tipo.equals("UNIDO_OK") || tipo.equals("ERROR_UNIRSE_SALA")
-             /* || otros tipos relevantes para Crear/Unir */ ))
-        {
-             System.out.println("CONTROLLER [Inicio]: Delegando mensaje tipo '" + tipo + "' a controladorCrearPartidaActual.");
-             boolean exito = !(tipo.startsWith("ERROR_")); // Simplificación: true si no empieza con ERROR
-             // Llamar al método apropiado en el controlador secundario (Asegúrate que existan)
-              if (tipo.contains("CREAR")) {
-                  controladorCrearPartidaActual.procesarRespuestaCrearSala(exito, datos);
-              } else if (tipo.contains("UNIRSE")) {
-                   controladorCrearPartidaActual.procesarRespuestaUnirseSala(exito, datos);
-              }
-              // Añadir más delegaciones si es necesario (ej. lista de salas)
+        // Determinar a qué controlador delegar o si manejar localmente
+        boolean delegadoACrearPartida = false;
+        boolean delegadoAEspera = false;
 
-        } else {
-            // Si no hay delegado o el mensaje es para este controlador, procesarlo aquí
-            System.out.println("CONTROLLER [Inicio]: Procesando mensaje tipo '" + tipo + "' localmente.");
-            SwingUtilities.invokeLater(() -> {
+        // --- Intenta delegar a Controlador de Espera ---
+        if (controladorEsperaActual != null && esMensajeParaEspera(tipo)) {
+             System.out.println("CONTROLLER [Inicio]: Delegando mensaje tipo '" + tipo + "' a controladorEsperaActual.");
+             delegadoAEspera = true; // Marcar que se intentó delegar
+             // Envolver en invokeLater por si acaso la delegación toca UI indirectamente
+             SwingUtilities.invokeLater(() -> {
                  switch(tipo) {
-                     case "REGISTRO_OK":
-                         System.out.println("CONTROLLER [Inicio]: Servidor confirma REGISTRO_OK para " + datos.get("nombre"));
-                         this.nombreUsuarioRegistrado = (String) datos.get("nombre");
-                         nombreUsuarioPendiente = null; // Limpiar pendiente
-                         // Navegar a la pantalla UnirseJugar
-                         if (vistaInicio != null) {
-                              System.out.println("CONTROLLER [Inicio]: Registro exitoso. Navegando a Unirse/Jugar...");
-                              vistaInicio.navegarASiguientePantalla(); // Este método crea UnirseJugar y los controladores
-                         }
-                         break;
-
-                     case "ERROR_REGISTRO":
-                         System.err.println("CONTROLLER [Inicio]: Servidor reporta ERROR_REGISTRO: " + datos.get("error"));
-                         nombreUsuarioPendiente = null;
-                         if (vistaInicio != null) {
-                              vistaInicio.mostrarError("Error de Registro: " + datos.get("error"));
-                              vistaInicio.reactivarBotonPlay();
-                         }
-                          solicitarDesconexion(); // Forzar desconexión si el registro falló
-                         break;
-
-                     // Otros mensajes que SÍ maneja este controlador principal:
-                     // case "LISTA_JUGADORES_GLOBAL": ...
-                     // case "MENSAJE_BROADCAST": ...
-
-                     default:
-                         System.out.println("CONTROLLER [Inicio]: Mensaje tipo '" + tipo + "' no manejado.");
-                         break;
+                      case "ACTUALIZACION_SALA":
+                      case "OPONENTE_LISTO":
+                      case "AMBOS_LISTOS":
+                           controladorEsperaActual.procesarActualizacionSala(datos);
+                           break;
+                      case "INICIAR_COLOCACION": // Añadido de ejemplo anterior
+                           controladorEsperaActual.procesarInicioColocacion(datos);
+                           break;
+                      case "INICIAR_PARTIDA":
+                           controladorEsperaActual.procesarInicioPartida(datos);
+                           clearControladorEsperaActual(); // Limpiar al iniciar partida
+                           break;
+                       case "OPONENTE_SALIO":
+                            controladorEsperaActual.procesarSalidaOponente(datos);
+                            clearControladorEsperaActual(); // Limpiar al salir oponente
+                            break;
+                       case "ERROR_SALA":
+                            controladorEsperaActual.procesarErrorSala(datos);
+                            clearControladorEsperaActual(); // Limpiar si hay error grave de sala
+                            break;
+                      // No poner default aquí para permitir que otros bloques manejen si este delegado es null
                  }
              });
-        } // Fin else (manejo local)
+        }
+        // --- Intenta delegar a Controlador de Crear/Unir (SOLO SI NO SE DELEGÓ A ESPERA) ---
+        else if (controladorCrearPartidaActual != null && esMensajeParaCrearUnir(tipo)) {
+            System.out.println("CONTROLLER [Inicio]: Delegando mensaje tipo '" + tipo + "' a controladorCrearPartidaActual.");
+            delegadoACrearPartida = true; // Marcar que se intentó delegar
+             // Envolver en invokeLater
+             SwingUtilities.invokeLater(() -> {
+                 boolean exito = !(tipo.startsWith("ERROR_"));
+                  if (tipo.contains("CREAR")) {
+                      controladorCrearPartidaActual.procesarRespuestaCrearSala(exito, datos);
+                  } else if (tipo.contains("UNIRSE")) {
+                       controladorCrearPartidaActual.procesarRespuestaUnirseSala(exito, datos);
+                  }
+            });
+        }
+        // --- Si no fue delegado, manejar localmente (Registro) ---
+        else if (tipo.equals("REGISTRO_OK") || tipo.equals("ERROR_REGISTRO")) {
+            System.out.println("CONTROLLER [Inicio]: Procesando mensaje tipo '" + tipo + "' localmente.");
+            SwingUtilities.invokeLater(() -> {
+                 if (tipo.equals("REGISTRO_OK")) {
+                     System.out.println("CONTROLLER [Inicio]: Servidor confirma REGISTRO_OK para " + datos.get("nombre"));
+                     this.nombreUsuarioRegistrado = (String) datos.get("nombre");
+                     nombreUsuarioPendiente = null;
+                     if (vistaInicio != null && vistaInicio.isDisplayable()) { // Asegurarse que la vista de inicio aún existe
+                          System.out.println("CONTROLLER [Inicio]: Registro exitoso. Navegando a Unirse/Jugar...");
+                          vistaInicio.navegarASiguientePantalla(); // Llama al método que crea UnirseJugar
+                     } else {
+                          System.out.println("CONTROLLER [Inicio]: Registro OK, pero vistaInicio no disponible para navegar.");
+                     }
+                 } else { // ERROR_REGISTRO
+                     System.err.println("CONTROLLER [Inicio]: Servidor reporta ERROR_REGISTRO: " + datos.get("error"));
+                     nombreUsuarioPendiente = null;
+                     if (vistaInicio != null) {
+                          vistaInicio.mostrarError("Error de Registro: " + datos.get("error"));
+                          vistaInicio.reactivarBotonPlay();
+                     }
+                      solicitarDesconexion(); // Forzar desconexión
+                 }
+            });
+        }
+        // --- Mensaje no manejado ---
+        else {
+             System.out.println("CONTROLLER [Inicio]: Mensaje tipo '" + tipo + "' no manejado o sin delegado activo.");
+        }
     } // Fin onMensajeServidor
-}
+
+
+    // --- Métodos privados Helper para clasificación de mensajes ---
+    private boolean esMensajeParaCrearUnir(String tipo) {
+         return tipo.equals("SALA_CREADA_OK") || tipo.equals("ERROR_CREAR_SALA") ||
+                tipo.equals("UNIDO_OK") || tipo.equals("ERROR_UNIRSE_SALA");
+                // Añadir LISTA_SALAS_RESPUESTA si se maneja en CrearPartida
+    }
+
+    private boolean esMensajeParaEspera(String tipo) {
+         return tipo.equals("ACTUALIZACION_SALA") || tipo.equals("OPONENTE_LISTO") ||
+                tipo.equals("AMBOS_LISTOS") || tipo.equals("INICIAR_COLOCACION") ||
+                tipo.equals("INICIAR_PARTIDA") || tipo.equals("OPONENTE_SALIO") ||
+                tipo.equals("ERROR_SALA");
+                // Añadir CHAT_SALA si se maneja en Espera
+    }
+
+} // Fin clase controladorInicio

@@ -145,11 +145,32 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
              // blackboard.enviarEventoBlackBoard(null, iniciarPartidaEvento); // Null como cliente origen
         }
 
-        // Indicar al blackboard que el procesamiento terminó (estilo Dominó)
-        blackboard.respuestaFuenteC(cliente, evento); // O un evento de respuesta específico
+        // --- Verificar si la sala está llena y disparar inicio de colocación ---
+        if (jugadoresActuales.size() == MAX_JUGADORES_SALA) {
+            System.out.println("UNIRSE_SALA_KS: ¡Sala '" + idSala + "' llena! Creando evento INICIAR_FASE_COLOCACION.");
+
+            // Crear el evento para que otra KS inicie la fase de colocación
+            Evento eventoInicioColocacion = new Evento("INICIAR_FASE_COLOCACION");
+            eventoInicioColocacion.agregarDato("idSala", idSala);
+
+            // Enviar el evento al blackboard para que lo procese la KS correspondiente
+            // Usamos null como cliente origen porque es un evento interno del sistema.
+            blackboard.enviarEventoBlackBoard(null, eventoInicioColocacion);
+
+            // Ya NO notificamos "SALA_LLENA" al controller directamente,
+            // la nueva KS se encargará de la lógica de inicio.
+            // // controller.notificarCambio("SALA_LLENA;" + idSala); // <- QUITAR O COMENTAR
+
+        } else {
+             System.out.println("UNIRSE_SALA_KS: Sala '" + idSala + "' tiene " + jugadoresActuales.size() + " jugadores. Esperando más.");
+        }
+
+        // Indicar finalización del evento UNIRSE_SALA
+        blackboard.respuestaFuenteC(cliente, evento);
+    
     }
 
-    // --- Métodos de ayuda para enviar respuestas ---
+  
 
     private void enviarRespuestaError(Socket cliente, String mensajeError) {
         Evento respuesta = new Evento("ERROR_UNIRSE_SALA");

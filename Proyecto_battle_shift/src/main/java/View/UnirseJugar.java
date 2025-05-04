@@ -6,6 +6,7 @@ package View;
 
 import Controler.controladorCrearPartida;
 import Controler.controladorInicio;
+import com.mycompany.servercomunicacion.ServerComunicacion;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
@@ -24,7 +25,7 @@ public class UnirseJugar extends javax.swing.JFrame {
     // --- Atributos ---
     // Controlador específico para las acciones de ESTA pantalla
     private final controladorCrearPartida controlador;
-    // Referencia al controlador principal (útil para desconectar al cerrar)
+    // Referencia al controlador principal (útil para desconectar al cerrar o navegar)
     private final controladorInicio controladorPrincipal;
 
 
@@ -35,103 +36,80 @@ public class UnirseJugar extends javax.swing.JFrame {
      */
     public UnirseJugar(controladorInicio ctrlInicio) {
         initComponents(); // Inicializa componentes Swing (generado por NetBeans)
-        this.setLocationRelativeTo(null); // Centrar ventana
+        this.setLocationRelativeTo(null); // Centrar
         this.controladorPrincipal = ctrlInicio; // Guardar referencia
 
         // --- Crear e inicializar el controlador específico ---
         controladorCrearPartida ctrlSecundario = null;
         if (ctrlInicio != null && ctrlInicio.getServerComunicacion() != null) {
             System.out.println("VIEW [UnirseJugar]: Creando controladorCrearPartida...");
+            // Le pasamos la instancia de ServerComunicacion obtenida del controlador principal
             ctrlSecundario = new controladorCrearPartida(ctrlInicio.getServerComunicacion());
-            ctrlSecundario.setVista(this); // El nuevo controlador conoce esta vista
-            // Informar al controlador principal sobre este controlador secundario activo
+            // Le decimos al controlador específico cuál es su vista
+            ctrlSecundario.setVista(this);
+             // Le decimos al controlador principal cuál es el controlador secundario activo ahora
             ctrlInicio.setControladorCrearPartidaActual(ctrlSecundario);
             System.out.println("VIEW [UnirseJugar]: Controlador específico creado y asignado.");
         } else {
             // Error grave si no podemos obtener la comunicación
-            System.err.println("VIEW [UnirseJugar] ERROR CRÍTICO: No se pudo obtener ServerComunicacion.");
-            mostrarError("Error crítico de inicialización. Cierre la aplicación.");
-            // Deshabilitar funcionalidad si falla
-            btnCrearSala.setEnabled(false);
-            btnUnirseSala.setEnabled(false);
+             System.err.println("VIEW [UnirseJugar] ERROR CRÍTICO: No se pudo obtener ServerComunicacion del controlador principal.");
+             mostrarError("Error crítico de inicialización. Cierre la aplicación.");
+             // Deshabilitar funcionalidad si falla
+             if(btnCrearSala != null) btnCrearSala.setEnabled(false); // Verificar null por si initComponents falla
+             if(btnUnirseSala != null) btnUnirseSala.setEnabled(false);
         }
-        this.controlador = ctrlSecundario; // Asignar el controlador creado a la variable de instancia
+        // Asignar el controlador creado (puede ser null si falló arriba) a la variable de instancia
+        this.controlador = ctrlSecundario;
     }
-
-    // --- Métodos llamados por el Controlador para actualizar esta UI ---
-
     // --- Este método va DENTRO de tu clase View.UnirseJugar.java ---
 
-    /**
-     * Navega a la pantalla de espera (PartidaEspera) después de crear o unirse exitosamente.
-     * Crea la nueva vista y su controlador asociado, y actualiza las referencias en controladorInicio.
+   /**
+     * Navega a la pantalla de espera después de crear o unirse exitosamente.
+     * Crea la nueva vista y su controlador asociado, y actualiza las referencias.
      * @param idSala El ID de la sala a la que se entró.
      */
     public void navegarAPantallaEspera(String idSala) {
-         // Asegurar que la creación y actualización de UI ocurra en el hilo de eventos de Swing
+         // Asegurarse de que se ejecute en el hilo de Swing
          SwingUtilities.invokeLater(() -> {
              System.out.println("VIEW [UnirseJugar]: Navegando a PantallaEspera para sala: " + idSala);
 
-             // 1. Verificar que tenemos la referencia al controlador principal
-             //    Es necesario para obtener el nombre del usuario y pasar la comunicación
-             //    a la nueva pantalla/controlador.
              if (this.controladorPrincipal == null) {
-                 System.err.println("VIEW [UnirseJugar] ERROR CRÍTICO: controladorPrincipal es null. No se puede continuar.");
-                 // Usar el método mostrarError de esta ventana (UnirseJugar)
-                 mostrarError("Error interno grave (Controlador Principal no encontrado). No se puede abrir la sala.");
-                 reactivarBotones(); // Reactivar botones aquí ya que no se navega
-                 return; // Detener ejecución
+                 System.err.println("VIEW [UnirseJugar] ERROR: controladorPrincipal es null. No se puede obtener nombre de usuario ni navegar.");
+                 mostrarError("Error interno grave al intentar abrir la sala.");
+                 reactivarBotones();
+                 return;
              }
 
-             // 2. Obtener el nombre del usuario que se registró exitosamente
-             //    Necesitas haber añadido el getter en controladorInicio.java
              String miNombre = this.controladorPrincipal.getNombreUsuarioRegistrado();
              if (miNombre == null || miNombre.isBlank()) {
-                 // Si no podemos obtener el nombre, es un problema, pero podemos continuar con un default
-                 System.err.println("VIEW [UnirseJugar] WARN: No se pudo obtener el nombre de usuario registrado desde controladorInicio. Usando default.");
+                 System.err.println("VIEW [UnirseJugar] ERROR: No se pudo obtener el nombre de usuario registrado.");
                  miNombre = "Jugador ???";
              }
              System.out.println("VIEW [UnirseJugar]: Nombre de usuario para PantallaEspera: " + miNombre);
 
-
-             // --- Navegación Real ---
              try {
-                  // 3. Crear la NUEVA ventana de espera (PartidaEspera)
-                  //    Le pasamos el controlador principal, el ID de la sala y el nombre del jugador.
-                  //    El constructor de PartidaEspera se encargará de crear su propio controlador
-                  //    y de registrarse como el controlador secundario activo en controladorInicio.
                   System.out.println("VIEW [UnirseJugar]: Creando instancia de PartidaEspera...");
+                  // Crear la pantalla de espera, pasando las referencias necesarias
                   PartidaEspera pantallaEspera = new PartidaEspera(this.controladorPrincipal, idSala, miNombre);
 
-                  // 4. Limpiar la referencia al controlador de ESTA pantalla (UnirseJugar)
-                  //    en el controlador principal, ya que vamos a cerrar esta ventana.
                   System.out.println("VIEW [UnirseJugar]: Limpiando controladorCrearPartidaActual en controladorInicio...");
                   this.controladorPrincipal.clearControladorCrearPartidaActual();
 
-                  // 5. Hacer visible la nueva pantalla de espera
                   System.out.println("VIEW [UnirseJugar]: Haciendo visible PartidaEspera...");
                   pantallaEspera.setVisible(true);
 
-                  // 6. Cerrar ESTA ventana (UnirseJugar)
                   System.out.println("VIEW [UnirseJugar]: Cerrando esta ventana (dispose)...");
                   this.dispose();
 
              } catch (Exception e) {
-                  // Capturar cualquier error inesperado durante la creación/visualización
-                  // de la ventana PartidaEspera.
                   System.err.println("VIEW [UnirseJugar] ERROR CRÍTICO: Excepción al crear/mostrar PartidaEspera: " + e.getMessage());
-                  e.printStackTrace(); // Imprimir stack trace para depuración
-                  // Mostrar error en ESTA ventana, ya que no pudimos navegar
+                  e.printStackTrace();
                   mostrarError("No se pudo abrir la pantalla de espera.\nError: " + e.getMessage());
-                   // Reactivar botones para permitir reintento si falla la navegación
                    reactivarBotones();
-                   // Limpiar referencia por si acaso
                    this.controladorPrincipal.clearControladorCrearPartidaActual();
              }
-             // --- Fin Navegación Real ---
-
-         }); // Fin de invokeLater
-    } // Fin de navegarAPantallaEspera
+         });
+    }
 
 
     /**
@@ -140,22 +118,38 @@ public class UnirseJugar extends javax.swing.JFrame {
      * @param mensaje El mensaje de error.
      */
     public void mostrarError(String mensaje) {
-        // Asegurar que se ejecuta en el hilo de Swing
+        // Asegurar ejecución en EDT
         SwingUtilities.invokeLater(() -> {
              System.out.println("VIEW [UnirseJugar]: Mostrando error: " + mensaje);
              JOptionPane.showMessageDialog(this, mensaje, "Error", JOptionPane.ERROR_MESSAGE);
-             // Como hubo un error, reactivar botones para que el usuario intente de nuevo
+             // Siempre reactivar botones después de un error mostrado en esta pantalla
              reactivarBotones();
         });
     }
 
     /** Método helper para deshabilitar botones y mostrar estado */
     private void deshabilitarBotones(String textoEstado) {
-         btnCrearSala.setEnabled(false);
-         btnUnirseSala.setEnabled(false);
-         btnCrearSala.setText(textoEstado); // Mostrar estado en un botón
-         btnUnirseSala.setText("...");
+        if (btnCrearSala != null) {
+             btnCrearSala.setEnabled(false);
+             btnCrearSala.setText(textoEstado);
+        }
+         if (btnUnirseSala != null) {
+             btnUnirseSala.setEnabled(false);
+              // Solo poner texto de estado en el botón que se presionó
+             if (!"Creando...".equals(textoEstado)) {
+                 btnUnirseSala.setText("...");
+             } else {
+                 btnUnirseSala.setText(textoEstado); // Si era crear, el otro también muestra creando? o solo puntos?
+             }
+             if (!"Uniendo...".equals(textoEstado)) {
+                  btnCrearSala.setText("...");
+             } else {
+                  btnCrearSala.setText(textoEstado);
+             }
+
+         }
     }
+
 
     /** Método helper para reactivar ambos botones */
     public void reactivarBotones() {
@@ -165,31 +159,26 @@ public class UnirseJugar extends javax.swing.JFrame {
 
     /** Reactiva el botón de Crear Sala */
     public void reactivarBotonCrear() {
-        // Asegurar que se ejecuta en el hilo de Swing
+        // Asegurar ejecución en EDT
         SwingUtilities.invokeLater(() -> {
-            btnCrearSala.setEnabled(true);
-            btnCrearSala.setText("Crear Sala");
-             // Reactivar el otro botón también si no hay acción en curso
-             if (btnUnirseSala.getText().equals("...")) {
-                 btnUnirseSala.setEnabled(true);
-                 btnUnirseSala.setText("Unirse a Sala");
-             }
+            if (btnCrearSala != null) {
+                 btnCrearSala.setEnabled(true);
+                 btnCrearSala.setText("Crear Sala");
+            }
         });
     }
 
      /** Reactiva el botón de Unirse a Sala */
     public void reactivarBotonUnirse() {
-         // Asegurar que se ejecuta en el hilo de Swing
+         // Asegurar ejecución en EDT
          SwingUtilities.invokeLater(() -> {
-             btnUnirseSala.setEnabled(true);
-             btnUnirseSala.setText("Unirse a Sala");
-              // Reactivar el otro botón también si no hay acción en curso
-             if (btnCrearSala.getText().equals("...")) {
-                 btnCrearSala.setEnabled(true);
-                 btnCrearSala.setText("Crear Sala");
+             if (btnUnirseSala != null) {
+                 btnUnirseSala.setEnabled(true);
+                 btnUnirseSala.setText("Unirse a Sala");
              }
          });
     }
+
 
 
     /**
@@ -326,21 +315,20 @@ public class UnirseJugar extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnCrearSalaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCrearSalaActionPerformed
-       String nombreSala = txtCrearSala.getText().trim();
-        System.out.println("VIEW [UnirseJugar]: Botón Crear presionado. Nombre: " + nombreSala);
-        if (nombreSala.isBlank()) {
-            mostrarError("Ingresa un nombre para crear la sala.");
-            return;
-        }
-        // Deshabilitar botones mientras se procesa
-        deshabilitarBotones("Creando...");
-        if (controlador != null) {
-             System.out.println("VIEW [UnirseJugar]: Llamando a controladorCrearPartida.solicitarCreacionSala...");
-             controlador.solicitarCreacionSala(nombreSala);
-        } else {
+      String nombreSala = txtCrearSala.getText().trim();
+         System.out.println("VIEW [UnirseJugar]: Botón Unirse presionado. Nombre: " + nombreSala);
+         if (nombreSala.isBlank()) {
+             mostrarError("Ingresa el nombre de la sala para unirte.");
+             return;
+         }
+         deshabilitarBotones("Uniendo..."); // Llama a helper
+         if (controlador != null) {
+             System.out.println("VIEW [UnirseJugar]: Llamando a controladorCrearPartida.solicitarCrearSala...");
+              controlador.solicitarCreacionSala(nombreSala);
+         } else {
              mostrarError("Error interno: Controlador no disponible.");
              reactivarBotones();
-        }
+         }
     }//GEN-LAST:event_btnCrearSalaActionPerformed
 
     private void btnUnirseSalaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUnirseSalaActionPerformed
@@ -350,7 +338,7 @@ public class UnirseJugar extends javax.swing.JFrame {
              mostrarError("Ingresa el nombre de la sala para unirte.");
              return;
          }
-          // Deshabilitar botones mientras se procesa
+          
          deshabilitarBotones("Uniendo...");
          if (controlador != null) {
              System.out.println("VIEW [UnirseJugar]: Llamando a controladorCrearPartida.solicitarUnirseSala...");

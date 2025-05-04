@@ -34,11 +34,11 @@ View\TableroJuego.class
 View\Ajustes$3.class
 Model\dtos\BarcoDTO.class
 View\UnirseJugar$5.class
+Controler\controladorTablero.class
 View\PantallaInicio$2.class
 View\TableroJuego$2.class
 Controler\controladorInicio.class
 View\Derrota$1.class
-View\TableroJuego$4.class
 Model\entidades\Jugador.class
 View\Ajustes$1.class
 Controler\controladorCrearPartida.class

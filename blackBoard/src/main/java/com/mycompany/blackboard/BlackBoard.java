@@ -2,25 +2,24 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.mycompany.blackboard; // Asegúrate que el paquete sea el correcto
+package com.mycompany.blackboard; 
 
 // --- Importaciones Correctas ---
 import ks.CrearSalaKS;
 import ks.UnirseSalaKS;
 import ks.ConnectionKS;
-import ks.IniciarPartidaKS;
 import com.mycompany.battleship.commons.Evento;
 import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 
-
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap; // Añadido para getDatosSala
+import java.util.HashMap; 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import ks.IniciarColocacionKS;
 import ks.RegistrarUsuarioKS;
 
 
@@ -91,6 +90,7 @@ public class BlackBoard implements IBlackboard {
         knowledgeSources.add(new CrearSalaKS(this, this.server, this.controller));
         knowledgeSources.add(new UnirseSalaKS(this, this.server, this.controller));
         knowledgeSources.add(new RegistrarUsuarioKS(this, this.server, this.controller));
+        knowledgeSources.add(new IniciarColocacionKS(this, this.server, this.controller));
 
         // TODO: Añadir futuras KS aquí...
 
