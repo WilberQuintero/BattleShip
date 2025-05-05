@@ -9,16 +9,16 @@ package Controler;
  * @author caarl
  */
 
-
-import View.UnirseJugar; // Asume que esta es tu pantalla de Crear/Unirse
+// --- Imports ---
+import View.UnirseJugar; // La Vista que este controlador maneja
 import com.mycompany.servercomunicacion.ServerComunicacion;
-import java.util.Map; // Para procesar respuestas
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
+import java.util.Map;
+import javax.swing.SwingUtilities; // Para asegurar actualizaciones de UI en el hilo correcto
+import javax.swing.JOptionPane;   // Para mostrar mensajes de error
 
 /**
  * Controlador específico para la pantalla/lógica de Crear y Unirse a una Sala (Partida).
- * Recibe la instancia de ServerComunicacion del controlador principal (controladorInicio).
+ * Navega para Crear Sala de forma optimista, pero ESPERA confirmación para Unirse a Sala.
  */
 public class controladorCrearPartida {
 
@@ -50,131 +50,185 @@ public class controladorCrearPartida {
 
     /**
      * Envía la solicitud para crear una nueva sala al servidor Y NAVEGA INMEDIATAMENTE.
+     * (Mantenemos optimista esta acción si así lo deseas).
      * @param idSala El nombre/ID deseado para la sala.
      */
     public void solicitarCreacionSala(String idSala) {
         System.out.println("CONTROLLER [CrearPartida]: Solicitud de Vista para crear sala: " + idSala);
-        if (!serverComunicacion.isConectado()) {
-             handleNotConnectedError("crear sala");
-             return;
-        }
+        if (!handleNotConnectedError("crear sala")) return;
 
         // 1. Enviar el evento al servidor
         serverComunicacion.crearSala(idSala);
         System.out.println("CONTROLLER [CrearPartida]: Solicitud CREAR_SALA enviada a ServerComunicacion.");
 
         // 2. Navegar INMEDIATAMENTE (Optimista)
-        navegarOptimistaAEspera(idSala, "Crear"); // Llama al método helper
+        navegarOptimistaAEspera(idSala, "Crear");
     }
 
     /**
-     * Envía la solicitud para unirse a una sala existente al servidor Y NAVEGA INMEDIATAMENTE.
+     * Envía la solicitud para unirse a una sala existente al servidor.
+     * **YA NO NAVEGA INMEDIATAMENTE**. Espera la respuesta del servidor.
      * @param idSala El ID de la sala a la que unirse.
      */
     public void solicitarUnirseSala(String idSala) {
         System.out.println("CONTROLLER [CrearPartida]: Solicitud de Vista para unirse a sala: " + idSala);
-         if (!serverComunicacion.isConectado()) {
-             handleNotConnectedError("unirse a sala");
-             return;
-        }
+         if (!handleNotConnectedError("unirse a sala")) return;
 
         // 1. Enviar el evento al servidor
         serverComunicacion.unirseASala(idSala);
-        System.out.println("CONTROLLER [CrearPartida]: Solicitud UNIRSE_SALA enviada a ServerComunicacion.");
+        System.out.println("CONTROLLER [CrearPartida]: Solicitud UNIRSE_SALA enviada. Esperando respuesta...");
 
-        // 2. Navegar INMEDIATAMENTE (Optimista)
-        navegarOptimistaAEspera(idSala, "Unirse"); // Llama al método helper
+        // --- NAVEGACIÓN OPTIMISTA ELIMINADA DE AQUÍ ---
     }
 
     // --- Métodos Helpers Internos ---
 
     /**
-     * Maneja el error común de no estar conectado.
-     * @param accion Descripción de la acción fallida.
-     */
-    private void handleNotConnectedError(String accion) {
-        System.err.println("CONTROLLER [CrearPartida]: No conectado. No se puede " + accion + ".");
-        if(vistaUnirseJugar != null) {
-            SwingUtilities.invokeLater(() -> {
-                vistaUnirseJugar.mostrarError("No estás conectado al servidor.");
-                // Reactivar botones correspondientes si es necesario
-                if (accion.contains("crear")) vistaUnirseJugar.reactivarBotonCrear();
-                if (accion.contains("unirse")) vistaUnirseJugar.reactivarBotonUnirse();
-            });
-        }
-    }
-
-    /**
-     * Realiza la navegación optimista a la pantalla de espera.
-     * @param idSala El ID de la sala a la que se intenta entrar.
-     * @param accion "Crear" o "Unirse" para logging.
+     * Realiza la navegación optimista a la pantalla de espera (usado solo por Crear Sala ahora).
      */
     private void navegarOptimistaAEspera(String idSala, String accion) {
         if (vistaUnirseJugar != null) {
              System.out.println("CONTROLLER [CrearPartida]: Navegando a pantalla de espera (Optimista para " + accion + ")...");
-             // Asegurarse de que la navegación ocurra en el hilo de Swing
              SwingUtilities.invokeLater(() -> {
-                 // Pasamos el ID de sala que *intentamos* crear/unir
                 vistaUnirseJugar.navegarAPantallaEspera(idSala);
              });
-        } else {
-             System.err.println("CONTROLLER [CrearPartida]: ERROR - Vista es null, no se puede navegar optimisticamente para " + accion + ".");
-             JOptionPane.showMessageDialog(null, "Error interno al procesar la solicitud.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        } else { /* ... (manejo error si vista es null) ... */ }
     }
+
+     /**
+     * Helper interno para verificar conexión y notificar error a la vista.
+     */
+    private boolean handleNotConnectedError(String accion) {
+        if (!serverComunicacion.isConectado()) {
+             System.err.println("CONTROLLER [CrearPartida]: No conectado. No se puede " + accion + ".");
+             if(vistaUnirseJugar != null) {
+                 SwingUtilities.invokeLater(() -> {
+                     vistaUnirseJugar.mostrarError("No estás conectado al servidor.");
+                     // Reactivar botones correspondientes
+                     if (accion.contains("crear")) vistaUnirseJugar.reactivarBotonCrear();
+                     if (accion.contains("unirse")) vistaUnirseJugar.reactivarBotonUnirse();
+                 });
+             }
+             return false;
+        }
+        return true;
+     }
 
 
     // --- Métodos llamados por controladorInicio para DELEGAR respuestas ---
 
     /**
      * Procesa la respuesta del servidor para la creación de sala.
-     * SOLO loguea o maneja el caso de ERROR (porque ya navegamos).
+     * SOLO loguea o maneja el caso de ERROR (porque ya navegamos optimisticamente).
      */
     public void procesarRespuestaCrearSala(boolean exito, Map<String, Object> datos) {
-        System.out.println("CONTROLLER [CrearPartida]: Respuesta RECIBIDA para creación de sala. Éxito=" + exito);
-
-        if (exito) {
-            String idSalaCreada = (String) datos.getOrDefault("idSala", "?");
-            System.out.println("CONTROLLER [CrearPartida]: Confirmación de sala '" + idSalaCreada + "' creada recibida. (Ya se navegó).");
-            // No hay acción de UI aquí en caso de éxito.
-        } else {
-            // ¡ERROR! Navegamos, pero el servidor dijo que falló.
-            String errorMsg = (String) datos.getOrDefault("error", "Error desconocido al crear sala.");
-            System.err.println("CONTROLLER [CrearPartida]: ERROR POST-NAVEGACIÓN - Servidor reportó error al crear sala: " + errorMsg);
-            // Mostrar error al usuario (ya está en otra pantalla)
-            SwingUtilities.invokeLater(() -> {
-                 JOptionPane.showMessageDialog(null, // null como parent para que sea global
-                     "ERROR: Falló la creación de la sala en el servidor:\n" + errorMsg +
-                     "\n\nSerás devuelto a la pantalla anterior.",
-                     "Error de Creación de Sala", JOptionPane.ERROR_MESSAGE);
-                 // TODO: Implementar lógica para cerrar la pantalla de espera y volver a UnirseJugar
-            });
+        System.out.println("DEBUG [CrearPartida]: Ingresando a procesarRespuestaCrearSala (Respuesta recibida). Éxito=" + exito);
+        if (vistaUnirseJugar == null && !exito) { // Si falló y ya no tenemos vista, mostramos diálogo global
+             String errorMsg = (String) datos.getOrDefault("error", "Error desconocido al crear sala.");
+             System.err.println("CONTROLLER [CrearPartida]: ERROR POST-NAVEGACIÓN (Crear): Vista es null. Error del servidor: " + errorMsg);
+             final String finalErrorMsg = errorMsg;
+             SwingUtilities.invokeLater(() -> {
+                   JOptionPane.showMessageDialog(null,"ERROR: Falló la creación de la sala:\n" + finalErrorMsg, "Error Creación", JOptionPane.ERROR_MESSAGE);
+             });
+             return;
+        } else if (vistaUnirseJugar == null && exito) {
+             // Éxito pero la vista ya no está (raro, pero posible si hubo error antes)
+             System.out.println("CONTROLLER [CrearPartida]: Confirmación de sala creada recibida, pero la vista UnirseJugar ya no existe.");
+             return;
         }
+
+        // Procesamiento normal si la vista aún existe (principalmente para manejar errores post-navegación)
+         if (exito) {
+             String idSalaCreada = "";
+             try{ idSalaCreada = (String) datos.getOrDefault("idSala", "?"); } catch(Exception e){}
+             System.out.println("CONTROLLER [CrearPartida]: Confirmación de sala '" + idSalaCreada + "' creada recibida. (Ya se navegó optimisticamente).");
+             // No se necesita acción de UI adicional aquí en caso de éxito
+         } else {
+             // ¡ERROR! Navegamos, pero el servidor dijo que falló.
+             String errorMsg = (String) datos.getOrDefault("error", "Error desconocido al crear sala.");
+             System.err.println("CONTROLLER [CrearPartida]: ERROR POST-NAVEGACIÓN (Crear) - Servidor reportó error: " + errorMsg);
+             // Mostramos diálogo porque la pantalla activa ahora es PartidaEspera
+             SwingUtilities.invokeLater(() -> {
+                  JOptionPane.showMessageDialog(null,
+                      "ERROR: Falló la creación de la sala en el servidor:\n" + errorMsg +
+                      "\n\nSerás devuelto a la pantalla anterior.",
+                      "Error de Creación de Sala", JOptionPane.ERROR_MESSAGE);
+                  // TODO: Implementar lógica para cerrar PartidaEspera y volver a UnirseJugar
+                  // Esto requiere que PartidaEspera o su controlador tengan forma de volver.
+             });
+         }
+         System.out.println("DEBUG [CrearPartida]: Fin de procesarRespuestaCrearSala.");
     }
 
      /**
      * Procesa la respuesta del servidor para unirse a sala.
-     * SOLO loguea o maneja el caso de ERROR (porque ya navegamos).
+     * **AHORA inicia la navegación si la unión fue exitosa.**
+     * @param exito true si se unió, false si hubo error.
+     * @param datos Los datos recibidos del servidor.
      */
     public void procesarRespuestaUnirseSala(boolean exito, Map<String, Object> datos) {
-         System.out.println("CONTROLLER [CrearPartida]: Respuesta RECIBIDA para unirse a sala. Éxito=" + exito);
+         // Log de entrada (¡Verifica que este aparezca!)
+         System.out.println("DEBUG [CrearPartida]: Ingresando a procesarRespuestaUnirseSala. Éxito=" + exito);
+
+         if (vistaUnirseJugar == null) {
+             System.err.println("CONTROLLER [CrearPartida]: ERROR - Vista (UnirseJugar) no asignada para procesar respuesta UnirseSala.");
+             return; // Salir si no hay vista
+         }
+         System.out.println("DEBUG [CrearPartida]: Referencia a vistaUnirseJugar OK."); // Log extra
+
+         // Ya estamos en el hilo de Swing (viene de invokeLater en controladorInicio)
 
          if (exito) {
-            String idSalaUnida = (String) datos.getOrDefault("idSala", "?");
-            System.out.println("CONTROLLER [CrearPartida]: Confirmación de unión a sala '" + idSalaUnida + "' recibida. (Ya se navegó).");
-            // No hay acción de UI aquí en caso de éxito.
-         } else {
-             // ¡ERROR! Navegamos, pero el servidor dijo que falló.
-             String errorMsg = (String) datos.getOrDefault("error", "Error desconocido al unirse.");
-             System.err.println("CONTROLLER [CrearPartida]: ERROR POST-NAVEGACIÓN - Servidor reportó error al unirse a sala: " + errorMsg);
-            // Mostrar error al usuario (ya está en otra pantalla)
-             SwingUtilities.invokeLater(() -> {
-                  JOptionPane.showMessageDialog(null, // null como parent
-                      "ERROR: Falló la unión a la sala en el servidor:\n" + errorMsg +
-                      "\n\nSerás devuelto a la pantalla anterior.",
-                      "Error al Unirse a Sala", JOptionPane.ERROR_MESSAGE);
-                  // TODO: Implementar lógica para cerrar la pantalla de espera y volver a UnirseJugar
-             });
+            String idSalaUnida = null; // Inicializar a null
+             try {
+                 // Extraer ID de sala
+                 Object idObj = datos.get("idSala");
+                 System.out.println("DEBUG [CrearPartida]: Objeto 'idSala' extraído (Unirse): " + idObj + (idObj != null ? " (Tipo: " + idObj.getClass().getName() + ")" : ""));
+                 if (idObj instanceof String) idSalaUnida = (String) idObj;
+
+                 // Validar ID
+                 if (idSalaUnida == null || idSalaUnida.isBlank()) {
+                     throw new Exception("ID de sala inválido en respuesta UNIDO_OK del servidor.");
+                 }
+
+                 System.out.println("CONTROLLER [CrearPartida]: Unión a sala '" + idSalaUnida + "' OK. Llamando a vistaUnirseJugar.navegarAPantallaEspera...");
+
+                 // --- ¡NAVEGACIÓN AQUÍ! ---
+                 vistaUnirseJugar.navegarAPantallaEspera(idSalaUnida);
+                 // -------------------------
+                 System.out.println("DEBUG [CrearPartida]: Llamada a navegarAPantallaEspera completada.");
+
+
+             } catch (Exception e) {
+                  // Error al procesar los datos de éxito o al navegar
+                  System.err.println("CONTROLLER [CrearPartida] ERROR: Excepción procesando UNIDO_OK o durante navegación: " + e.getMessage());
+                  e.printStackTrace();
+                  // Mostrar error y reactivar botón en UnirseJugar
+                  vistaUnirseJugar.mostrarError("Respuesta inesperada del servidor al unirse.");
+                  vistaUnirseJugar.reactivarBotonUnirse();
+             }
+         } else { // Manejar ERROR_UNIRSE_SALA
+             String errorMsg = "Error desconocido al unirse.";
+             try{ // Extraer mensaje de error de forma segura
+                  Object errObj = datos.get("error");
+                   System.out.println("DEBUG [CrearPartida]: Objeto 'error' extraído (Unirse): " + errObj + (errObj != null ? " (Tipo: " + errObj.getClass().getName() + ")" : ""));
+                  if(errObj instanceof String) errorMsg = (String) errObj;
+                  else if (errObj != null) errorMsg = errObj.toString();
+             } catch (Exception e) { System.err.println("CONTROLLER [CrearPartida] WARN: Excepción al obtener mensaje de error: " + e.getMessage());}
+
+             System.err.println("CONTROLLER [CrearPartida]: Error al unirse a sala: " + errorMsg);
+             // Mostrar error y reactivar botón en UnirseJugar
+             try {
+                 vistaUnirseJugar.mostrarError("Error al unirse: " + errorMsg);
+                 vistaUnirseJugar.reactivarBotonUnirse();
+                 System.out.println("DEBUG [CrearPartida]: Llamadas a mostrarError/reactivarBotonUnirse completadas.");
+             } catch (Exception eMostrarError) {
+                 System.err.println("CONTROLLER [CrearPartida] ERROR: Excepción dentro de vistaUnirseJugar.mostrarError/reactivar: " + eMostrarError.getMessage());
+                 eMostrarError.printStackTrace();
+             }
          }
+         System.out.println("DEBUG [CrearPartida]: Fin de procesarRespuestaUnirseSala.");
     }
-}
+
+    
+} // Fin de la clase

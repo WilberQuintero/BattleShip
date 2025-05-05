@@ -243,104 +243,175 @@ public class controladorInicio implements ServerEventListener {
 
 
 
-    @Override
+
+
+ @Override
     public void onMensajeServidor(String tipo, Map<String, Object> datos) {
         System.out.println("CONTROLLER [Inicio]: Mensaje genérico recibido - Tipo: " + tipo + ", Datos: " + datos);
 
-        // Determinar a qué controlador delegar o si manejar localmente
-        boolean delegadoACrearPartida = false;
-        boolean delegadoAEspera = false;
+        // Usar referencias finales para el lambda
+        final controladorCrearPartida delegadoCrearUnir = this.controladorCrearPartidaActual;
+        final controladorPartidaEspera delegadoEspera = this.controladorEsperaActual;
+        final String finalTipo = tipo;
+        final Map<String, Object> finalDatos = datos;
+        final boolean esParaCrearUnir = esMensajeParaCrearUnir(finalTipo);
+        final boolean esParaEspera = esMensajeParaEspera(finalTipo);
+        final boolean esRegistro = finalTipo.equals("REGISTRO_OK") || finalTipo.equals("ERROR_REGISTRO");
 
-        // --- Intenta delegar a Controlador de Espera ---
-        if (controladorEsperaActual != null && esMensajeParaEspera(tipo)) {
-             System.out.println("CONTROLLER [Inicio]: Delegando mensaje tipo '" + tipo + "' a controladorEsperaActual.");
-             delegadoAEspera = true; // Marcar que se intentó delegar
-             // Envolver en invokeLater por si acaso la delegación toca UI indirectamente
-             SwingUtilities.invokeLater(() -> {
-                 switch(tipo) {
-                      case "ACTUALIZACION_SALA":
-                      case "OPONENTE_LISTO":
-                      case "AMBOS_LISTOS":
-                           controladorEsperaActual.procesarActualizacionSala(datos);
-                           break;
-                      case "INICIAR_COLOCACION": // Añadido de ejemplo anterior
-                           controladorEsperaActual.procesarInicioColocacion(datos);
-                           break;
-                      case "INICIAR_PARTIDA":
-                           controladorEsperaActual.procesarInicioPartida(datos);
-                           clearControladorEsperaActual(); // Limpiar al iniciar partida
-                           break;
-                       case "OPONENTE_SALIO":
-                            controladorEsperaActual.procesarSalidaOponente(datos);
-                            clearControladorEsperaActual(); // Limpiar al salir oponente
-                            break;
-                       case "ERROR_SALA":
-                            controladorEsperaActual.procesarErrorSala(datos);
-                            clearControladorEsperaActual(); // Limpiar si hay error grave de sala
-                            break;
-                      // No poner default aquí para permitir que otros bloques manejen si este delegado es null
-                 }
-             });
-        }
-        // --- Intenta delegar a Controlador de Crear/Unir (SOLO SI NO SE DELEGÓ A ESPERA) ---
-        else if (controladorCrearPartidaActual != null && esMensajeParaCrearUnir(tipo)) {
-            System.out.println("CONTROLLER [Inicio]: Delegando mensaje tipo '" + tipo + "' a controladorCrearPartidaActual.");
-            delegadoACrearPartida = true; // Marcar que se intentó delegar
-             // Envolver en invokeLater
-             SwingUtilities.invokeLater(() -> {
-                 boolean exito = !(tipo.startsWith("ERROR_"));
-                  if (tipo.contains("CREAR")) {
-                      controladorCrearPartidaActual.procesarRespuestaCrearSala(exito, datos);
-                  } else if (tipo.contains("UNIRSE")) {
-                       controladorCrearPartidaActual.procesarRespuestaUnirseSala(exito, datos);
-                  }
-            });
-        }
-        // --- Si no fue delegado, manejar localmente (Registro) ---
-        else if (tipo.equals("REGISTRO_OK") || tipo.equals("ERROR_REGISTRO")) {
-            System.out.println("CONTROLLER [Inicio]: Procesando mensaje tipo '" + tipo + "' localmente.");
-            SwingUtilities.invokeLater(() -> {
-                 if (tipo.equals("REGISTRO_OK")) {
-                     System.out.println("CONTROLLER [Inicio]: Servidor confirma REGISTRO_OK para " + datos.get("nombre"));
-                     this.nombreUsuarioRegistrado = (String) datos.get("nombre");
-                     nombreUsuarioPendiente = null;
-                     if (vistaInicio != null && vistaInicio.isDisplayable()) { // Asegurarse que la vista de inicio aún existe
-                          System.out.println("CONTROLLER [Inicio]: Registro exitoso. Navegando a Unirse/Jugar...");
-                          vistaInicio.navegarASiguientePantalla(); // Llama al método que crea UnirseJugar
-                     } else {
-                          System.out.println("CONTROLLER [Inicio]: Registro OK, pero vistaInicio no disponible para navegar.");
+        // Ejecutar en el EDT
+        SwingUtilities.invokeLater(() -> {
+            System.out.println(">>> EDT Task START for " + finalTipo);
+            try {
+                // 1. Intentar delegar a Controlador de Espera
+                if (delegadoEspera != null && esParaEspera) {
+                     System.out.println("    EDT Task: Delegado ESPERA Ref Check: " + delegadoEspera.getClass().getName() + "@" + delegadoEspera.hashCode());
+                     System.out.println("    EDT Task: Procesando para delegado ESPERA tipo " + finalTipo);
+
+                     switch(finalTipo) {
+                          case "ACTUALIZACION_SALA":
+                          case "OPONENTE_LISTO":
+                          case "AMBOS_LISTOS":
+                               delegadoEspera.procesarActualizacionSala(finalDatos);
+                               break;
+                          case "INICIAR_COLOCACION":
+                               // --- DELAY DE DIAGNÓSTICO ---
+                               try {
+                                    System.out.println("    EDT Task: >>> INICIANDO PAUSA DIAGNÓSTICA (500ms) ANTES de delegar INICIAR_COLOCACION <<<");
+                                    Thread.sleep(500); // Pausa de medio segundo
+                                    System.out.println("    EDT Task: >>> PAUSA FINALIZADA <<<");
+                               } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                    System.err.println("    EDT Task: Hilo interrumpido durante pausa diagnóstica.");
+                               }
+                               // --- FIN DELAY ---
+                               System.out.println("    EDT Task: Llamando a delegadoEspera.procesarInicioColocacion...");
+                               delegadoEspera.procesarInicioColocacion(finalDatos);
+                               break;
+                          case "INICIAR_PARTIDA":
+                               System.out.println("    EDT Task: Llamando a delegadoEspera.procesarInicioPartida...");
+                               delegadoEspera.procesarInicioPartida(finalDatos);
+                               clearControladorEsperaActual();
+                               break;
+                           case "OPONENTE_SALIO":
+                                System.out.println("    EDT Task: Llamando a delegadoEspera.procesarSalidaOponente...");
+                                delegadoEspera.procesarSalidaOponente(finalDatos);
+                                clearControladorEsperaActual();
+                                break;
+                           case "ERROR_SALA":
+                                System.out.println("    EDT Task: Llamando a delegadoEspera.procesarErrorSala...");
+                                delegadoEspera.procesarErrorSala(finalDatos);
+                                clearControladorEsperaActual();
+                                break;
+                           default:
+                                System.out.println("    EDT Task: Tipo de Espera [" + finalTipo + "] no reconocido en switch interno.");
+                                break;
                      }
-                 } else { // ERROR_REGISTRO
-                     System.err.println("CONTROLLER [Inicio]: Servidor reporta ERROR_REGISTRO: " + datos.get("error"));
-                     nombreUsuarioPendiente = null;
-                     if (vistaInicio != null) {
-                          vistaInicio.mostrarError("Error de Registro: " + datos.get("error"));
-                          vistaInicio.reactivarBotonPlay();
+                     System.out.println("    EDT Task: Llamada a delegado ESPERA retornó.");
+
+                // 2. Intentar delegar a Controlador de Crear/Unir
+                } else if (delegadoCrearUnir != null && esParaCrearUnir) {
+                    System.out.println("    EDT Task: Delegado CREAR/UNIR Ref Check: " + delegadoCrearUnir.getClass().getName() + "@" + delegadoCrearUnir.hashCode());
+                    System.out.println("    EDT Task: Llamando a delegado CREAR/UNIR para tipo " + finalTipo);
+                    boolean exito = !(finalTipo.startsWith("ERROR_"));
+
+                    // --- AÑADIR DELAY AQUÍ TAMBIÉN SI QUIERES PROBAR PARA UNIDO_OK ---
+                    
+                    try {
+                         System.out.println("    EDT Task: >>> INICIANDO PAUSA DE 500ms ANTES de delegar " + finalTipo + " <<<");
+                         Thread.sleep(500);
+                         System.out.println("    EDT Task: >>> PAUSA FINALIZADA <<<");
+                    } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                    
+                    // --- FIN DELAY ---
+
+                    if (finalTipo.contains("CREAR")) {
+                        delegadoCrearUnir.procesarRespuestaCrearSala(exito, finalDatos);
+                    } else if (finalTipo.contains("UNIRSE")) {
+                        delegadoCrearUnir.procesarRespuestaUnirseSala(exito, finalDatos);
+                    }
+                    System.out.println("    EDT Task: Llamada a delegado CREAR/UNIR retornó.");
+
+
+                // 3. Si no, manejar localmente (Eventos de Registro)
+                } else if (esRegistro) {
+                    System.out.println("    EDT Task: Procesando REGISTRO localmente.");
+                    if (finalTipo.equals("REGISTRO_OK")) {
+                         System.out.println("    EDT Task: Servidor confirma REGISTRO_OK para " + finalDatos.get("nombre"));
+                         // Guardar nombre confirmado
+                         this.nombreUsuarioRegistrado = (String) finalDatos.get("nombre");
+                         nombreUsuarioPendiente = null; // Limpiar el pendiente
+                         // Navegar a la siguiente pantalla si la vista inicial existe y está visible
+                         if (vistaInicio != null && vistaInicio.isDisplayable()) {
+                              System.out.println("    EDT Task: Registro exitoso. Navegando a Unirse/Jugar...");
+                              vistaInicio.navegarASiguientePantalla(); // Llama al método que crea UnirseJugar y los controllers
+                         } else {
+                              System.out.println("    EDT Task: Registro OK, pero vistaInicio no disponible para navegar.");
+                         }
+                    } else { // ERROR_REGISTRO
+                         System.err.println("    EDT Task: Servidor reporta ERROR_REGISTRO: " + finalDatos.get("error"));
+                         nombreUsuarioPendiente = null;
+                         // Mostrar error en la vista inicial y reactivar
+                         if (vistaInicio != null) {
+                              vistaInicio.mostrarError("Error de Registro: " + finalDatos.get("error"));
+                              vistaInicio.reactivarBotonPlay();
+                         }
+                          // Forzar desconexión en error de registro, ya que no se puede continuar
+                          solicitarDesconexion();
+                    }
+                // 4. Mensaje no manejado o delegado incorrecto
+                } else {
+                     System.out.println("    EDT Task: Mensaje tipo '" + finalTipo + "' NO MANEJADO.");
+                     // Añadir logs para diagnosticar por qué no se manejó si debería haberse hecho
+                     if(esParaEspera && delegadoEspera == null) {
+                          System.err.println("    EDT Task: Era mensaje para Espera pero delegadoEspera era NULL.");
                      }
-                      solicitarDesconexion(); // Forzar desconexión
-                 }
-            });
-        }
-        // --- Mensaje no manejado ---
-        else {
-             System.out.println("CONTROLLER [Inicio]: Mensaje tipo '" + tipo + "' no manejado o sin delegado activo.");
-        }
+                     if(esParaCrearUnir && delegadoCrearUnir == null) {
+                          System.err.println("    EDT Task: Era mensaje para Crear/Unir pero delegadoCrearUnir era NULL.");
+                     }
+                }
+
+            } catch (Throwable t) { // Capturar CUALQUIER error/excepción durante procesamiento EDT
+                 System.err.println("    EDT Task: CATCH Throwable durante procesamiento de " + finalTipo + ":");
+                 t.printStackTrace(); // Imprimir stack trace completo
+                 // Intentar notificar a la UI genéricamente si es posible
+                  Component vistaActiva = null; // Determinar vista activa para mostrar error
+                  if (vistaPartidaEspera != null && vistaPartidaEspera.isDisplayable()) vistaActiva = vistaPartidaEspera;
+                  else if (vistaUnirseJugar != null && vistaUnirseJugar.isDisplayable()) vistaActiva = vistaUnirseJugar;
+                  else vistaActiva = vistaInicio;
+
+                  final String errorMsg = "Error interno procesando respuesta del servidor: " + t.getMessage();
+                  // Mostrar error en la vista activa
+                  if (vistaActiva instanceof PartidaEspera) { ((PartidaEspera)vistaActiva).mostrarError(errorMsg, true); /*Considerar volver atrás*/ }
+                  else if (vistaActiva instanceof UnirseJugar) { ((UnirseJugar)vistaActiva).mostrarError(errorMsg); ((UnirseJugar)vistaActiva).reactivarBotones(); }
+                  else if (vistaActiva instanceof PantallaInicio) { ((PantallaInicio)vistaActiva).mostrarError(errorMsg); ((PantallaInicio)vistaActiva).reactivarBotonPlay(); }
+                  else { JOptionPane.showMessageDialog(null, errorMsg, "Error Crítico", JOptionPane.ERROR_MESSAGE); }
+                  // Considerar desconectar si ocurre un error grave aquí
+                  // solicitarDesconexion();
+            } finally {
+                 System.out.println("<<< EDT Task END for " + finalTipo); // Log fin tarea EDT
+            }
+        }); // Fin invokeLater
     } // Fin onMensajeServidor
 
 
     // --- Métodos privados Helper para clasificación de mensajes ---
+    // Asegúrate de tener estos métodos en tu clase controladorInicio
     private boolean esMensajeParaCrearUnir(String tipo) {
-         return tipo.equals("SALA_CREADA_OK") || tipo.equals("ERROR_CREAR_SALA") ||
-                tipo.equals("UNIDO_OK") || tipo.equals("ERROR_UNIRSE_SALA");
+         return tipo != null && (tipo.equals("SALA_CREADA_OK") || tipo.equals("ERROR_CREAR_SALA") ||
+                                 tipo.equals("UNIDO_OK") || tipo.equals("ERROR_UNIRSE_SALA"));
                 // Añadir LISTA_SALAS_RESPUESTA si se maneja en CrearPartida
     }
 
     private boolean esMensajeParaEspera(String tipo) {
-         return tipo.equals("ACTUALIZACION_SALA") || tipo.equals("OPONENTE_LISTO") ||
-                tipo.equals("AMBOS_LISTOS") || tipo.equals("INICIAR_COLOCACION") ||
-                tipo.equals("INICIAR_PARTIDA") || tipo.equals("OPONENTE_SALIO") ||
-                tipo.equals("ERROR_SALA");
+         return tipo != null && (tipo.equals("ACTUALIZACION_SALA") || tipo.equals("OPONENTE_LISTO") ||
+                                 tipo.equals("AMBOS_LISTOS") || tipo.equals("INICIAR_COLOCACION") ||
+                                 tipo.equals("INICIAR_PARTIDA") || tipo.equals("OPONENTE_SALIO") ||
+                                 tipo.equals("ERROR_SALA"));
                 // Añadir CHAT_SALA si se maneja en Espera
     }
 
-} // Fin clase controladorInicio
+
+   
+
+
+} 

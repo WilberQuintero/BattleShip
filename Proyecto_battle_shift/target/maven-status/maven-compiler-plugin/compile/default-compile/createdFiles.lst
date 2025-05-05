@@ -1,5 +1,6 @@
 View\TableroJuego$6.class
 Model\entidades\Barco.class
+testAislado\MockServerComunicacion.class
 View\PartidaEspera.class
 View\Victoria$1.class
 Model\entidades\Posicion.class
@@ -24,6 +25,7 @@ Model\entidades\Jugador.class
 View\Derrota.class
 View\UnirseJugar$3.class
 View\UnirseJugar$1.class
+testAislado\MockUnirseJugar.class
 View\PantallaInicio.class
 View\TableroJuego$1.class
 View\IconTransferHandler$1.class
@@ -42,3 +44,4 @@ View\TableroJuego$2.class
 Controler\controladorInicio.class
 View\Ajustes$1.class
 Controler\controladorCrearPartida.class
+testAislado\TestControladorAislado.class

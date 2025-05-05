@@ -131,12 +131,12 @@ private javax.swing.JList<String> listaJugadores;
 
         jPanel1 = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
-        lblNombreSala = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         panelAnimacion = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
         btnSalir = new javax.swing.JButton();
+        lblNombreSala = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -145,11 +145,6 @@ private javax.swing.JList<String> listaJugadores;
 
         jPanel3.setBackground(new java.awt.Color(36, 37, 56));
         jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        lblNombreSala.setFont(new java.awt.Font("Sitka Display", 1, 36)); // NOI18N
-        lblNombreSala.setForeground(new java.awt.Color(255, 255, 255));
-        lblNombreSala.setText("SALA");
-        jPanel3.add(lblNombreSala, new org.netbeans.lib.awtextra.AbsoluteConstraints(280, 20, -1, -1));
 
         jPanel2.setBackground(new java.awt.Color(0, 0, 0));
         jPanel2.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -176,11 +171,6 @@ private javax.swing.JList<String> listaJugadores;
         jLabel2.setText("Espera que la partida empiece");
         jPanel3.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(98, 90, -1, -1));
 
-        jLabel3.setFont(new java.awt.Font("Sitka Display", 1, 36)); // NOI18N
-        jLabel3.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel3.setText("SALA: ");
-        jPanel3.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 20, -1, -1));
-
         jPanel1.add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 80, 680, 330));
 
         btnSalir.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
@@ -195,6 +185,16 @@ private javax.swing.JList<String> listaJugadores;
             }
         });
         jPanel1.add(btnSalir, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 10, -1, -1));
+
+        lblNombreSala.setFont(new java.awt.Font("Sitka Display", 1, 36)); // NOI18N
+        lblNombreSala.setForeground(new java.awt.Color(255, 255, 255));
+        lblNombreSala.setText("SALA");
+        jPanel1.add(lblNombreSala, new org.netbeans.lib.awtextra.AbsoluteConstraints(490, 20, -1, -1));
+
+        jLabel3.setFont(new java.awt.Font("Sitka Display", 1, 36)); // NOI18N
+        jLabel3.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel3.setText("SALA: ");
+        jPanel1.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(280, 20, -1, -1));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);

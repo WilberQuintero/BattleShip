@@ -63,52 +63,55 @@ public class UnirseJugar extends javax.swing.JFrame {
     }
     // --- Este método va DENTRO de tu clase View.UnirseJugar.java ---
 
-   /**
-     * Navega a la pantalla de espera después de crear o unirse exitosamente.
-     * Crea la nueva vista y su controlador asociado, y actualiza las referencias.
-     * @param idSala El ID de la sala a la que se entró.
+   // Dentro de UnirseJugar.java
+
+    /**
+     * Navega a la pantalla de espera (SIN invokeLater interno).
+     * Se asume que este método es llamado desde el EDT (ej. acción de botón).
+     * @param idSala
      */
     public void navegarAPantallaEspera(String idSala) {
-         // Asegurarse de que se ejecute en el hilo de Swing
-         SwingUtilities.invokeLater(() -> {
-             System.out.println("VIEW [UnirseJugar]: Navegando a PantallaEspera para sala: " + idSala);
+        // --- invokeLater ELIMINADO de aquí ---
+        // SwingUtilities.invokeLater(() -> { // <--- QUITAR
 
-             if (this.controladorPrincipal == null) {
-                 System.err.println("VIEW [UnirseJugar] ERROR: controladorPrincipal es null. No se puede obtener nombre de usuario ni navegar.");
-                 mostrarError("Error interno grave al intentar abrir la sala.");
-                 reactivarBotones();
-                 return;
-             }
+        System.out.println("VIEW [UnirseJugar]: Navegando a PantallaEspera para sala: " + idSala);
 
-             String miNombre = this.controladorPrincipal.getNombreUsuarioRegistrado();
-             if (miNombre == null || miNombre.isBlank()) {
-                 System.err.println("VIEW [UnirseJugar] ERROR: No se pudo obtener el nombre de usuario registrado.");
-                 miNombre = "Jugador ???";
-             }
-             System.out.println("VIEW [UnirseJugar]: Nombre de usuario para PantallaEspera: " + miNombre);
+        if (this.controladorPrincipal == null) {
+            System.err.println("VIEW [UnirseJugar] ERROR CRÍTICO: controladorPrincipal es null.");
+            mostrarError("Error interno grave al intentar abrir la sala.");
+            reactivarBotones();
+            return;
+        }
 
-             try {
-                  System.out.println("VIEW [UnirseJugar]: Creando instancia de PartidaEspera...");
-                  // Crear la pantalla de espera, pasando las referencias necesarias
-                  PartidaEspera pantallaEspera = new PartidaEspera(this.controladorPrincipal, idSala, miNombre);
+        String miNombre = this.controladorPrincipal.getNombreUsuarioRegistrado();
+        if (miNombre == null || miNombre.isBlank()) {
+            System.err.println("VIEW [UnirseJugar] WARN: No se pudo obtener nombre. Usando default.");
+            miNombre = "Jugador ???";
+        }
+        System.out.println("VIEW [UnirseJugar]: Nombre de usuario para PantallaEspera: " + miNombre);
 
-                  System.out.println("VIEW [UnirseJugar]: Limpiando controladorCrearPartidaActual en controladorInicio...");
-                  this.controladorPrincipal.clearControladorCrearPartidaActual();
+        try {
+            System.out.println("VIEW [UnirseJugar]: Creando instancia de PartidaEspera...");
+            // Crear la pantalla de espera. Su constructor asigna el controladorEsperaActual.
+            PartidaEspera pantallaEspera = new PartidaEspera(this.controladorPrincipal, idSala, miNombre);
 
-                  System.out.println("VIEW [UnirseJugar]: Haciendo visible PartidaEspera...");
-                  pantallaEspera.setVisible(true);
+            System.out.println("VIEW [UnirseJugar]: Limpiando controladorCrearPartidaActual en controladorInicio...");
+            this.controladorPrincipal.clearControladorCrearPartidaActual();
 
-                  System.out.println("VIEW [UnirseJugar]: Cerrando esta ventana (dispose)...");
-                  this.dispose();
+            System.out.println("VIEW [UnirseJugar]: Haciendo visible PartidaEspera...");
+            pantallaEspera.setVisible(true);
 
-             } catch (Exception e) {
-                  System.err.println("VIEW [UnirseJugar] ERROR CRÍTICO: Excepción al crear/mostrar PartidaEspera: " + e.getMessage());
-                  e.printStackTrace();
-                  mostrarError("No se pudo abrir la pantalla de espera.\nError: " + e.getMessage());
-                   reactivarBotones();
-                   this.controladorPrincipal.clearControladorCrearPartidaActual();
-             }
-         });
+            System.out.println("VIEW [UnirseJugar]: Cerrando esta ventana (dispose)...");
+            this.dispose();
+
+        } catch (Exception e) {
+            System.err.println("VIEW [UnirseJugar] ERROR CRÍTICO: Excepción al crear/mostrar PartidaEspera: " + e.getMessage());
+            e.printStackTrace();
+            mostrarError("No se pudo abrir la pantalla de espera.\nError: " + e.getMessage());
+            reactivarBotones();
+            this.controladorPrincipal.clearControladorCrearPartidaActual(); // Limpiar por si acaso
+        }
+       
     }
 
 
