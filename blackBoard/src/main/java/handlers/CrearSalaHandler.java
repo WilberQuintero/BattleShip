@@ -2,30 +2,30 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package ks;
+package handlers;
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 import com.mycompany.blackboard.Controller;
-import com.mycompany.blackboard.IKnowledgeSource;
 
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.mycompany.blackboard.IHandler;
+import com.mycompany.battleship.commons.IHandlerCommons;
 /**
  *
  * @author Hector
  */
 
 
-// Asegúrate que implemente tu interfaz IKnowledgeSource correctamente
-public class CrearSalaKS implements IKnowledgeSource {
+// Asegúrate que implemente tu interfaz IHandler correctamente
+public class CrearSalaHandler implements IHandler {
 
     // Dependencias (final hace que deban asignarse en el constructor)
     private final IServer server;
-    private final IBlackboard blackboard;
+    private final IHandlerCommons handlerCommons;
     private final Controller controller; // Hacerlo final si siempre se requiere
 
     // --- CORRECCIÓN/RECOMENDACIÓN 1: Unificar Constructores ---
@@ -37,23 +37,23 @@ public class CrearSalaKS implements IKnowledgeSource {
 
     /**
      * Constructor recomendado que inicializa todas las dependencias necesarias.
-     * @param blackboard Instancia de IBlackboard.
+     * @param blackboard Instancia de IHandlerCommons.
      * @param server Instancia de IServer.
      * @param controller Instancia de Controller.
      */
-    public CrearSalaKS(IBlackboard blackboard, IServer server, Controller controller) {
+    public CrearSalaHandler(IHandlerCommons blackboard, IServer server, Controller controller) {
         // Es buena práctica verificar que las dependencias no sean nulas
         if (blackboard == null || server == null || controller == null) {
             throw new IllegalArgumentException("Las dependencias (Blackboard, Server, Controller) no pueden ser nulas.");
         }
-        this.blackboard = blackboard;
+        this.handlerCommons = blackboard;
         this.server = server;
         this.controller = controller;
     }
 
     // Se recomienda eliminar este constructor si siempre necesitas el controller:
     /*
-    public CrearSalaKS(IServer server, IBlackboard blackboard) {
+    public CrearSalaHandler(IServer server, IHandlerCommons blackboard) {
         this.server = server;
         this.blackboard = blackboard;
         this.controller = null; // Esto puede llevar a NullPointerException si se usa controller
@@ -97,7 +97,7 @@ public class CrearSalaKS implements IKnowledgeSource {
        // --- Lógica de Creación de Sala ---
 
        // Verificar si la sala ya existe. Correcto.
-       if (blackboard.existeSala(idSala)) {
+       if (handlerCommons.existeSala(idSala)) {
            System.out.println("CREAR_SALA_KS: Sala '" + idSala + "' ya existe. No se creó.");
            enviarRespuestaError(cliente, "La sala '" + idSala + "' ya existe.");
            return;
@@ -118,7 +118,7 @@ public class CrearSalaKS implements IKnowledgeSource {
                           + jugadores.size() + " [" + cliente.getInetAddress().getHostAddress() + "]");
 
        // Agregar la sala al Blackboard. Correcto.
-       blackboard.agregarSala(idSala, datosSala);
+       handlerCommons.agregarSala(idSala, datosSala);
 
        // Enviar respuesta de éxito al cliente. Correcto.
        enviarRespuesta(cliente, "SALA_CREADA_OK", Map.of("mensaje", "Sala '" + idSala + "' creada.", "idSala", idSala));
@@ -131,7 +131,7 @@ public class CrearSalaKS implements IKnowledgeSource {
        }
 
        // Indicar finalización al blackboard. Correcto.
-       blackboard.respuestaFuenteC(cliente, evento);
+       handlerCommons.respuestaFuenteC(cliente, evento);
     }
 
     // --- Métodos de ayuda para enviar respuestas ---

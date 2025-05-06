@@ -5,11 +5,10 @@
 package com.mycompany.blackboard; 
 
 // --- Importaciones Correctas ---
-import ks.CrearSalaKS;
-import ks.UnirseSalaKS;
-import ks.ConnectionKS;
+import handlers.CrearSalaHandler;
+import handlers.UnirseSalaHandler;
+import handlers.ConnectionHandler;
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 
 import java.net.Socket;
@@ -19,8 +18,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import ks.IniciarColocacionKS;
-import ks.RegistrarUsuarioKS;
+import handlers.IniciarColocacionHandler;
+import handlers.RegistrarUsuarioHandler;
+import com.mycompany.battleship.commons.IHandlerCommons;
 
 
 
@@ -29,7 +29,7 @@ import ks.RegistrarUsuarioKS;
  * Almacena el estado principal (clientes conectados, salas, nombres) y despacha eventos a las KS.
  * Implementa IBlackboard para exponer su funcionalidad al Server y KSs.
  */
-public class BlackBoard implements IBlackboard {
+public class HandlerChain implements IHandlerCommons {
 
     // --- Estado Principal ---
     private final List<Socket> clientesConectados;
@@ -40,13 +40,13 @@ public class BlackBoard implements IBlackboard {
     // --- Componentes del Sistema ---
     private Controller controller;
     private final IServer server;
-    private final List<IKnowledgeSource> knowledgeSources; // Usar el nombre de interfaz correcto
+    private final List<IHandler> knowledgeSources; // Usar el nombre de interfaz correcto
 
     /**
      * Constructor del BlackBoard.
      * @param server La instancia del servidor (como IServer).
      */
-    public BlackBoard(IServer server) {
+    public HandlerChain(IServer server) {
         if (server == null) {
             throw new IllegalArgumentException("La instancia de IServer no puede ser nula.");
         }
@@ -86,11 +86,11 @@ public class BlackBoard implements IBlackboard {
         knowledgeSources.clear();
 
         // Asegúrate de que los nombres de clase y el constructor sean correctos
-        knowledgeSources.add(new ConnectionKS(this, this.server, this.controller));
-        knowledgeSources.add(new CrearSalaKS(this, this.server, this.controller));
-        knowledgeSources.add(new UnirseSalaKS(this, this.server, this.controller));
-        knowledgeSources.add(new RegistrarUsuarioKS(this, this.server, this.controller));
-        knowledgeSources.add(new IniciarColocacionKS(this, this.server, this.controller));
+        knowledgeSources.add(new ConnectionHandler(this, this.server, this.controller));
+        knowledgeSources.add(new CrearSalaHandler(this, this.server, this.controller));
+        knowledgeSources.add(new UnirseSalaHandler(this, this.server, this.controller));
+        knowledgeSources.add(new RegistrarUsuarioHandler(this, this.server, this.controller));
+        knowledgeSources.add(new IniciarColocacionHandler(this, this.server, this.controller));
 
         // TODO: Añadir futuras KS aquí...
 
@@ -98,7 +98,7 @@ public class BlackBoard implements IBlackboard {
         knowledgeSources.forEach(ks -> System.out.println("  - " + ks.getClass().getSimpleName()));
     }
 
-    // --- Implementación COMPLETA de IBlackboard ---
+    // --- Implementación COMPLETA de IHandlerCommons ---
 
     @Override
     public void enviarEventoBlackBoard(Socket cliente, Evento evento) {
@@ -119,12 +119,12 @@ public class BlackBoard implements IBlackboard {
 
         boolean eventoProcesado = false;
         // Usar el nombre de interfaz correcto aquí
-        List<IKnowledgeSource> sourcesSnapshot = new ArrayList<>(knowledgeSources);
+        List<IHandler> sourcesSnapshot = new ArrayList<>(knowledgeSources);
 
         System.out.println("DEBUG [BB.enviarEvento]: Iniciando bucle de despacho a KSs (" + sourcesSnapshot.size() + " KSs)...");
 
         // Usar el nombre de interfaz correcto aquí
-        for (IKnowledgeSource ks : sourcesSnapshot) {
+        for (IHandler ks : sourcesSnapshot) {
             try {
                 System.out.println("DEBUG [BB.enviarEvento]: Verificando KS: " + ks.getClass().getSimpleName());
                 if (ks.puedeProcesar(evento)) {
@@ -248,7 +248,7 @@ public class BlackBoard implements IBlackboard {
          System.out.println("BLACKBOARD: KS reporta finalización para cliente " + logCliente + ". Evento: " + (eventoRespuesta != null ? eventoRespuesta.getTipo(): "NULL"));
     }
 
-    // --- NUEVOS Métodos Implementados de IBlackboard ---
+    // --- NUEVOS Métodos Implementados de IHandlerCommons ---
 
     @Override
     public boolean isNombreEnUso(String nombre) {

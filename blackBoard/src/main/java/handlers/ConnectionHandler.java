@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package ks;
+package handlers;
 
 /**
  *
@@ -12,26 +12,26 @@ package ks;
 
 import com.mycompany.battleship.commons.Evento;
 import com.mycompany.battleship.commons.IServer;
-import com.mycompany.blackboard.BlackBoard;
+import com.mycompany.blackboard.HandlerChain;
 import com.mycompany.blackboard.Controller;
-import com.mycompany.blackboard.IKnowledgeSource;
 
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import com.mycompany.blackboard.IHandler;
 
 /**
  * Knowledge Source para manejar el evento de conexión inicial de un usuario.
  * Adaptada al estilo Dominó.
  */
-public class ConnectionKS implements IKnowledgeSource {
+public class ConnectionHandler implements IHandler {
 
-    private final BlackBoard blackboard;
+    private final HandlerChain HandlerChain;
     private final IServer server; // Podría necesitar el server para enviar respuestas directas
     private final Controller controller; // Podría necesitar notificar cambios específicos
 
-    public ConnectionKS(BlackBoard blackboard, IServer server, Controller controller) {
-        this.blackboard = blackboard;
+    public ConnectionHandler(HandlerChain blackboard, IServer server, Controller controller) {
+        this.HandlerChain = blackboard;
         this.server = server;
         this.controller = controller;
     }
@@ -63,8 +63,8 @@ public class ConnectionKS implements IKnowledgeSource {
     
     System.out.println("ConnectionKS: Procesando evento '" + evento.getTipo() + "' para " + cliente.getInetAddress().getHostAddress());
     
-    // Registrar el socket del cliente en el BlackBoard (acción principal)
-    blackboard.agregarClienteSocket(cliente);
+    // Registrar el socket del cliente en el HandlerChain (acción principal)
+    HandlerChain.agregarClienteSocket(cliente);
 
     // Procesar diferentes tipos de eventos
     switch (evento.getTipo()) {
@@ -82,7 +82,7 @@ public class ConnectionKS implements IKnowledgeSource {
                 nuevaSala.put("socket", cliente); // Guardamos el socket del creador
 
                 // Guardar en el Blackboard
-                blackboard.agregarSala(idSala, nuevaSala);
+                HandlerChain.agregarSala(idSala, nuevaSala);
 
                 // Notificar al cliente
                 server.enviarMensajeACliente(cliente, "SALA_CREADAConecctionKS;id=" + idSala);
@@ -92,10 +92,10 @@ public class ConnectionKS implements IKnowledgeSource {
             break;
             
         case "CONECTAR_USUARIO_SERVER":  // Manejo de conexión básica (tu lógica original)
-            // Acción secundaria: Notificar al BlackBoard
+            // Acción secundaria: Notificar al HandlerChain
             Evento eventoRespuesta = new Evento("CONEXION_PROCESADA");
             eventoRespuesta.agregarDato("clienteHost", cliente.getInetAddress().getHostAddress());
-            blackboard.respuestaFuenteC(cliente, eventoRespuesta);
+            HandlerChain.respuestaFuenteC(cliente, eventoRespuesta);
             break;
             
         default:

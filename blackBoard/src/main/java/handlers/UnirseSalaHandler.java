@@ -2,33 +2,33 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package ks; // O tu paquete de knowledge sources
+package handlers; // O tu paquete de knowledge sources
 
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 import com.mycompany.blackboard.Controller;
-import com.mycompany.blackboard.IKnowledgeSource;
 
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import com.mycompany.blackboard.IHandler;
+import com.mycompany.battleship.commons.IHandlerCommons;
 
 /**
  * Knowledge Source para manejar el evento de un jugador uniéndose a una sala existente.
  */
-public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowledgeSource esté definida como en tu proyecto
+public class UnirseSalaHandler implements IHandler { // Asegúrate que IHandler esté definida como en tu proyecto
 
-    private final IBlackboard blackboard;
+    private final IHandlerCommons handlerCommons;
     private final IServer server;
     private final Controller controller; // Podríamos necesitar notificar al controller
 
     // Constante para la capacidad máxima de la sala (Battleship = 2 jugadores)
     private static final int MAX_JUGADORES_SALA = 2;
 
-    public UnirseSalaKS(IBlackboard blackboard, IServer server, Controller controller) {
-        this.blackboard = blackboard;
+    public UnirseSalaHandler(IHandlerCommons blackboard, IServer server, Controller controller) {
+        this.handlerCommons = blackboard;
         this.server = server;
         this.controller = controller;
     }
@@ -57,7 +57,7 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
         System.out.println("UNIRSE_SALA_KS: Intentando unir cliente " + cliente.getInetAddress().getHostAddress() + " a sala '" + idSala + "'");
 
         // Obtener datos de la sala del blackboard
-        Map<String, Object> datosSala = blackboard.getDatosSala(idSala);
+        Map<String, Object> datosSala = handlerCommons.getDatosSala(idSala);
 
         if (datosSala == null) {
             System.err.println("UNIRSE_SALA_KS: Sala '" + idSala + "' no encontrada.");
@@ -111,7 +111,7 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
         datosSala.put("jugadores", jugadoresActuales); // Actualiza la referencia en el mapa local
 
         // Persistir el cambio en el Blackboard
-        blackboard.actualizarDatosSala(idSala, datosSala);
+        handlerCommons.actualizarDatosSala(idSala, datosSala);
         System.out.println("UNIRSE_SALA_KS: Datos de sala '" + idSala + "' actualizados en Blackboard.");
 
         // Notificar al jugador que se unió
@@ -137,7 +137,7 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
              controller.notificarCambio("SALA_LLENA;" + idSala); // Pasar ID de sala al controller
                Evento iniciarPartida = new Evento("INICIAR_PARTIDA_SALA");
             iniciarPartida.agregarDato("idSala", idSala);
-            blackboard.enviarEventoBlackBoard(cliente, iniciarPartida);
+            handlerCommons.enviarEventoBlackBoard(cliente, iniciarPartida);
 
             // O podrías crear un nuevo evento y enviarlo al blackboard
              // Evento iniciarPartidaEvento = new Evento("INICIAR_PARTIDA_SALA");
@@ -155,7 +155,7 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
 
             // Enviar el evento al blackboard para que lo procese la KS correspondiente
             // Usamos null como cliente origen porque es un evento interno del sistema.
-            blackboard.enviarEventoBlackBoard(null, eventoInicioColocacion);
+            handlerCommons.enviarEventoBlackBoard(null, eventoInicioColocacion);
 
             // Ya NO notificamos "SALA_LLENA" al controller directamente,
             // la nueva KS se encargará de la lógica de inicio.
@@ -166,7 +166,7 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
         }
 
         // Indicar finalización del evento UNIRSE_SALA
-        blackboard.respuestaFuenteC(cliente, evento);
+        handlerCommons.respuestaFuenteC(cliente, evento);
     
     }
 
@@ -185,4 +185,4 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
         }
         server.enviarEventoACliente(cliente, respuesta);
     }
-}
+} // O tu paquete de knowledge sources // O tu paquete de knowledge sources

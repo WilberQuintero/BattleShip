@@ -2,19 +2,19 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package ks;
+package handlers;
 
 /**
  *
  * @author caarl
  */
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 import com.mycompany.blackboard.Controller;
-import com.mycompany.blackboard.IKnowledgeSource;
 
 import java.net.Socket;
+import com.mycompany.blackboard.IHandler;
+import com.mycompany.battleship.commons.IHandlerCommons;
 
 
 
@@ -23,15 +23,15 @@ import java.net.Socket;
  * Knowledge Source encargada de procesar el registro de un nombre de usuario
  * para un cliente recién conectado.
  */
-public class RegistrarUsuarioKS implements IKnowledgeSource { // O IKnowledgeSource
+public class RegistrarUsuarioHandler implements IHandler { // O IHandler
 
-    private final IBlackboard blackboard;
+    private final IHandlerCommons handlerCommons;
     private final IServer server;
     private final Controller controller;
 
-    public RegistrarUsuarioKS(IBlackboard blackboard, IServer server, Controller controller) {
+    public RegistrarUsuarioHandler(IHandlerCommons blackboard, IServer server, Controller controller) {
         // Verificar nulos si es necesario
-        this.blackboard = blackboard;
+        this.handlerCommons = blackboard;
         this.server = server;
         this.controller = controller;
     }
@@ -65,11 +65,11 @@ public class RegistrarUsuarioKS implements IKnowledgeSource { // O IKnowledgeSou
         System.out.println("REGISTRAR_USUARIO_KS: Procesando registro para nombre '" + nombre + "' desde socket " + cliente.getInetAddress().getHostAddress());
 
         // 2. Verificar si el nombre ya está en uso por OTRO socket
-        // Usamos la interfaz IBlackboard para interactuar
-        if (blackboard.isNombreEnUso(nombre)) {
+        // Usamos la interfaz IHandlerCommons para interactuar
+        if (handlerCommons.isNombreEnUso(nombre)) {
             // Podríamos verificar si el socket asociado a ese nombre es el mismo que el actual,
             // lo que significaría un re-registro, pero por ahora lo tratamos como error.
-             Socket socketExistente = blackboard.getSocketDeUsuario(nombre);
+             Socket socketExistente = handlerCommons.getSocketDeUsuario(nombre);
              if (socketExistente != null && !socketExistente.equals(cliente)) {
                  System.err.println("REGISTRAR_USUARIO_KS: Nombre '" + nombre + "' ya está en uso por otro cliente.");
                  enviarError(cliente, "El nombre de usuario '" + nombre + "' ya está en uso.");
@@ -89,7 +89,7 @@ public class RegistrarUsuarioKS implements IKnowledgeSource { // O IKnowledgeSou
         
 
         // 3. Verificar si el SOCKET ya tiene OTRO nombre (opcional, pero informativo)
-        String nombrePrevioSocket = blackboard.getNombreDeUsuario(cliente);
+        String nombrePrevioSocket = handlerCommons.getNombreDeUsuario(cliente);
         if (nombrePrevioSocket != null && !nombrePrevioSocket.equals(nombre)) {
              System.out.println("REGISTRAR_USUARIO_KS WARN: Socket " + cliente.getInetAddress().getHostAddress() +
                                 " tenía nombre previo '" + nombrePrevioSocket + "', se sobrescribirá con '" + nombre + "'.");
@@ -107,7 +107,7 @@ System.out.println("-----------------------------------------------------");
         
         // 4. Registrar en Blackboard
         System.out.println("REGISTRAR_USUARIO_KS: Registrando usuario '" + nombre + "' para socket " + cliente.getInetAddress().getHostAddress());
-        blackboard.registrarUsuario(cliente, nombre); // Llama al método del blackboard
+        handlerCommons.registrarUsuario(cliente, nombre); // Llama al método del blackboard
 
         // 5. Enviar confirmación al cliente
         Evento respuestaOk = new Evento("REGISTRO_OK");
@@ -122,7 +122,7 @@ System.out.println("-----------------------------------------------------");
         }
 
         // 7. Informar al Blackboard sobre finalización
-        blackboard.respuestaFuenteC(cliente, evento); // O usar respuestaOk
+        handlerCommons.respuestaFuenteC(cliente, evento); // O usar respuestaOk
     }
 
     // Método helper para enviar errores específicos de este KS

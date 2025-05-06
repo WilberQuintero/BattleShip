@@ -2,32 +2,32 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package ks;
+package handlers;
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 import com.mycompany.blackboard.Controller;
-import com.mycompany.blackboard.IKnowledgeSource;
 
 import java.net.Socket;
 import java.util.*;
+import com.mycompany.blackboard.IHandler;
+import com.mycompany.battleship.commons.IHandlerCommons;
 /**
  *
  * @author Hector
  */
-public class IniciarPartidaKS implements IKnowledgeSource{
+public class IniciarPartidaHandler implements IHandler{
     
     // Dependencias (final hace que deban asignarse en el constructor)
     private final IServer server;
-    private final IBlackboard blackboard;
+    private final IHandlerCommons handlerCommons;
     private final Controller controller; // Hacerlo final si siempre se requiere
 
-    public IniciarPartidaKS(IBlackboard blackboard, IServer server, Controller controller) {
+    public IniciarPartidaHandler(IHandlerCommons blackboard, IServer server, Controller controller) {
           // Es buena práctica verificar que las dependencias no sean nulas
         if (blackboard == null || server == null || controller == null) {
             throw new IllegalArgumentException("Las dependencias (Blackboard, Server, Controller) no pueden ser nulas.");
         }
-        this.blackboard = blackboard;
+        this.handlerCommons = blackboard;
         this.server = server;
         this.controller = controller;
     }
@@ -46,7 +46,7 @@ public class IniciarPartidaKS implements IKnowledgeSource{
             return;
         }
 
-        Map<String, Object> datosSala = blackboard.getDatosSala(idSala);
+        Map<String, Object> datosSala = handlerCommons.getDatosSala(idSala);
         if (datosSala == null) {
             System.err.println("INICIAR_PARTIDA_KS: Sala no encontrada.");
             return;
@@ -73,7 +73,7 @@ public class IniciarPartidaKS implements IKnowledgeSource{
         // datosSala.put("barcos_jugador_2", barcosJugador2);
         // blackboard.actualizarDatosSala(idSala, datosSala);
 
-        blackboard.respuestaFuenteC(cliente, evento);
+        handlerCommons.respuestaFuenteC(cliente, evento);
     }
 
     private List<String> generarBarcos() {

@@ -8,7 +8,7 @@ package testDeServercomprobar;
 
 // Importa las clases CONCRETAS que vas a instanciar
 
-import com.mycompany.blackboard.BlackBoard;
+import com.mycompany.blackboard.HandlerChain;
 import com.mycompany.blackboard.Controller;
 
 // No necesitas importar las interfaces (IServer, IBlackboard) aquí,
@@ -37,7 +37,7 @@ public class ServerTest {
 
         System.out.println("[TEST] Creando instancia de BlackBoard (pasando Server como IServer)...");
         // Pasamos la instancia 'server'. Java permite esto porque Server implementa IServer.
-        BlackBoard blackboard = new BlackBoard(server); // BlackBoard concreto
+        HandlerChain blackboard = new HandlerChain(server); // HandlerChain concreto
 
         System.out.println("[TEST] Creando instancia de Controller (pasando Server como IServer)...");
         // Pasamos la instancia 'server'. Java permite esto porque Server implementa IServer.
@@ -50,13 +50,13 @@ public class ServerTest {
         System.out.println("[TEST] Estableciendo referencias cruzadas...");
 
         // El Server necesita conocer el Blackboard (como IBlackboard)
-        server.setBlackboard(blackboard); // Pasamos 'blackboard', se acepta como IBlackboard
+        server.setHandlerCommons(blackboard); // Pasamos 'blackboard', se acepta como IBlackboard
 
         // El Controller necesita conocer el Blackboard (como IBlackboard)
-        controller.setBlackboard(blackboard); // Pasamos 'blackboard', se acepta como IBlackboard
+        controller.setHandlerCommons(blackboard); // Pasamos 'blackboard', se acepta como IBlackboard
 
         // El Blackboard necesita conocer el Controller. Este setter también
-        // registra las KnowledgeSources dentro del BlackBoard.
+        // registra las KnowledgeSources dentro del HandlerChain.
         blackboard.setController(controller); // Pasamos 'controller' concreto
 
         System.out.println("[TEST] Referencias establecidas y KS registradas en BlackBoard.");
@@ -113,7 +113,7 @@ public class ServerTest {
 
         // --- 7. Inspección Final (Opcional) ---
         System.out.println("\n[TEST] Realizando inspección final del Blackboard...");
-        // Llama al método inspect que añadimos al BlackBoard para ver el estado
+        // Llama al método inspect que añadimos al HandlerChain para ver el estado
         if (blackboard != null) {
             blackboard.inspect();
         }

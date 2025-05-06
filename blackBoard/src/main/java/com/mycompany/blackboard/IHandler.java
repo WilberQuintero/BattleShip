@@ -16,7 +16,7 @@ import java.net.Socket;
  * Interfaz que define el contrato para una Fuente de Conocimiento (Knowledge Source)
  * dentro del patrón Blackboard.
  */
-public interface IKnowledgeSource {
+public interface IHandler {
 
     /**
      * Determina si esta fuente de conocimiento puede procesar el evento dado.

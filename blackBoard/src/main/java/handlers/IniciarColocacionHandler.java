@@ -2,35 +2,35 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package ks;
+package handlers;
 
 /**
  *
  * @author caarl
  */
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 import com.mycompany.blackboard.Controller; // Controller del backend
-import com.mycompany.blackboard.IKnowledgeSource;
 
 import java.net.Socket;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList; // Para crear la lista de flota
+import com.mycompany.blackboard.IHandler;
+import com.mycompany.battleship.commons.IHandlerCommons;
 
 /**
  * Knowledge Source que se activa cuando una sala está llena
  * para iniciar la fase de colocación de barcos por parte de los jugadores.
  */
-public class IniciarColocacionKS implements IKnowledgeSource { // O IKnowledgeSource
+public class IniciarColocacionHandler implements IHandler { // O IHandler
 
-    private final IBlackboard blackboard;
+    private final IHandlerCommons handlerCommons;
     private final IServer server;
     private final Controller controller;
 
-    public IniciarColocacionKS(IBlackboard blackboard, IServer server, Controller controller) {
-        this.blackboard = blackboard;
+    public IniciarColocacionHandler(IHandlerCommons blackboard, IServer server, Controller controller) {
+        this.handlerCommons = blackboard;
         this.server = server;
         this.controller = controller;
     }
@@ -51,7 +51,7 @@ public class IniciarColocacionKS implements IKnowledgeSource { // O IKnowledgeSo
 
         System.out.println("INICIAR_COLOCACION_KS: Procesando inicio de colocación para sala: " + idSala);
 
-        Map<String, Object> datosSala = blackboard.getDatosSala(idSala);
+        Map<String, Object> datosSala = handlerCommons.getDatosSala(idSala);
         if (datosSala == null) {
             System.err.println("INICIAR_COLOCACION_KS: No se encontraron datos para la sala " + idSala);
             return;
@@ -91,7 +91,7 @@ public class IniciarColocacionKS implements IKnowledgeSource { // O IKnowledgeSo
         datosSala.put("tableroJsonJugador2", null); // Placeholder
         datosSala.put("jugador1ListoColocar", false); // Flags para saber cuándo ambos terminaron
         datosSala.put("jugador2ListoColocar", false);
-        blackboard.actualizarDatosSala(idSala, datosSala);
+        handlerCommons.actualizarDatosSala(idSala, datosSala);
         System.out.println("INICIAR_COLOCACION_KS: Estado de sala " + idSala + " actualizado a COLOCANDO_BARCOS.");
 
 

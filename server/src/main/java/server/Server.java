@@ -9,7 +9,6 @@ package server;
  * @author caarl
  */
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -24,6 +23,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
+import com.mycompany.battleship.commons.IHandlerCommons;
 
 /**
  * Servidor principal adaptado al estilo Dominó.
@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Server implements Runnable, IServer { // Implementa IServer
 
 private final int port;
-    private IBlackboard blackboard; // Usa la interfaz IBlackboard
+    private IHandlerCommons handlerCommons; // Usa la interfaz IHandlerCommons
     private ServerSocket serverSocket;
     private volatile boolean running = true;
     // Mapa para mantener writers de clientes activos
@@ -51,13 +51,13 @@ private final int port;
     /**
      * Asigna la instancia del BlackBoard (como IBlackboard) al Server.
      * Debe llamarse antes de iniciar el hilo del servidor.
-     * @param blackboard La instancia del BlackBoard que implementa IBlackboard.
+     * @param handlerCommons La instancia del BlackBoard que implementa IHandlerCommons.
      */
-    public void setBlackboard(IBlackboard blackboard) {
-        if (blackboard == null) {
+    public void setHandlerCommons(IHandlerCommons handlerCommons) {
+        if (handlerCommons == null) {
             throw new IllegalArgumentException("La instancia de IBlackboard no puede ser nula.");
         }
-        this.blackboard = blackboard;
+        this.handlerCommons = handlerCommons;
         System.out.println("SERVER: IBlackboard asignado.");
     }
 
@@ -100,7 +100,7 @@ private final int port;
 
     @Override
     public void run() {
-        if (this.blackboard == null) {
+        if (this.handlerCommons == null) {
              System.err.println("SERVER CRITICAL ERROR: IBlackboard no asignado antes de iniciar. Deteniendo.");
              return;
         }
@@ -131,9 +131,9 @@ private final int port;
                                 Evento evento = parsearEvento(linea);
 
                                 // --- ¡¡ESTA ES LA PARTE CORREGIDA Y CLAVE!! ---
-                                if (evento != null && blackboard != null) {
+                                if (evento != null && handlerCommons != null) {
                                     System.out.println("SERVER [Hilo Cliente " + currentClientSocket.getPort() + "]: Enviando evento '" + evento.getTipo() + "' al Blackboard.");
-                                    blackboard.enviarEventoBlackBoard(currentClientSocket, evento); // Envía el evento parseado
+                                    handlerCommons.enviarEventoBlackBoard(currentClientSocket, evento); // Envía el evento parseado
                                 } else if (evento == null) {
                                     System.err.println("SERVER [Hilo Cliente " + currentClientSocket.getPort() + "]: Mensaje no pudo ser parseado: " + linea);
                                 }
@@ -228,15 +228,15 @@ private final int port;
         } catch (IOException e) {
              System.err.println("SERVER ERROR: Error cerrando socket de cliente desconectado: " + e.getMessage());
         }
-        // Notificar al blackboard sobre la desconexión para que actualice el estado del juego
-        if (blackboard != null) {
+        // Notificar al handlerCommons sobre la desconexión para que actualice el estado del juego
+        if (handlerCommons != null) {
              Evento eventoDesconexion = new Evento("DESCONECTAR_USUARIO");
              // Pasamos null como cliente "origen" porque el cliente ya no está activo
              // La información relevante (quién se desconectó) debe deducirse
              // por la KS que procese este evento, quizás buscando el socket en sus datos.
              // O podríamos añadir el socket como dato al evento si fuera útil.
              eventoDesconexion.agregarDato("socketDesconectado", cliente.toString()); // Añadir info del socket
-             blackboard.enviarEventoBlackBoard(null, eventoDesconexion);
+             handlerCommons.enviarEventoBlackBoard(null, eventoDesconexion);
         }
     }
 
