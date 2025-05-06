@@ -125,8 +125,6 @@ public class TableroJuego extends javax.swing.JFrame {
         // TODO: Limpiar/dibujar la cuadrícula inicial en tableroJPanel
         dibujarTablero();
         
-        
-
         //CRUCEROS*3 - Submarinos*1 - Barcos*2 - Artilleros*4  (* numero de casillas)
         configurarBarcos(1,2,1,1);
     }
@@ -204,11 +202,27 @@ public class TableroJuego extends javax.swing.JFrame {
                 btn.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
-                        // Evitar que el click derecho haga algo
                         if (e.getButton() == MouseEvent.BUTTON3) {
-                            return; // No hacer nada si es click derecho
+                        isRotado = !isRotado;
+                        ImageIcon icon = (ImageIcon) btn.getIcon();
+                        Image originalImg = iconBase.getImage().getScaledInstance(tamaño * cellSize, cellSize, Image.SCALE_SMOOTH);
+
+                        Image nuevaImg;
+                        if (isRotado) {
+                            rotatedImage = rotateImage(originalImg);
+                            nuevaImg = rotatedImage;
+                            btn.setPreferredSize(new Dimension(cellSize, tamaño * cellSize));
+                        } else {
+                            rotatedImage = originalImg;
+                            nuevaImg = rotatedImage;
+                            btn.setPreferredSize(new Dimension(tamaño * cellSize, cellSize));
                         }
 
+                        btn.setIcon(new ImageIcon(nuevaImg));
+                        jPanel2.revalidate();
+                        jPanel2.repaint();
+                        return;
+                    }
                         initialClick = e.getPoint(); // Guardar posición inicial
                     }
 
@@ -291,39 +305,41 @@ public class TableroJuego extends javax.swing.JFrame {
                 btn.addMouseMotionListener(new MouseMotionAdapter() {
                     @Override
                     public void mouseDragged(MouseEvent e) {
-                        if (lblArrastrando == null) {
-                            ImageIcon icon = (ImageIcon) btn.getIcon();
-                            Image img = icon.getImage();
-
-                            if (isRotado) {
-                                rotatedImage = rotateImage(img);
-                            } else {
-                                rotatedImage = img;
-                            }
-
-                            lblArrastrando = new JLabel(new ImageIcon(rotatedImage));
-                            lblArrastrando.setSize(rotatedImage.getWidth(null), rotatedImage.getHeight(null));
-                            lblArrastrando.setOpaque(false);
-                            tableroJPanel.add(lblArrastrando);
-                            tableroJPanel.setComponentZOrder(lblArrastrando, 0);
+                        if (lblArrastrando != null) {
+                            tableroJPanel.remove(lblArrastrando);
+                            lblArrastrando = null;
+                            tableroJPanel.repaint();
                         }
 
-                        // Obtener las coordenadas del mouse en el tablero
-                        Point puntoEnTablero = SwingUtilities.convertPoint(btn, e.getPoint(), tableroJPanel);
+                        ImageIcon icon = (ImageIcon) btn.getIcon();
+                        Image img = icon.getImage();
 
-                        // Ajustar la posición de la imagen mientras se arrastra
+                        if (isRotado) {
+                            rotatedImage = rotateImage(img);
+                        } else {
+                            rotatedImage = img;
+                        }
+
+                        lblArrastrando = new JLabel(new ImageIcon(rotatedImage));
+                        lblArrastrando.setSize(rotatedImage.getWidth(null), rotatedImage.getHeight(null));
+                        lblArrastrando.setOpaque(false);
+                        tableroJPanel.add(lblArrastrando);
+                        tableroJPanel.setComponentZOrder(lblArrastrando, 0);
+
+                        Point puntoEnTablero = SwingUtilities.convertPoint(btn, e.getPoint(), tableroJPanel);
                         if (isRotado) {
                             lblArrastrando.setLocation(
-                                puntoEnTablero.x - (lblArrastrando.getWidth()/2),  // Centrado horizontalmente
-                                puntoEnTablero.y - (lblArrastrando.getHeight()/2)  // Centrado verticalmente
-                                 ); 
-                        }else {
+                            puntoEnTablero.x - (lblArrastrando.getWidth() / 6),
+                            puntoEnTablero.y - (lblArrastrando.getHeight() / 6)
+                        );
+                        } else {
                             lblArrastrando.setLocation(
-                            puntoEnTablero.x - (lblArrastrando.getWidth() / 6),  // Centrado horizontalmente
-                            puntoEnTablero.y - (lblArrastrando.getHeight() / 2)  // Centrado verticalmente
-                             ); 
-                            }
-                        // Forzar repintado del panel para que la imagen rotada o no rotada se muestre
+                            puntoEnTablero.x - (lblArrastrando.getWidth() / 6),
+                            puntoEnTablero.y - (lblArrastrando.getHeight() / 2)
+                        );
+                        }
+                        
+
                         tableroJPanel.revalidate();
                         tableroJPanel.repaint();
                     }
@@ -378,7 +394,7 @@ public class TableroJuego extends javax.swing.JFrame {
     private void seleccionarBarco(String tamaño) {
             barcoSeleccionado = tamaño;
             System.out.println("Barco seleccionado: " + tamaño);
-        }
+    }
 
 
      private void dibujarTablero() {
@@ -452,7 +468,6 @@ public class TableroJuego extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         cancelButton = new javax.swing.JButton();
         readyButton = new javax.swing.JButton();
-        btnRotar = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -523,14 +538,6 @@ public class TableroJuego extends javax.swing.JFrame {
             }
         });
         jPanel1.add(readyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(690, 160, 120, 40));
-
-        btnRotar.setText("Rotar");
-        btnRotar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnRotarActionPerformed(evt);
-            }
-        });
-        jPanel1.add(btnRotar, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 440, -1, -1));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -604,37 +611,6 @@ public class TableroJuego extends javax.swing.JFrame {
                mostrarError("Error interno: Controlador no disponible.");
          }
     }//GEN-LAST:event_readyButtonActionPerformed
-
-    private void btnRotarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRotarActionPerformed
-        for (Component comp : jPanel2.getComponents()) {
-            if (comp instanceof JButton) {
-                JButton btn = (JButton) comp;
-                // Verificar si el barco está visible (es decir, aún no colocado)
-                if (btn.isVisible()) {
-                    // Obtener la imagen y rotarla solo si está estático (no arrastrado)
-                    ImageIcon icon = (ImageIcon) btn.getIcon();
-                    Image img = icon.getImage();
-                    Image rotatedImage = rotateImage(img);
-
-                    // Cambiar la imagen del botón con la imagen rotada
-                    btn.setIcon(new ImageIcon(rotatedImage));
-
-                    // Actualizar el tamaño del botón según la nueva orientación
-                    int width = rotatedImage.getWidth(null);
-                    int height = rotatedImage.getHeight(null);
-                    btn.setPreferredSize(new Dimension(width, height));
-
-                    // Recalcular el tamaño del barco según la nueva orientación
-                    int tamaño = Integer.parseInt(btn.getActionCommand());  // Obtiene el tamaño del barco
-                    btn.setActionCommand(String.valueOf(width / 40)); // Ajusta el tamaño del barco
-
-                    jPanel2.revalidate();
-                    jPanel2.repaint();
-                    break;  // Solo rotar un barco a la vez por clic en el botón
-                }
-            }
-        }
-    }//GEN-LAST:event_btnRotarActionPerformed
 // Acción al cerrar ventana
      private void formWindowClosing(java.awt.event.WindowEvent evt) {
          // Preguntar si quiere abandonar la partida
@@ -757,7 +733,6 @@ public class TableroJuego extends javax.swing.JFrame {
    
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnRotar;
     private javax.swing.JButton cancelButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
