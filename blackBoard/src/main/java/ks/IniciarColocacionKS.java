@@ -76,19 +76,12 @@ public class IniciarColocacionKS implements IKnowledgeSource { // O IKnowledgeSo
         // Podrías tener esto en una clase de configuración o constantes
         // Formato: "Nombre:Tamaño"
         List<String> flotaParaColocar = new ArrayList<>();
-        flotaParaColocar.add("Portaaviones:4"); // Según PDF eran 2? Ajusta según tus reglas
         flotaParaColocar.add("Portaaviones:4");
         flotaParaColocar.add("Crucero:3");
-        flotaParaColocar.add("Crucero:3");
-        flotaParaColocar.add("Submarino:2"); // Eran 4 submarinos?
         flotaParaColocar.add("Submarino:2");
-        flotaParaColocar.add("Submarino:2");
-        flotaParaColocar.add("Submarino:2");
-        flotaParaColocar.add("Barco:1"); // Eran 3 barcos?
-        flotaParaColocar.add("Barco:1");
         flotaParaColocar.add("Barco:1");
         // Crear un string simple para enviar (JSON sería mejor a futuro)
-        String flotaString = String.join(",", flotaParaColocar); // "Portaaviones:4,Portaaviones:4,..."
+        String flotaString = String.join(",", flotaParaColocar); // "Portaaviones:4,Crucero:3,..."
 
 
         // --- Actualizar Estado de la Sala en Blackboard ---

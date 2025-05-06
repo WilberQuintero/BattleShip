@@ -11,6 +11,7 @@
             <artifactId>battleship-commons</artifactId>
             <version>${project.version}</version>
         </dependency>
+                   
     </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

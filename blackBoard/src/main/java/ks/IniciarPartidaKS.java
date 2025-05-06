@@ -78,11 +78,10 @@ public class IniciarPartidaKS implements IKnowledgeSource{
 
     private List<String> generarBarcos() {
         return Arrays.asList(
-            "Portaaviones A1-A5",
-            "Acorazado B1-B4",
-            "Submarino C1-C3",
-            "Destructor D1-D3",
-            "Lancha E1-E2"
+            "Portaaviones A1-A4",
+            "Crucero B1-B3",
+            "Submarino C1-C2",
+            "Barco D1-D1"
         );
     }
 }
