@@ -6,7 +6,8 @@ package View;
 
 import Controler.controladorCrearPartida;
 import Controler.controladorInicio;
-import com.mycompany.servercomunicacion.ServerComunicacion;
+import Controler.controladorPartidaEspera;
+import Controler.controladorTablero;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
@@ -27,7 +28,10 @@ public class UnirseJugar extends javax.swing.JFrame {
     private final controladorCrearPartida controlador;
     // Referencia al controlador principal (útil para desconectar al cerrar o navegar)
     private final controladorInicio controladorPrincipal;
-
+    
+//    private final controladorPartidaEspera controladorEspera;
+//
+//    private final controladorTablero controladorTablero;
 
     /**
      * Creates new form UnirseJugar.
@@ -38,6 +42,7 @@ public class UnirseJugar extends javax.swing.JFrame {
         initComponents(); // Inicializa componentes Swing (generado por NetBeans)
         this.setLocationRelativeTo(null); // Centrar
         this.controladorPrincipal = ctrlInicio; // Guardar referencia
+       
 
         // --- Crear e inicializar el controlador específico ---
         controladorCrearPartida ctrlSecundario = null;
@@ -61,9 +66,6 @@ public class UnirseJugar extends javax.swing.JFrame {
         // Asignar el controlador creado (puede ser null si falló arriba) a la variable de instancia
         this.controlador = ctrlSecundario;
     }
-    // --- Este método va DENTRO de tu clase View.UnirseJugar.java ---
-
-   // Dentro de UnirseJugar.java
 
     /**
      * Navega a la pantalla de espera (SIN invokeLater interno).

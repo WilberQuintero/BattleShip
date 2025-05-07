@@ -167,8 +167,6 @@ public class controladorCrearPartida {
      * @param datos Los datos recibidos del servidor.
      */
     public void procesarRespuestaUnirseSala(boolean exito, Map<String, Object> datos) {
-         // Log de entrada (¡Verifica que este aparezca!)
-         System.out.println("DEBUG [CrearPartida]: Ingresando a procesarRespuestaUnirseSala. Éxito=" + exito);
 
          if (vistaUnirseJugar == null) {
              System.err.println("CONTROLLER [CrearPartida]: ERROR - Vista (UnirseJugar) no asignada para procesar respuesta UnirseSala.");
@@ -229,6 +227,22 @@ public class controladorCrearPartida {
          }
          System.out.println("DEBUG [CrearPartida]: Fin de procesarRespuestaUnirseSala.");
     }
+    
+    
+    // Dentro de la clase controladorCrearPartida.java
+
+public void metodoDePruebaSuperSimple(String mensajeEntrada) {
+    // Log muy distintivo para que sea fácil de ver
+    System.out.println("*******************************************************************");
+    System.out.println("***** MÉTODO DE PRUEBA SUPER SIMPLE EN controladorCrearPartida EJECUTADO *****");
+    System.out.println("***** Mensaje recibido: " + mensajeEntrada);
+    System.out.println("*******************************************************************");
+    System.out.flush(); // Forzar que la consola muestre esto inmediatamente
+}
+
+// ... El resto de tus métodos (procesarRespuestaCrearSala, procesarRespuestaUnirseSala, etc.)
+// pueden quedar como estaban o simplificados si aún lo están. Para esta prueba,
+// solo nos importa si metodoDePruebaSuperSimple se ejecuta.
 
     
 } // Fin de la clase
