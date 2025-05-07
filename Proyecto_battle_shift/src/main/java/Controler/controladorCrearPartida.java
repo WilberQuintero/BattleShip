@@ -192,7 +192,7 @@ public class controladorCrearPartida {
                  System.out.println("CONTROLLER [CrearPartida]: Unión a sala '" + idSalaUnida + "' OK. Llamando a vistaUnirseJugar.navegarAPantallaEspera...");
 
                  // --- ¡NAVEGACIÓN AQUÍ! ---
-                 vistaUnirseJugar.navegarAPantallaEspera(idSalaUnida);
+                 vistaUnirseJugar.navegarAPantallaTablero(idSalaUnida);
                  // -------------------------
                  System.out.println("DEBUG [CrearPartida]: Llamada a navegarAPantallaEspera completada.");
 

@@ -28,10 +28,6 @@ public class UnirseJugar extends javax.swing.JFrame {
     private final controladorCrearPartida controlador;
     // Referencia al controlador principal (útil para desconectar al cerrar o navegar)
     private final controladorInicio controladorPrincipal;
-    
-//    private final controladorPartidaEspera controladorEspera;
-//
-//    private final controladorTablero controladorTablero;
 
     /**
      * Creates new form UnirseJugar.
@@ -66,6 +62,53 @@ public class UnirseJugar extends javax.swing.JFrame {
         // Asignar el controlador creado (puede ser null si falló arriba) a la variable de instancia
         this.controlador = ctrlSecundario;
     }
+    
+    
+    
+    /**
+ * Navega a la pantalla de tablero de juego.
+ * Se asume que este método es llamado desde el EDT.
+ * @param idSala El identificador de la sala a la que se va a unir el tablero.
+ */
+public void navegarAPantallaTablero(String idSala) {
+    System.out.println("VIEW [UnirseJugar]: Navegando a TableroJuego para sala: " + idSala);
+
+    if (this.controladorPrincipal == null) {
+        System.err.println("VIEW [UnirseJugar] ERROR CRÍTICO: controladorPrincipal es null.");
+        mostrarError("Error interno grave al intentar abrir el tablero.");
+        reactivarBotones();
+        return;
+    }
+
+    String miNombre = this.controladorPrincipal.getNombreUsuarioRegistrado();
+    if (miNombre == null || miNombre.isBlank()) {
+        System.err.println("VIEW [UnirseJugar] WARN: No se pudo obtener nombre. Usando default.");
+        miNombre = "Jugador ???";
+    }
+    System.out.println("VIEW [UnirseJugar]: Nombre de usuario para TableroJuego: " + miNombre);
+
+    try {
+        System.out.println("VIEW [UnirseJugar]: Creando instancia de TableroJuego...");
+        TableroJuego pantallaTablero = new TableroJuego(this.controladorPrincipal, idSala, miNombre,"");
+
+        System.out.println("VIEW [UnirseJugar]: Limpiando controladorCrearPartidaActual en controladorInicio...");
+        this.controladorPrincipal.clearControladorCrearPartidaActual();
+
+        System.out.println("VIEW [UnirseJugar]: Haciendo visible TableroJuego...");
+        pantallaTablero.setVisible(true);
+
+        System.out.println("VIEW [UnirseJugar]: Cerrando esta ventana (dispose)...");
+        this.dispose();
+
+    } catch (Exception e) {
+        System.err.println("VIEW [UnirseJugar] ERROR CRÍTICO: Excepción al crear/mostrar TableroJuego: " + e.getMessage());
+        e.printStackTrace();
+        mostrarError("No se pudo abrir la pantalla de juego.\nError: " + e.getMessage());
+        reactivarBotones();
+        this.controladorPrincipal.clearControladorCrearPartidaActual(); // Limpiar por si acaso
+    }
+}
+
 
     /**
      * Navega a la pantalla de espera (SIN invokeLater interno).
@@ -73,8 +116,6 @@ public class UnirseJugar extends javax.swing.JFrame {
      * @param idSala
      */
     public void navegarAPantallaEspera(String idSala) {
-        // --- invokeLater ELIMINADO de aquí ---
-        // SwingUtilities.invokeLater(() -> { // <--- QUITAR
 
         System.out.println("VIEW [UnirseJugar]: Navegando a PantallaEspera para sala: " + idSala);
 
