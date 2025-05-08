@@ -5,6 +5,7 @@
 package dto;
 import enums.*;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set; // O List para JSON más simple si Set da problemas con alguna librería
 import java.util.Map; // O una estructura de lista para JSON
@@ -14,17 +15,21 @@ import java.util.Map; // O una estructura de lista para JSON
  */
 // --- TableroSeguimientoDTO ---
 public class TableroSeguimientoDTO implements Serializable {
-    private List<RegistroDisparoSeguimientoDTO> registrosDisparos; // Más JSON-friendly que Map<PosicionDTO, ...>
+     private Map<PosicionDTO, ResultadoDisparo> registrosDisparos;
     private int dimension;
 
     public TableroSeguimientoDTO() {}
     // Constructor, Getters y Setters...
+  public TableroSeguimientoDTO(int dimension) {
+        this.dimension = dimension;
+        this.registrosDisparos = new HashMap<>();
+    }
 
-    public List<RegistroDisparoSeguimientoDTO> getRegistrosDisparos() {
+    public Map<PosicionDTO, ResultadoDisparo> getRegistrosDisparos() {
         return registrosDisparos;
     }
 
-    public void setRegistrosDisparos(List<RegistroDisparoSeguimientoDTO> registrosDisparos) {
+    public void setRegistrosDisparos(Map<PosicionDTO, ResultadoDisparo> registrosDisparos) {
         this.registrosDisparos = registrosDisparos;
     }
 

@@ -9,6 +9,7 @@ package com.mycompany.battleship.commons;
  *
  * @author caarl
  */
+import dto.JugadorDTO;
 import java.net.Socket;
 import java.util.List; // Necesario para getClientesConectados
 import java.util.Map;  // Necesario para los métodos de sala
@@ -48,8 +49,8 @@ public interface IBlackboard {
      * @param cliente El socket del cliente.
      * @param nombre El nombre de usuario validado.
      */
-    void registrarUsuario(Socket cliente, String nombre); // <-- NUEVO
-
+     void registrarUsuario(Socket cliente, JugadorDTO jugadorDTO); // <-- NUEVO
+JugadorDTO getJugadorDTO(Socket cliente); 
     /**
      * Obtiene el nombre de usuario asociado a un socket específico.
      * @param cliente El socket del cliente.

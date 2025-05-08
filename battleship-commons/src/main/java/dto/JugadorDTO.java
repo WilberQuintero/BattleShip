@@ -22,7 +22,19 @@ public class JugadorDTO implements Serializable {
 
     public JugadorDTO() {}
     // Constructor, Getters y Setters...
-
+       public JugadorDTO(String nombre) {
+        this.nombre = nombre;
+        this.tableroFlota =null;
+        this.tableroSeguimiento = null;
+        this.haConfirmadoTablero = false;
+    }
+       public JugadorDTO(String nombre, int dimensionTablero) {
+        this.nombre = nombre;
+        this.tableroFlota = new TableroFlotaDTO(dimensionTablero);
+        this.tableroSeguimiento = new TableroSeguimientoDTO(dimensionTablero);
+        this.haConfirmadoTablero = false;
+    }
+    
     public String getNombre() {
         return nombre;
     }

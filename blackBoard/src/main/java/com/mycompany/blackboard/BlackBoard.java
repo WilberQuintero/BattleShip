@@ -5,6 +5,7 @@
 package com.mycompany.blackboard; 
 
 // --- Importaciones Correctas ---
+import dto.JugadorDTO;
 import ks.CrearSalaKS;
 import ks.UnirseSalaKS;
 import ks.ConnectionKS;
@@ -36,7 +37,8 @@ public class BlackBoard implements IBlackboard {
     private final Map<String, Map<String, Object>> salas;
     private final Map<String, Socket> socketPorNombre;
     private final Map<Socket, String> nombrePorSocket;
-
+   private final Map<Socket, JugadorDTO> jugadorDTOPorSocket;
+    private final Map<String, JugadorDTO> jugadorDTOPorNombre; 
     // --- Componentes del Sistema ---
     private Controller controller;
     private final IServer server;
@@ -55,6 +57,9 @@ public class BlackBoard implements IBlackboard {
         this.salas = new ConcurrentHashMap<>();
         this.socketPorNombre = new ConcurrentHashMap<>();
         this.nombrePorSocket = new ConcurrentHashMap<>();
+        // Inicializar los nuevos mapas
+        this.jugadorDTOPorSocket = new ConcurrentHashMap<>();
+        this.jugadorDTOPorNombre = new ConcurrentHashMap<>();
         this.knowledgeSources = new ArrayList<>();
     }
 
@@ -250,15 +255,132 @@ public class BlackBoard implements IBlackboard {
 
     // --- NUEVOS Métodos Implementados de IBlackboard ---
 
+/**
+     * Verifica si un nombre de jugador ya está en uso (registrado en jugadorDTOPorNombre).
+     * @param nombre El nombre a verificar.
+     * @return true si el nombre está en uso, false en caso contrario.
+     */
     @Override
-    public boolean isNombreEnUso(String nombre) {
-        // Implementación existente
-        if (nombre == null) return false;
-        return socketPorNombre.containsKey(nombre);
+    public boolean isNombreEnUso(String nombre) { // Implementación actualizada
+        if (nombre == null || nombre.isBlank()) return false;
+        return jugadorDTOPorNombre.containsKey(nombre);
+    }
+    
+    /**
+     * Registra un JugadorDTO asociándolo a un Socket.
+     * Gestiona la actualización si el socket o el nombre ya existían.
+     *
+     * @param cliente El Socket del cliente.
+     * @param nuevoJugadorDTO El objeto JugadorDTO a registrar.
+     */
+    @Override
+    public synchronized void registrarUsuario(Socket cliente, JugadorDTO nuevoJugadorDTO) { // CAMBIO: Acepta JugadorDTO
+        if (cliente == null || nuevoJugadorDTO == null) {
+            System.err.println("BLACKBOARD ERROR: registrarUsuario: Cliente o JugadorDTO nulo.");
+            return;
+        }
+        String nombreNuevoJugador = nuevoJugadorDTO.getNombre();
+
+        System.out.println("BLACKBOARD [registrarUsuario]: Solicitud para registrar JugadorDTO: " + nombreNuevoJugador +
+                           " con Socket: " + cliente.getInetAddress().getHostAddress() + ":" + cliente.getPort());
+
+        // 1. Manejar si el Socket ya está asociado con otro JugadorDTO
+        JugadorDTO jugadorAnteriorDelSocket = jugadorDTOPorSocket.get(cliente);
+        if (jugadorAnteriorDelSocket != null) {
+            System.out.println("BLACKBOARD [registrarUsuario]: Socket ya asociado con JugadorDTO '" +
+                               jugadorAnteriorDelSocket.getNombre() + "'.");
+            if (!jugadorAnteriorDelSocket.getNombre().equals(nombreNuevoJugador)) {
+                System.out.println("BLACKBOARD [registrarUsuario]: El nombre cambió. Eliminando mapeo antiguo nombre '" +
+                                   jugadorAnteriorDelSocket.getNombre() + "' de jugadorDTOPorNombre.");
+                jugadorDTOPorNombre.remove(jugadorAnteriorDelSocket.getNombre());
+            }
+        }
+
+        // 2. Manejar si el nombre ya está en uso por otro JugadorDTO (y potencialmente otro socket)
+        JugadorDTO jugadorExistenteConEseNombre = jugadorDTOPorNombre.get(nombreNuevoJugador);
+        if (jugadorExistenteConEseNombre != null) {
+            System.out.println("BLACKBOARD [registrarUsuario]: Nombre '" + nombreNuevoJugador +
+                               "' ya asociado a JugadorDTO: " + jugadorExistenteConEseNombre.getNombre());
+            // Buscar el socket asociado a este jugador existente
+            Socket socketDelJugadorConNombreExistente = null;
+            for (Map.Entry<Socket, JugadorDTO> entry : jugadorDTOPorSocket.entrySet()) {
+                // Usamos el nombre para comparar DTOs, asumiendo que el nombre es el identificador único aquí
+                if (entry.getValue().getNombre().equals(jugadorExistenteConEseNombre.getNombre())) {
+                    socketDelJugadorConNombreExistente = entry.getKey();
+                    break;
+                }
+            }
+
+            if (socketDelJugadorConNombreExistente != null && !socketDelJugadorConNombreExistente.equals(cliente)) {
+                // El nombre está en uso por un socket diferente. La KS debería haberlo prevenido.
+                // Si se decide permitir que la nueva conexión "robe" el nombre:
+                System.err.println("BLACKBOARD WARN [registrarUsuario]: Nombre '" + nombreNuevoJugador +
+                                   "' usado por OTRO socket (" + socketDelJugadorConNombreExistente.getInetAddress().getHostAddress() +
+                                   "). Se desvinculará el socket antiguo.");
+                jugadorDTOPorSocket.remove(socketDelJugadorConNombreExistente);
+            }
+        }
+
+        // 3. Realizar el registro/actualización con el DTO
+        jugadorDTOPorSocket.put(cliente, nuevoJugadorDTO);
+        jugadorDTOPorNombre.put(nombreNuevoJugador, nuevoJugadorDTO);
+
+        System.out.println("*****************************************************");
+        System.out.println("BLACKBOARD: >>> Usuario Registrado (con JugadorDTO) <<<");
+        System.out.println("   Socket: " + cliente.getInetAddress().getHostAddress() + ":" + cliente.getPort());
+        System.out.println("   JugadorDTO: " + nuevoJugadorDTO.toString()); // Usa el toString() de JugadorDTO
+        System.out.println("   Total jugadorDTOPorSocket: " + jugadorDTOPorSocket.size());
+        System.out.println("   Total jugadorDTOPorNombre: " + jugadorDTOPorNombre.size());
+        System.out.println("*****************************************************");
+    }
+    
+    /**
+     * Obtiene el objeto JugadorDTO asociado a un Socket.
+     * @param cliente El socket del cliente.
+     * @return El JugadorDTO, o null si no hay asociación.
+     */
+    public JugadorDTO getJugadorDTO(Socket cliente) { // NUEVO método
+        if (cliente == null) return null;
+        return jugadorDTOPorSocket.get(cliente);
+    }
+    
+    
+
+  /**
+     * Obtiene el nombre del jugador (desde el DTO) asociado a un Socket.
+     * @param cliente El socket del cliente.
+     * @return El nombre del jugador, o null si no hay asociación.
+     */
+    @Override
+    public String getNombreDeUsuario(Socket cliente) { // Implementación actualizada
+        JugadorDTO jugadorDTO = jugadorDTOPorSocket.get(cliente);
+        return (jugadorDTO != null) ? jugadorDTO.getNombre() : null;
+    }
+  /**
+     * Obtiene el Socket asociado a un nombre de jugador.
+     * Busca en el mapa jugadorDTOPorNombre y luego encuentra el socket correspondiente.
+     * @param nombre El nombre del jugador.
+     * @return El Socket, o null si el nombre no está registrado.
+     */
+    @Override
+    public Socket getSocketDeUsuario(String nombre) { // Implementación actualizada
+        if (nombre == null || nombre.isBlank()) return null;
+        JugadorDTO jugadorDTO = jugadorDTOPorNombre.get(nombre);
+        if (jugadorDTO != null) {
+            for (Map.Entry<Socket, JugadorDTO> entry : jugadorDTOPorSocket.entrySet()) {
+                // Comparamos por nombre, ya que el DTO podría no tener un equals robusto
+                if (entry.getValue().getNombre().equals(jugadorDTO.getNombre())) {
+                    return entry.getKey();
+                }
+            }
+        }
+        return null;
     }
 
-    @Override
-    public void registrarUsuario(Socket cliente, String nombre) {
+    
+    
+    
+    public void registrarUsuarioAnterior(Socket cliente, String nombre) {
         // Implementación existente (con logs detallados y manejo de casos)
         if (cliente == null || nombre == null || nombre.isBlank()) { /* ... */ return; }
         String nombreAnterior = nombrePorSocket.get(cliente);
@@ -276,21 +398,6 @@ public class BlackBoard implements IBlackboard {
         System.out.println("    (Tablero y Turno se asignarán más adelante)");
         System.out.println("*****************************************************");
     }
-
-    @Override
-    public String getNombreDeUsuario(Socket cliente) {
-        // Implementación existente
-        if (cliente == null) return null;
-        return nombrePorSocket.get(cliente);
-    }
-
-    @Override
-    public Socket getSocketDeUsuario(String nombre) {
-        // Implementación existente
-        if (nombre == null) return null;
-        return socketPorNombre.get(nombre);
-    }
-
     // --- Getters Internos (para uso de KSs si se pasan en constructor) ---
     public IServer getServer() { return server; }
     public Controller getController() { return controller; }
@@ -342,4 +449,29 @@ public class BlackBoard implements IBlackboard {
          nombrePorSocket.forEach((socket, nombre) -> System.out.println(String.format("  - %-21s -> '%s'", (socket != null && socket.getInetAddress() != null ? socket.getInetAddress().getHostAddress() : "NULL/Inválido"), nombre)));
         System.out.println("------------------------------------------\n");
     }
+     
+     
+      /**
+     * Elimina las asociaciones de un JugadorDTO cuando se desconecta el cliente.
+     * @param cliente El Socket del cliente desconectado.
+     */
+    public synchronized void usuarioDesconectado(Socket cliente) { // Renombrado/Añadido
+        if (cliente == null) return;
+
+        System.out.println("BLACKBOARD: Procesando desconexión (usuarioDesconectado) para socket " + cliente.getInetAddress().getHostAddress());
+        JugadorDTO jugadorDesconectadoDTO = jugadorDTOPorSocket.remove(cliente);
+
+        if (jugadorDesconectadoDTO != null) {
+            System.out.println("BLACKBOARD: JugadorDTO '" + jugadorDesconectadoDTO.getNombre() + "' estaba asociado al socket. Eliminando de jugadorDTOPorNombre.");
+            jugadorDTOPorNombre.remove(jugadorDesconectadoDTO.getNombre());
+            System.out.println("BLACKBOARD: JugadorDTO '" + jugadorDesconectadoDTO.getNombre() + "' eliminado completamente.");
+            // Aquí iría la lógica para limpiar la presencia del jugador en las salas, etc.
+        } else {
+            System.out.println("BLACKBOARD: No se encontró JugadorDTO asociado al socket " + cliente.getInetAddress().getHostAddress() + " para eliminar.");
+        }
+        clientesConectados.remove(cliente);
+        System.out.println("BLACKBOARD: Limpieza de usuarioDesconectado completada para socket " + cliente.getInetAddress().getHostAddress());
+    }
+
 }
+

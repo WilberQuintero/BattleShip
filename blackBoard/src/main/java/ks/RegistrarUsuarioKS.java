@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package ks;
-
+import dto.JugadorDTO; // Importa tu JugadorDTO
 /**
  *
  * @author caarl
@@ -43,10 +43,7 @@ public class RegistrarUsuarioKS implements IKnowledgeSource { // O IKnowledgeSou
 
     @Override
     public void procesarEvento(Socket cliente, Evento evento) {
-        if (cliente == null || evento == null) {
-            System.err.println("REGISTRAR_USUARIO_KS: Cliente o Evento nulo.");
-            return;
-        }
+        if (cliente == null || evento == null) { /* ... manejo error ... */ return; }
 
         // 1. Obtener y validar nombre
         Object nombreObj = evento.obtenerDato("nombre");
@@ -54,77 +51,60 @@ public class RegistrarUsuarioKS implements IKnowledgeSource { // O IKnowledgeSou
         if (nombreObj instanceof String) {
             nombre = ((String) nombreObj).trim();
         }
-
         if (nombre == null || nombre.isBlank()) {
-            System.err.println("REGISTRAR_USUARIO_KS: Nombre de usuario inválido recibido: '" + nombreObj + "'");
             enviarError(cliente, "Nombre de usuario inválido.");
-            // Considerar si se debe desconectar al cliente por enviar datos inválidos
             return;
         }
 
-        System.out.println("REGISTRAR_USUARIO_KS: Procesando registro para nombre '" + nombre + "' desde socket " + cliente.getInetAddress().getHostAddress());
+        System.out.println("REGISTRAR_USUARIO_KS: Procesando registro para nombre '" + nombre + "'...");
 
         // 2. Verificar si el nombre ya está en uso por OTRO socket
-        // Usamos la interfaz IBlackboard para interactuar
         if (blackboard.isNombreEnUso(nombre)) {
-            // Podríamos verificar si el socket asociado a ese nombre es el mismo que el actual,
-            // lo que significaría un re-registro, pero por ahora lo tratamos como error.
-             Socket socketExistente = blackboard.getSocketDeUsuario(nombre);
-             if (socketExistente != null && !socketExistente.equals(cliente)) {
-                 System.err.println("REGISTRAR_USUARIO_KS: Nombre '" + nombre + "' ya está en uso por otro cliente.");
-                 enviarError(cliente, "El nombre de usuario '" + nombre + "' ya está en uso.");
-                 return;
-             } else if (socketExistente != null && socketExistente.equals(cliente)) {
-                  System.out.println("REGISTRAR_USUARIO_KS: El cliente ya está registrado con este nombre. Permitiendo (o ignorando).");
-                  // Podríamos simplemente enviar OK o ignorar si ya está registrado con ese nombre.
-                  // Por ahora, continuaremos y sobrescribiremos por si acaso.
-             } else {
-                  // Caso raro: isNombreEnUso es true pero getSocketDeUsuario es null? Improbable con ConcurrentHashMap
-                  System.err.println("REGISTRAR_USUARIO_KS: Inconsistencia detectada para nombre '" + nombre + "'.");
-                  enviarError(cliente, "Error interno al verificar nombre.");
-                  return;
-             }
-        }
-        
-        
-
-        // 3. Verificar si el SOCKET ya tiene OTRO nombre (opcional, pero informativo)
-        String nombrePrevioSocket = blackboard.getNombreDeUsuario(cliente);
-        if (nombrePrevioSocket != null && !nombrePrevioSocket.equals(nombre)) {
-             System.out.println("REGISTRAR_USUARIO_KS WARN: Socket " + cliente.getInetAddress().getHostAddress() +
-                                " tenía nombre previo '" + nombrePrevioSocket + "', se sobrescribirá con '" + nombre + "'.");
-             // No enviamos error, permitimos el cambio de nombre implícito aquí
+            Socket socketExistente = blackboard.getSocketDeUsuario(nombre);
+            if (socketExistente != null && !socketExistente.equals(cliente)) {
+                enviarError(cliente, "El nombre de usuario '" + nombre + "' ya está en uso.");
+                return;
+            }
+            // Si es el mismo socket, permite continuar (re-registro)
         }
 
-System.out.println("-----------------------------------------------------");
-        System.out.println("REGISTRAR_USUARIO_KS: Preparando para registrar en Blackboard:");
-        System.out.println("  -> Socket: " + (cliente != null ? cliente.getInetAddress().getHostAddress() + ":" + cliente.getPort() : "NULL"));
-        System.out.println("  -> Nombre: '" + nombre + "'");
-        System.out.println("  -> Tablero: null (valor inicial)");
-        System.out.println("  -> EnTurno: false (valor inicial)"); 
-        System.out.println("-----------------------------------------------------");
+        // 3. Crear el objeto JugadorDTO
+        JugadorDTO nuevoJugadorDTO;
+        try {
+            nuevoJugadorDTO = new JugadorDTO(nombre);
+            // Inicializar otros campos del DTO si es necesario aquí
+            // nuevoJugadorDTO.setListoParaJugar(false); // Por defecto ya es false
+            // Los tableros se asignarán más adelante cuando se configuren
+            System.out.println("REGISTRAR_USUARIO_KS: JugadorDTO creado: " + nuevoJugadorDTO.toString());
+        } catch (Exception e) { // Captura errores de creación si los hubiera
+            System.err.println("REGISTRAR_USUARIO_KS: Error creando JugadorDTO: " + e.getMessage());
+            enviarError(cliente, "Error interno al procesar registro.");
+            return;
+        }
         
-        
-        // 4. Registrar en Blackboard
-        System.out.println("REGISTRAR_USUARIO_KS: Registrando usuario '" + nombre + "' para socket " + cliente.getInetAddress().getHostAddress());
-        blackboard.registrarUsuario(cliente, nombre); // Llama al método del blackboard
+        // (Opcional) Verificar si el SOCKET tenía otro JugadorDTO asociado
+        JugadorDTO jugadorPrevioDTO = blackboard.getJugadorDTO(cliente); // Usa el nuevo método
+        if(jugadorPrevioDTO != null && !jugadorPrevioDTO.getNombre().equals(nombre)) {
+             System.out.println("REGISTRAR_USUARIO_KS WARN: Socket tenía JugadorDTO previo '" + jugadorPrevioDTO.getNombre() + "', se sobrescribirá.");
+        }
 
-        // 5. Enviar confirmación al cliente
+        // 4. Registrar en Blackboard (pasando el DTO)
+        System.out.println("REGISTRAR_USUARIO_KS: Registrando JugadorDTO '" + nombre + "' en Blackboard...");
+        blackboard.registrarUsuario(cliente, nuevoJugadorDTO); // Llama al método MODIFICADO
+
+        // 5. Enviar confirmación al cliente (solo el nombre es suficiente por ahora)
         Evento respuestaOk = new Evento("REGISTRO_OK");
-        respuestaOk.agregarDato("nombre", nombre); // Devolver el nombre registrado
-        respuestaOk.agregarDato("mensaje", "Usuario registrado exitosamente.");
+        respuestaOk.agregarDato("nombre", nuevoJugadorDTO.getNombre());
+        respuestaOk.agregarDato("mensaje", "Usuario '" + nombre + "' registrado.");
         server.enviarEventoACliente(cliente, respuestaOk);
         System.out.println("REGISTRAR_USUARIO_KS: Confirmación REGISTRO_OK enviada a '" + nombre + "'.");
 
-        // 6. Notificar al Controller (backend)
-        if (controller != null) {
-            controller.notificarCambio("USUARIO_REGISTRADO;" + nombre); // Incluir nombre en notificación
-        }
+        // 6. Notificar al Controller (backend), si aplica
+        // ...
 
         // 7. Informar al Blackboard sobre finalización
-        blackboard.respuestaFuenteC(cliente, evento); // O usar respuestaOk
+        blackboard.respuestaFuenteC(cliente, evento);
     }
-
     // Método helper para enviar errores específicos de este KS
     private void enviarError(Socket cliente, String mensajeError) {
         Evento respuesta = new Evento("ERROR_REGISTRO");

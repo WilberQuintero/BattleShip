@@ -5,6 +5,7 @@
 package dto;
 import enums.*;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set; // O List para JSON más simple si Set da problemas con alguna librería
 import java.util.Map; // O una estructura de lista para JSON
@@ -20,7 +21,10 @@ public class TableroFlotaDTO implements Serializable {
 
     public TableroFlotaDTO() {}
     // Constructor, Getters y Setters...
-
+  public TableroFlotaDTO(int dimension) {
+        this.dimension = dimension;
+        this.barcos = new ArrayList<>();
+    }
     public List<BarcoDTO> getBarcos() {
         return barcos;
     }
