@@ -11,9 +11,8 @@ import java.util.Objects;
  * @author javie
  */
 public class Posicion {
-    
-    private int x;
-    private int y;
+    private final int x;
+    private final int y;
 
     public Posicion(int x, int y) {
         this.x = x;
@@ -29,11 +28,11 @@ public class Posicion {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof Posicion)) return false;
-        Posicion p = (Posicion) obj;
-        return this.x == p.x && this.y == p.y;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Posicion posicion = (Posicion) o;
+        return x == posicion.x && y == posicion.y;
     }
 
     @Override
@@ -41,13 +40,8 @@ public class Posicion {
         return Objects.hash(x, y);
     }
 
-    public void setX(int x) {
-        this.x = x;
+    @Override
+    public String toString() {
+        return "Posicion{" + "x=" + x + ", y=" + y + '}';
     }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-    
-    
 }

@@ -3,48 +3,23 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package Model.entidades;
-
+import enums.*;
 import java.util.List;
 
-/**
- *
- * @author javie
- */
+// Este es un Value Object, representa un evento de disparo con su resultado.
+// Podría ser usado para logging, historial, o si la Partida devuelve un objeto Disparo más rico.
 public class Disparo {
-    private Posicion posicion;
-    private boolean impacto;
+    private final Posicion posicionAtaque;
+    private final ResultadoDisparo resultado;
+    private final Jugador autor; // Referencia al jugador que realizó el disparo
 
-    public Disparo(Posicion posicion) {
-        this.posicion = posicion;
-        this.impacto = false;
-    }
-
-    public Disparo(Posicion posicion, boolean impacto) {
-        this.posicion = posicion;
-        this.impacto = impacto;
-    }
-    
-    public void evaluarImpacto(List<Barco> barcos) {
-        for (Barco barco : barcos) {
-            if (barco.contiene(posicion)) {
-                barco.registrarImpacto(posicion);
-                impacto = true;
-                break;
-            }
-        }
+    public Disparo(Posicion posicionAtaque, ResultadoDisparo resultado, Jugador autor) {
+        this.posicionAtaque = posicionAtaque;
+        this.resultado = resultado;
+        this.autor = autor;
     }
 
-    public boolean isImpacto() {
-        return impacto;
-    }
-
-    public Posicion getPosicion() {
-        return posicion;
-    }
-
-    public void setPosicion(Posicion posicion) {
-        this.posicion = posicion;
-    }
-    
-    
+    public Posicion getPosicionAtaque() { return posicionAtaque; }
+    public ResultadoDisparo getResultado() { return resultado; }
+    public Jugador getAutor() { return autor; }
 }

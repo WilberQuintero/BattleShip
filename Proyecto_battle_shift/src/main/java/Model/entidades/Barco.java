@@ -4,87 +4,97 @@
  */
 package Model.entidades;
 
-import java.util.ArrayList;
+import enums.*;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.ArrayList;
 
 /**
  *
  * @author javie
  */
 public class Barco {
-    private String tipo;
-    private int tamanio;
-    private List<Posicion> posiciones;
-    private List<Posicion> posicionesImpactadas;
+    private TipoNave tipo;
+    private int longitud;
+    private List<Posicion> posicionesOcupadas;
+    private Set<Posicion> posicionesImpactadas;
+    private EstadoNave estado;
+    private Orientacion orientacion; // Orientación con la que se colocó
+    private Posicion posicionInicio; // Posición inicial para referencia
 
-    public Barco(String tipo, int tamanio) {
+    public Barco(TipoNave tipo, Posicion posicionInicio, Orientacion orientacion) {
         this.tipo = tipo;
-        this.tamanio = tamanio;
-        this.posiciones = new ArrayList<>();
-        this.posicionesImpactadas = new ArrayList<>();
+        this.longitud = tipo.getLongitud();
+        this.posicionInicio = posicionInicio;
+        this.orientacion = orientacion;
+        this.posicionesOcupadas = calcularPosicionesOcupadas(posicionInicio, longitud, orientacion);
+        this.posicionesImpactadas = new HashSet<>();
+        this.estado = EstadoNave.INTACTA;
     }
 
-    public Barco(String tipo, int tamanio, List<Posicion> posiciones, List<Posicion> posicionesImpactadas) {
+    // Constructor alternativo si las posiciones ya están calculadas
+    public Barco(TipoNave tipo, List<Posicion> posicionesOcupadas, Orientacion orientacion) {
         this.tipo = tipo;
-        this.tamanio = tamanio;
-        this.posiciones = posiciones;
-        this.posicionesImpactadas = posicionesImpactadas;
+        this.longitud = tipo.getLongitud(); // O posicionesOcupadas.size() si se confía en ello
+        this.posicionesOcupadas = new ArrayList<>(posicionesOcupadas);
+        this.posicionInicio = !posicionesOcupadas.isEmpty() ? posicionesOcupadas.get(0) : null; // Asume la primera como inicio
+        this.orientacion = orientacion;
+        this.posicionesImpactadas = new HashSet<>();
+        this.estado = EstadoNave.INTACTA;
     }
-    
-    
 
-    public void colocar(Posicion inicio, boolean horizontal) {
-        posiciones.clear();
-        for (int i = 0; i < tamanio; i++) {
-            int x = inicio.getX() + (horizontal ? i : 0);
-            int y = inicio.getY() + (horizontal ? 0 : i);
-            posiciones.add(new Posicion(x, y));
+
+    public static List<Posicion> calcularPosicionesOcupadas(Posicion inicio, int longitud, Orientacion orientacion) {
+        List<Posicion> posiciones = new ArrayList<>();
+        for (int i = 0; i < longitud; i++) {
+            if (orientacion == Orientacion.HORIZONTAL) {
+                posiciones.add(new Posicion(inicio.getX() + i, inicio.getY()));
+            } else { // VERTICAL
+                posiciones.add(new Posicion(inicio.getX(), inicio.getY() + i));
+            }
         }
+        return posiciones;
     }
 
-    public boolean contiene(Posicion posicion) {
-        return posiciones.contains(posicion);
+    public boolean registrarImpacto(Posicion pos) {
+        if (posicionesOcupadas.contains(pos) && !posicionesImpactadas.contains(pos)) {
+            posicionesImpactadas.add(pos);
+            actualizarEstado();
+            return true;
+        }
+        return false; // Ya impactada o no es parte del barco
     }
 
-    public void registrarImpacto(Posicion posicion) {
-        if (contiene(posicion) && !posicionesImpactadas.contains(posicion)) {
-            posicionesImpactadas.add(posicion);
+    private void actualizarEstado() {
+        if (posicionesImpactadas.size() == longitud) {
+            this.estado = EstadoNave.HUNDIDA;
+        } else if (!posicionesImpactadas.isEmpty()) {
+            this.estado = EstadoNave.AVERIADA;
+        } else {
+            this.estado = EstadoNave.INTACTA;
         }
     }
 
     public boolean estaHundido() {
-        return posicionesImpactadas.containsAll(posiciones);
+        return estado == EstadoNave.HUNDIDA;
     }
 
-    public String getTipo() {
-        return tipo;
+    public boolean ocupaPosicion(Posicion pos) {
+        return posicionesOcupadas.contains(pos);
     }
 
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
-    }
+    // Getters
+    public TipoNave getTipo() { return tipo; }
+    public int getLongitud() { return longitud; }
+    public List<Posicion> getPosicionesOcupadas() { return new ArrayList<>(posicionesOcupadas); } // Devuelve copia
+    public Set<Posicion> getPosicionesImpactadas() { return new HashSet<>(posicionesImpactadas); } // Devuelve copia
+    public EstadoNave getEstado() { return estado; }
+    public Orientacion getOrientacion() { return orientacion; }
+    public Posicion getPosicionInicio() { return posicionInicio; }
 
-    public int getTamanio() {
-        return tamanio;
-    }
-
-    public void setTamanio(int tamanio) {
-        this.tamanio = tamanio;
-    }
-
-    public List<Posicion> getPosiciones() {
-        return posiciones;
-    }
-
-    public void setPosiciones(List<Posicion> posiciones) {
-        this.posiciones = posiciones;
-    }
-
-    public List<Posicion> getPosicionesImpactadas() {
-        return posicionesImpactadas;
-    }
-
-    public void setPosicionesImpactadas(List<Posicion> posicionesImpactadas) {
-        this.posicionesImpactadas = posicionesImpactadas;
-    }
+    // Setters (usar con cuidado, preferiblemente manejar estado vía métodos)
+    public void setEstado(EstadoNave estado) { this.estado = estado; }
+    // No se suelen poner setters para tipo, longitud, posicionesOcupadas una vez creado,
+    // a menos que la lógica del juego lo requiera explícitamente (raro para un barco ya colocado).
 }
