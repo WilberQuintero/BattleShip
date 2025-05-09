@@ -9,11 +9,18 @@ import com.mycompany.battleship.commons.IServer;
 import com.mycompany.blackboard.Controller;
 import com.mycompany.blackboard.IKnowledgeSource;
 
+import dto.JugadorDTO;
+import dto.TableroFlotaDTO;
+import dto.TableroSeguimientoDTO;
+import dto.PartidaDTO; // Asumiendo que tienes un PartidaDTO
+import enums.EstadoPartida; // Asumiendo que tienes un enum para esto
+
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID; // Para generar un ID de partida si es necesario
 /**
  *
  * @author Hector
@@ -66,73 +73,77 @@ public class CrearSalaKS implements IKnowledgeSource {
         return evento != null && "CREAR_SALA".equalsIgnoreCase(evento.getTipo());
     }
 
-    @Override
-    public void procesarEvento(Socket cliente, Evento evento) {
-        // Verificación inicial de nulos. Correcto.
-       if (evento == null || cliente == null) {
-            System.err.println("CREAR_SALA_KS: Evento o cliente nulo.");
+       @Override
+    public void procesarEvento(Socket clienteHost, Evento evento) {
+        if (evento == null || clienteHost == null) { /* ... error ... */ return; }
+
+        String idSala = (String) evento.obtenerDato("idSala");
+        if (idSala == null || idSala.isBlank()) {
+            enviarRespuestaError(clienteHost, "Nombre de sala no válido.");
+            return;
+        }
+        idSala = idSala.trim();
+
+        System.out.println("CREAR_SALA_KS: Procesando para crear sala '" + idSala + "' por " + clienteHost.getInetAddress().getHostAddress());
+
+        if (blackboard.existeSala(idSala)) {
+            enviarRespuestaError(clienteHost, "La sala '" + idSala + "' ya existe.");
             return;
         }
 
-       // --- Obtención y Validación del ID de Sala ---
-       Object idSalaObj = evento.obtenerDato("idSala");
-       System.out.println("DEBUG [CrearSalaKS]: Intentando obtener 'idSala'. Valor obtenido: " + idSalaObj +
-                          " (Tipo: " + (idSalaObj != null ? idSalaObj.getClass().getName() : "null") + ")");
+        // 1. Obtener el JugadorDTO del anfitrión
+        JugadorDTO anfitrionDTO = blackboard.getJugadorDTO(clienteHost);
+        if (anfitrionDTO == null) {
+            enviarRespuestaError(clienteHost, "Error: Usuario no registrado. No se puede crear sala.");
+            return;
+        }
+        System.out.println("CREAR_SALA_KS: Anfitrión es '" + anfitrionDTO.getNombre() + "'.");
 
-       String idSala = null;
-       if (idSalaObj instanceof String) {
-            String idSalaTemp = (String) idSalaObj;
-            idSala = idSalaTemp.trim(); // Correcto: aplica trim()
-       }
+        // 2. (Opcional, pero buena práctica) Asignar/Reasignar tableros DTO vacíos al anfitriónDTO
+        // Esto asegura que cualquier estado previo de tableros de otra partida no se mezcle.
+        // Si el JugadorDTO ya se crea con tableros vacíos al registrarse, esto es solo para reafirmar.
+        int dimensionTablero = 10; // O tu dimensión estándar
+        if (anfitrionDTO.getTableroFlota() == null) {
+            TableroFlotaDTO tfdto = new TableroFlotaDTO();
+            tfdto.setDimension(dimensionTablero);
+            anfitrionDTO.setTableroFlota(tfdto);
+        }
+        if (anfitrionDTO.getTableroSeguimiento() == null) {
+            TableroSeguimientoDTO tsdto = new TableroSeguimientoDTO();
+            tsdto.setDimension(dimensionTablero);
+            anfitrionDTO.setTableroSeguimiento(tsdto);
+        }
+        anfitrionDTO.setHaConfirmadoTablero(false); // Aún no ha colocado barcos para esta nueva partida
 
-       // Validación. Correcto.
-       if (idSala == null || idSala.isBlank()) {
-           System.err.println("CREAR_SALA_KS: ID de sala inválido después de procesar (null, vacío o solo espacios). Valor original obj: '" + idSalaObj + "'");
-           enviarRespuestaError(cliente, "Nombre de sala no válido o no proporcionado.");
-           return;
-       }
+        // 3. Crear el PartidaDTO
+        PartidaDTO nuevaPartida = new PartidaDTO(idSala, anfitrionDTO, EstadoPartida.ESPERANDO_OPONENTE);
+        // El constructor de PartidaDTO debería inicializar jugador2 a null y nombreJugadorEnTurno a null.
 
-       System.out.println("CREAR_SALA_KS: Procesando solicitud para crear sala válida '" + idSala + "' por " + cliente.getInetAddress().getHostAddress());
+        System.out.println("CREAR_SALA_KS: PartidaDTO creada: " + nuevaPartida.toString());
 
-       // --- Lógica de Creación de Sala ---
+        // 4. Agregar la PartidaDTO al Blackboard usando el nuevo método
+        if (blackboard.agregarPartida(nuevaPartida)) {
+            System.out.println("CREAR_SALA_KS: Partida '" + idSala + "' con anfitrión '" + anfitrionDTO.getNombre() + "' agregada al Blackboard.");
 
-       // Verificar si la sala ya existe. Correcto.
-       if (blackboard.existeSala(idSala)) {
-           System.out.println("CREAR_SALA_KS: Sala '" + idSala + "' ya existe. No se creó.");
-           enviarRespuestaError(cliente, "La sala '" + idSala + "' ya existe.");
-           return;
-       }
+            // Enviar respuesta de éxito al cliente
+            enviarRespuesta(clienteHost, "SALA_CREADA_OK", Map.of(
+                "mensaje", "Sala '" + idSala + "' creada. Esperando oponente.",
+                "idSala", idSala,
+                "tuNombre", anfitrionDTO.getNombre()
+            ));
 
-       // Crear datos de la nueva sala. Correcto.
-       Map<String, Object> datosSala = new HashMap<>();
-       List<Socket> jugadores = new ArrayList<>();
-       jugadores.add(cliente); // Correcto: Añadir host a la lista.
+            if (controller != null) {
+                controller.notificarCambio("NUEVA_SALA_CREADA;" + idSala + ";anfitrion=" + anfitrionDTO.getNombre());
+            }
+        } else {
+            // Esto no debería pasar si existeSala() funcionó, pero es un buen control.
+            System.err.println("CREAR_SALA_KS: Falló agregarPartida al Blackboard, la sala podría haber sido creada concurrentemente.");
+            enviarRespuestaError(clienteHost, "Error interno al crear la sala. Intenta de nuevo.");
+        }
 
-       datosSala.put("host", cliente); // Guardar host.
-       datosSala.put("jugadores", jugadores); // Guardar lista con 1 jugador.
-       datosSala.put("estado", "ESPERANDO"); // Estado inicial.
-       datosSala.put("maxJugadores", 2);     // Capacidad.
-
-       // Log del estado inicial. Correcto.
-       System.out.println("CREAR_SALA_KS: Preparando datos para sala '" + idSala + "'. Jugadores iniciales: "
-                          + jugadores.size() + " [" + cliente.getInetAddress().getHostAddress() + "]");
-
-       // Agregar la sala al Blackboard. Correcto.
-       blackboard.agregarSala(idSala, datosSala);
-
-       // Enviar respuesta de éxito al cliente. Correcto.
-       enviarRespuesta(cliente, "SALA_CREADA_OK", Map.of("mensaje", "Sala '" + idSala + "' creada.", "idSala", idSala));
-
-       // Notificar al Controller (maneja el caso null internamente, pero es mejor evitarlo con el constructor único). Correcto.
-       if (controller != null) {
-           controller.notificarCambio("NUEVA_SALA;" + idSala);
-       } else {
-            System.out.println("CREAR_SALA_KS WARN: Controller es null, no se puede notificar cambio NUEVA_SALA.");
-       }
-
-       // Indicar finalización al blackboard. Correcto.
-       blackboard.respuestaFuenteC(cliente, evento);
+        blackboard.respuestaFuenteC(clienteHost, evento);
     }
+
 
     // --- Métodos de ayuda para enviar respuestas ---
     // Estos métodos lucen correctos. Verifican si 'server' es null antes de usarlo.

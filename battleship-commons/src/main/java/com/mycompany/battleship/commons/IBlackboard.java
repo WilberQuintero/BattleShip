@@ -10,6 +10,7 @@ package com.mycompany.battleship.commons;
  * @author caarl
  */
 import dto.JugadorDTO;
+import dto.PartidaDTO;
 import java.net.Socket;
 import java.util.List; // Necesario para getClientesConectados
 import java.util.Map;  // Necesario para los métodos de sala
@@ -35,6 +36,14 @@ public interface IBlackboard {
     void removerClienteSocket(Socket clienteSocket); // Maneja limpieza interna de mapas
     List<Socket> getClientesConectados();
 
+    
+    
+        // Métodos para Partidas
+    //boolean existeSala(String idSala); // Ya lo tenías, ahora opera sobre PartidaDTOs
+    boolean agregarPartida(PartidaDTO partida); // NUEVO
+    PartidaDTO getPartidaDTO(String idSala);    // NUEVO
+    boolean actualizarPartida(PartidaDTO partida); // NUEVO
+    void eliminarPartida(String idSala); // NUEVO
     /**
      * Verifica si un nombre de usuario ya está registrado en el sistema.
      * Necesario para evitar nombres duplicados.

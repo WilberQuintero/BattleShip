@@ -189,9 +189,9 @@ public class ModelConverter {
                     entry.getValue() // ResultadoDisparo es una enum, se pasa directamente
                 ))
                 .collect(Collectors.toList());
-            dto.setRegistrosDisparos(registros);
+            
         } else {
-            dto.setRegistrosDisparos(new ArrayList<>());
+         
         }
         return dto;
     }
@@ -199,13 +199,7 @@ public class ModelConverter {
     public static TableroSeguimiento toTableroSeguimientoEntity(TableroSeguimientoDTO dto) {
         if (dto == null) return null;
         TableroSeguimiento entidad = new TableroSeguimiento(dto.getDimension());
-        if (dto.getRegistrosDisparos() != null) {
-            dto.getRegistrosDisparos().forEach(registroDTO -> 
-                entidad.marcarDisparo(
-                    toPosicionEntity(registroDTO.getPosicion()),
-                    registroDTO.getResultado()
-                )
-            );
+        if (dto.getRegistrosDisparos() != null) {                               
         }
         return entidad;
     }

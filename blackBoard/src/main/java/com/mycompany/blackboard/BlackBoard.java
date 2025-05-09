@@ -5,7 +5,7 @@
 package com.mycompany.blackboard; 
 
 // --- Importaciones Correctas ---
-import dto.JugadorDTO;
+import dto.*;
 import ks.CrearSalaKS;
 import ks.UnirseSalaKS;
 import ks.ConnectionKS;
@@ -35,6 +35,7 @@ public class BlackBoard implements IBlackboard {
     // --- Estado Principal ---
     private final List<Socket> clientesConectados;
     private final Map<String, Map<String, Object>> salas;
+     private final Map<String, PartidaDTO> partidasActivas; // NUEVO: idSala -> PartidaDTO
     private final Map<String, Socket> socketPorNombre;
     private final Map<Socket, String> nombrePorSocket;
    private final Map<Socket, JugadorDTO> jugadorDTOPorSocket;
@@ -57,6 +58,7 @@ public class BlackBoard implements IBlackboard {
         this.salas = new ConcurrentHashMap<>();
         this.socketPorNombre = new ConcurrentHashMap<>();
         this.nombrePorSocket = new ConcurrentHashMap<>();
+         this.partidasActivas = new ConcurrentHashMap<>(); // NUEVO
         // Inicializar los nuevos mapas
         this.jugadorDTOPorSocket = new ConcurrentHashMap<>();
         this.jugadorDTOPorNombre = new ConcurrentHashMap<>();
@@ -151,12 +153,82 @@ public class BlackBoard implements IBlackboard {
         }
     }
 
-    @Override
-    public boolean existeSala(String idSala) {
-        // Implementación simple
-        return idSala != null && salas.containsKey(idSala);
+       @Override
+    public boolean existeSala(String idSala) { // Ahora verifica en partidasActivas
+        return idSala != null && partidasActivas.containsKey(idSala);
     }
 
+    
+    /**
+     * Agrega una nueva PartidaDTO al Blackboard.
+     * @param partida La PartidaDTO a agregar.
+     * @return true si se agregó, false si ya existía una partida con ese ID.
+     */
+     @Override
+    public boolean agregarPartida(PartidaDTO partida) { // NUEVO método específico
+        if (partida == null || partida.getIdPartida() == null) {
+            System.err.println("BLACKBOARD ERROR: Intento de agregar PartidaDTO nula o sin ID.");
+            return false;
+        }
+        // putIfAbsent devuelve null si la clave no existía (y se insertó), o el valor existente si ya estaba.
+        if (partidasActivas.putIfAbsent(partida.getIdPartida(), partida) == null) {
+            System.out.println("BLACKBOARD: Partida '" + partida.getIdPartida() + "' agregada. Estado: " + partida.getEstado());
+            return true;
+        } else {
+            System.out.println("BLACKBOARD WARN: Intento de agregar partida que ya existe: '" + partida.getIdPartida() + "'. No se sobrescribió.");
+            return false;
+        }
+    }
+
+    /**
+     * Obtiene los datos de una PartidaDTO.
+     * @param idSala El ID de la sala/partida.
+     * @return La PartidaDTO, o null si no existe.
+     */
+     @Override
+    public PartidaDTO getPartidaDTO(String idSala) { // NUEVO método específico
+        return idSala != null ? partidasActivas.get(idSala) : null;
+    }
+
+    
+    /**
+     * Actualiza una PartidaDTO existente en el Blackboard.
+     * @param partida La PartidaDTO con los datos actualizados.
+     * @return true si se actualizó, false si la partida no existía.
+     */
+     @Override
+    public boolean actualizarPartida(PartidaDTO partida) { // NUEVO método específico
+        if (partida == null || partida.getIdPartida() == null) {
+            System.err.println("BLACKBOARD ERROR: Intento de actualizar PartidaDTO nula o sin ID.");
+            return false;
+        }
+        if (partidasActivas.containsKey(partida.getIdPartida())) {
+            partidasActivas.put(partida.getIdPartida(), partida); // Sobrescribe
+            System.out.println("BLACKBOARD: Partida '" + partida.getIdPartida() + "' actualizada. Nuevo estado: " + partida.getEstado());
+            return true;
+        } else {
+            System.err.println("BLACKBOARD WARN: Intento de actualizar partida inexistente '" + partida.getIdPartida() + "'.");
+            return false;
+        }
+    }
+    
+    /**
+     * Elimina una partida del Blackboard.
+     * @param idSala El ID de la sala/partida a eliminar.
+     */
+     @Override
+    public void eliminarPartida(String idSala) {
+        if (idSala != null) {
+            PartidaDTO partidaEliminada = partidasActivas.remove(idSala);
+            if (partidaEliminada != null) {
+                System.out.println("BLACKBOARD: Partida '" + idSala + "' eliminada.");
+            } else {
+                System.out.println("BLACKBOARD WARN: Intento de eliminar partida inexistente '" + idSala + "'.");
+            }
+        }
+    }
+    
+    
     @Override
     public void agregarSala(String id, Map<String, Object> datosSala) {
         // Implementación que evita sobrescribir y loguea

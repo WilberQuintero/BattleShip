@@ -23,7 +23,13 @@ public class PartidaDTO implements Serializable {
 
     public PartidaDTO() {}
     // Constructor, Getters y Setters...
-
+ public PartidaDTO(String idPartida, JugadorDTO jugador1, EstadoPartida estadoInicial) {
+        this.idPartida = idPartida;
+        this.jugador1 = jugador1;
+        this.estado = estadoInicial;
+        this.jugador2 = null;
+        this.nombreJugadorEnTurno = null;
+    }
     public String getIdPartida() {
         return idPartida;
     }

@@ -8,4 +8,4 @@ package enums;
  *
  * @author Hector
  */
-public enum EstadoPartida { CONFIGURACION, EN_CURSO, FINALIZADA; }
+public enum EstadoPartida { CONFIGURACION,ESPERANDO_OPONENTE, EN_CURSO, FINALIZADA; }
