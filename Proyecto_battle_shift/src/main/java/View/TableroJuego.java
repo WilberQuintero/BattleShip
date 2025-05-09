@@ -236,8 +236,10 @@ public class TableroJuego extends javax.swing.JFrame {
                             lblArrastrando = null;
 
                             Point puntoEnTablero = SwingUtilities.convertPoint(btn, e.getPoint(), tableroJPanel);
-                            int col = puntoEnTablero.x / cellSize;
-                            int row = puntoEnTablero.y / cellSize;
+
+                            // Alinea al grid
+                            int col = (puntoEnTablero.x - cellSize) / cellSize;
+                            int row = (puntoEnTablero.y - cellSize) / cellSize;
 
                             int tamaño = Integer.parseInt(btn.getActionCommand());
 
@@ -280,9 +282,9 @@ public class TableroJuego extends javax.swing.JFrame {
                             // Colocar el barco usando la imagen rotada o no, según el estado
                             JLabel lbl = new JLabel(new ImageIcon(rotatedImage));
                             if (isRotado) {
-                                lbl.setBounds(col * cellSize, row * cellSize, rotatedImage.getWidth(null), rotatedImage.getHeight(null));
+                                lbl.setBounds((col + 1) * cellSize, (row + 1) * cellSize, rotatedImage.getWidth(null), rotatedImage.getHeight(null));
                             } else {
-                                lbl.setBounds(col * cellSize, row * cellSize, img.getWidth(null), img.getHeight(null));
+                                lbl.setBounds((col + 1) * cellSize, (row + 1) * cellSize, img.getWidth(null), img.getHeight(null));
                             }
                             lbl.setOpaque(false);
                             tableroJPanel.add(lbl);
@@ -397,34 +399,46 @@ public class TableroJuego extends javax.swing.JFrame {
     }
 
 
-     private void dibujarTablero() {
+    private void dibujarTablero() {
         tableroJPanel.removeAll();
         tableroJPanel.setLayout(null);
 
         int cellSize = 40;
+        int filas = 10;
+        int columnas = 10;
+        int offset = cellSize; // Espacio para coordenadas (una fila y una columna extra)
 
-        // Configura el tablero para que reciba el foco
-        tableroJPanel.setFocusable(true);
-        tableroJPanel.requestFocusInWindow(); // Asegura que el panel tenga el foco para eventos de teclado
+        int anchoTablero = (columnas + 1) * cellSize;
+        int altoTablero = (filas + 1) * cellSize;
 
-        for (int fila = 0; fila < 10; fila++) {
-            for (int columna = 0; columna < 10; columna++) {
+        // Escalar imagen de fondo al tamaño del tablero
+        ImageIcon fondoOriginal = cargarIcono("/Images/Board.png");
+        Image imagenEscalada = fondoOriginal.getImage().getScaledInstance(anchoTablero, altoTablero, Image.SCALE_SMOOTH);
+        ImageIcon fondo = new ImageIcon(imagenEscalada);
+
+        JLabel fondoLabel = new JLabel(fondo);
+        fondoLabel.setBounds(0, 0, anchoTablero, altoTablero);
+        fondoLabel.setLayout(null); // Permitir agregar componentes manualmente
+
+        // Crear botones y agregarlos al fondoLabel (dejando espacio para coordenadas)
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
                 JButton celda = new JButton();
-                celda.setBackground(Color.WHITE);
+                celda.setBackground(new Color(255, 255, 255, 0)); // Transparente
                 celda.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-                celda.setBounds(columna * cellSize, fila * cellSize, cellSize, cellSize);
+                celda.setBounds((columna + 1) * cellSize, (fila + 1) * cellSize, cellSize, cellSize); // +1 por el offset
                 celda.setActionCommand(fila + "," + columna);
-                celda.setFocusable(false);  // Los botones no deben recibir el foco
+                celda.setFocusable(false);
                 celda.addActionListener(e -> {
                     String[] pos = e.getActionCommand().split(",");
                     System.out.println("Click en celda: (" + pos[0] + "," + pos[1] + ")");
                 });
-                tableroJPanel.add(celda);
+                fondoLabel.add(celda);
             }
         }
 
-        // Ajuste visual del panel
-        tableroJPanel.setPreferredSize(new Dimension(400, 400));
+        tableroJPanel.add(fondoLabel);
+        tableroJPanel.setPreferredSize(new Dimension(anchoTablero, altoTablero));
         tableroJPanel.revalidate();
         tableroJPanel.repaint();
     }
@@ -483,19 +497,18 @@ public class TableroJuego extends javax.swing.JFrame {
         tableroJPanelLayout.setHorizontalGroup(
             tableroJPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(tableroJPanelLayout.createSequentialGroup()
-                .addContainerGap()
                 .addComponent(numberLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 422, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(22, Short.MAX_VALUE))
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         tableroJPanelLayout.setVerticalGroup(
             tableroJPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(tableroJPanelLayout.createSequentialGroup()
                 .addGap(179, 179, 179)
                 .addComponent(numberLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(213, Short.MAX_VALUE))
+                .addContainerGap(203, Short.MAX_VALUE))
         );
 
-        jPanel1.add(tableroJPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 10, 450, 450));
+        jPanel1.add(tableroJPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 20, 440, 440));
 
         jPanel2.setBackground(new java.awt.Color(204, 204, 204));
 
