@@ -92,7 +92,7 @@ public class TableroJuego extends javax.swing.JFrame {
         this.controladorPrincipal = ctrlPrincipal;
         this.idSala = idSala;
         this.miNombreUsuario = miNombre;
-        this.flotaString = flotaRecibida;
+        this.flotaString = "Portaaviones:4,Crucero:3,Submarino:2,Barco:1";
         
         // Crear controlador específico para esta pantalla
         controladorTablero ctrlTablero = null;
@@ -133,11 +133,6 @@ public class TableroJuego extends javax.swing.JFrame {
         if (flotaString != null && !flotaString.isEmpty()) {
              barcosParaColocar = new ArrayList<>(Arrays.asList(flotaString.split(",")));
             
-            // TODO: Llenar el componente UI en jPanel2 (ej. JList) con esta lista 'barcosPorColocar'
-            // Por ejemplo:
-            // DefaultListModel<String> model = new DefaultListModel<>();
-            // barcosPorColocar.forEach(model::addElement);
-            // miListaDeBarcosEnPanel2.setModel(model);
             
             posicionesOcupadas.clear();
             tableroJPanel.removeAll();
