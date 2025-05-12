@@ -124,11 +124,9 @@ public class TableroJuego extends javax.swing.JFrame {
         if(cancelButton != null) cancelButton.setEnabled(true);  // Habilitado para resetear
         // TODO: Limpiar/dibujar la cuadrícula inicial en tableroJPanel
         dibujarTablero();
-        
-        //CRUCEROS*3 - Submarinos*1 - Barcos*2 - Artilleros*4  (* numero de casillas)
-        configurarBarcos(1,2,1,1);
     }
 
+    
     /** Parsea el string de flota y actualiza la UI (ej. un JList en jPanel2) */
     private void parsearYMostrarFlota() {
         System.out.println("VIEW [TableroJuego]: Parseando flota: " + flotaString);
@@ -145,10 +143,10 @@ public class TableroJuego extends javax.swing.JFrame {
             tableroJPanel.removeAll();
             tableroJPanel.repaint();
             dibujarTablero();
-            configurarBarcos(1,2,1,1);
-            
             
             System.out.println("VIEW [TableroJuego]: Flota parseada: " + "barcosPorColocar");
+            Map<String, Integer> tiposBarcos = obtenerMapaDesdeFlota(flotaString);
+            configurarBarcos(tiposBarcos);
         } else {
              mostrarError("No se recibió la flota para colocar.");
              if(readyButton != null) readyButton.setEnabled(false);
@@ -156,7 +154,7 @@ public class TableroJuego extends javax.swing.JFrame {
     }
     
 
-    private void configurarBarcos(int numCruceros, int numSubmarinos, int numBarcos, int numArtilleros) {
+    private void configurarBarcos(Map<String, Integer> tiposBarcos) {
         int cellSize = 40;
 
         // Limpia el panel de selección
@@ -351,17 +349,54 @@ public class TableroJuego extends javax.swing.JFrame {
                 jPanel2.add(Box.createVerticalStrut(5));
             }
         };
-
-        // Crear botones
-        creaBotones.accept("crucero", numCruceros);
-        creaBotones.accept("submarino", numSubmarinos);
-        creaBotones.accept("barco", numBarcos);
-        creaBotones.accept("artillero", numArtilleros);
-
+        for (Map.Entry<String, Integer> entry : tiposBarcos.entrySet()) {
+            creaBotones.accept(entry.getKey(), entry.getValue());
+        }
         jPanel2.revalidate();
         jPanel2.repaint();
     }
     
+    
+    private Map<String, Integer> obtenerMapaDesdeFlota(String flotaString) {
+        Map<String, Integer> mapa = new HashMap<>();
+
+        if (flotaString == null || flotaString.isEmpty()) return mapa;
+
+        if (flotaString.startsWith("flota=")) {
+            flotaString = flotaString.substring(6);
+        }
+
+        String[] partes = flotaString.split(",");
+        for (String parte : partes) {
+            String[] tipoYValor = parte.split(":");
+            if (tipoYValor.length == 2) {
+                String tipo = tipoYValor[0].trim().toLowerCase();
+                int cantidad;
+                try {
+                    cantidad = Integer.parseInt(tipoYValor[1].trim());
+                } catch (NumberFormatException e) {
+                    cantidad = 0;
+                }
+
+                switch (tipo) {
+                    case "portaaviones":
+                        tipo = "artillero";
+                        break;
+                    case "crucero":
+                    case "submarino":
+                    case "barco":
+                        break;
+                    default:
+                        System.out.println("Tipo de barco desconocido: " + tipo);
+                        continue;
+                }
+
+                mapa.put(tipo, cantidad);
+            }
+        }
+
+        return mapa;
+    }
 
    private Image rotateImage(Image img) {
         int w = img.getWidth(null);
@@ -446,23 +481,8 @@ public class TableroJuego extends javax.swing.JFrame {
     /** Añade listeners al tablero para manejar clics de colocación */
     private void prepararTableroParaColocacion() {
          System.out.println("VIEW [TableroJuego]: Preparando tablero para colocación...");
-         // TODO: Implementar lógica para colocar barcos
-         // 1. Añadir MouseListener a tableroJPanel (o a sus celdas si son botones).
-         // 2. En el listener:
-         //    a. Calcular la celda (fila, columna) donde se hizo clic.
-         //    b. Verificar si hay un 'barcoSeleccionado' de la lista.
-         //    c. Verificar si el barco cabe en esa posición con la 'orientacionHorizontal' actual.
-         //    d. Verificar si colisiona con otros barcos ya puestos en 'miTableroLogico'.
-         //    e. Si es válido:
-         //       - Dibujar el barco en la UI (tableroJPanel).
-         //       - Añadir el barco a 'miTableroLogico'.
-         //       - Eliminar el barco de la lista 'barcosPorColocar' y actualizar la UI de la lista.
-         //       - Limpiar 'barcoSeleccionado'.
-         //       - Si 'barcosPorColocar' está vacío, habilitar 'readyButton'.
-         //    f. Si no es válido: Mostrar mensaje de error.
-         //
-         // También necesitarás listeners en la lista de barcos (jPanel2) para seleccionar
-         // un barco y quizás un botón para cambiar la orientación.
+         Map<String, Integer> tiposBarcos = obtenerMapaDesdeFlota(flotaString);
+         configurarBarcos(tiposBarcos);
     }
 
 
