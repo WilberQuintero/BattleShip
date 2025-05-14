@@ -4,17 +4,38 @@
  */
 package View;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+
 /**
  *
  * @author javie
  */
 public class Partida extends javax.swing.JFrame {
 
+    private List<Map<String, Object>> barcosColocados = new ArrayList<>();
+    
     /**
      * Creates new form Partida
      */
     public Partida() {
         initComponents();
+        
+        dibujarTableros();
+        
     }
 
     /**
@@ -26,24 +47,24 @@ public class Partida extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new javax.swing.JPanel();
+        oponenteTablero = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
-        jPanel2 = new javax.swing.JPanel();
+        miTablero = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        jPanel1.setBackground(new java.awt.Color(232, 255, 255));
+        oponenteTablero.setBackground(new java.awt.Color(232, 255, 255));
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        javax.swing.GroupLayout oponenteTableroLayout = new javax.swing.GroupLayout(oponenteTablero);
+        oponenteTablero.setLayout(oponenteTableroLayout);
+        oponenteTableroLayout.setHorizontalGroup(
+            oponenteTableroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 361, Short.MAX_VALUE)
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        oponenteTableroLayout.setVerticalGroup(
+            oponenteTableroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 371, Short.MAX_VALUE)
         );
 
@@ -60,54 +81,61 @@ public class Partida extends javax.swing.JFrame {
             }
         });
 
-        jPanel2.setBackground(new java.awt.Color(220, 240, 255));
+        miTablero.setBackground(new java.awt.Color(220, 240, 255));
+        miTablero.setPreferredSize(new java.awt.Dimension(361, 371));
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+        javax.swing.GroupLayout miTableroLayout = new javax.swing.GroupLayout(miTablero);
+        miTablero.setLayout(miTableroLayout);
+        miTableroLayout.setHorizontalGroup(
+            miTableroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
         );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 371, Short.MAX_VALUE)
+        miTableroLayout.setVerticalGroup(
+            miTableroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(205, 205, 205)
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 328, Short.MAX_VALUE)
-                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(249, 249, 249))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(18, 18, 18)
-                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(156, 156, 156)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(79, 79, 79))
             .addGroup(layout.createSequentialGroup()
-                .addGap(404, 404, 404)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(206, 206, 206)
+                        .addComponent(jLabel1))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(45, 45, 45)
+                        .addComponent(miTablero, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 111, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(249, 249, 249))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(oponenteTablero, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(47, 47, 47))))
+            .addGroup(layout.createSequentialGroup()
+                .addGap(410, 410, 410)
                 .addComponent(jButton1)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(41, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1))
+                .addContainerGap(37, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(oponenteTablero, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(miTablero, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(28, 28, 28)
                 .addComponent(jButton1)
-                .addContainerGap())
+                .addGap(35, 35, 35))
         );
 
         pack();
@@ -151,12 +179,265 @@ public class Partida extends javax.swing.JFrame {
             }
         });
     }
+    
+    private void dibujarTableros(){
+        dibujarOponenteTablero();
+        
+        //solo para probar si se colocan
+        Map<String, Object> barco1 = new HashMap<>();
+        barco1.put("fila", 2);
+        barco1.put("columna", 3);
+        barco1.put("tamaño", 3);
+        barco1.put("rotado", false);
+
+        Map<String, Object> barco2 = new HashMap<>();
+        barco2.put("fila", 5);
+        barco2.put("columna", 1);
+        barco2.put("tamaño", 4);
+        barco2.put("rotado", true);
+
+        barcosColocados.clear();
+        barcosColocados.add(barco1);
+        barcosColocados.add(barco2);
+
+        dibujarMiTablero();
+    }
+    
+    
+    
+    private Image rotateImage(Image img) {
+        int w = img.getWidth(null);
+        int h = img.getHeight(null);
+
+        // El nuevo BufferedImage debe ser suficientemente grande para contener la imagen rotada
+        BufferedImage rotated = new BufferedImage(h, w, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = rotated.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+        // Mover el punto de origen al centro del nuevo lienzo
+        g2d.translate(h / 2.0, w / 2.0);
+        g2d.rotate(Math.toRadians(90));
+        g2d.translate(-w / 2.0, -h / 2.0);
+
+        // Dibujar la imagen rotada
+        g2d.drawImage(img, 0, 0, null);
+        g2d.dispose();
+
+        return rotated;
+    }
+    
+    
+    
+    private Map<String, Integer> obtenerMapaDesdeFlota(String flotaString) {
+        Map<String, Integer> mapa = new HashMap<>();
+
+        if (flotaString == null || flotaString.isEmpty()) return mapa;
+
+        if (flotaString.startsWith("flota=")) {
+            flotaString = flotaString.substring(6);
+        }
+
+        String[] partes = flotaString.split(",");
+        for (String parte : partes) {
+            String[] tipoYValor = parte.split(":");
+            if (tipoYValor.length == 2) {
+                String tipo = tipoYValor[0].trim().toLowerCase();
+                int cantidad;
+                try {
+                    cantidad = Integer.parseInt(tipoYValor[1].trim());
+                } catch (NumberFormatException e) {
+                    cantidad = 0;
+                }
+
+                switch (tipo) {
+                    case "portaaviones":
+                        tipo = "artillero";
+                        break;
+                    case "crucero":
+                    case "submarino":
+                    case "barco":
+                        break;
+                    default:
+                        System.out.println("Tipo de barco desconocido: " + tipo);
+                        continue;
+                }
+
+                mapa.put(tipo, cantidad);
+            }
+        }
+
+        return mapa;
+    }
+    
+    
+    private ImageIcon cargarIcono(String ruta) {
+        URL url = getClass().getResource(ruta);
+        if (url == null) {
+            System.err.println("No se encontró la imagen: " + ruta);
+            return new ImageIcon();
+        }
+        return new ImageIcon(url);
+    }
+    
+    private void dibujarMiTablero() {
+        miTablero.removeAll();
+        miTablero.setLayout(null);
+
+        int cellSize = 40;
+        int filas = 10;
+        int columnas = 10;
+
+        int anchoTablero = columnas * cellSize;
+        int altoTablero = filas * cellSize;
+
+        miTablero.setPreferredSize(new Dimension(anchoTablero, altoTablero));
+        
+        // Fondo del tablero
+        ImageIcon fondoOriginal = cargarIcono("/Images/Board.png");
+        if (fondoOriginal == null) {
+            System.out.println("No se pudo cargar la imagen de fondo");
+        } else {
+            Image imagenEscalada = fondoOriginal.getImage().getScaledInstance(anchoTablero, altoTablero, Image.SCALE_SMOOTH);
+            ImageIcon fondo = new ImageIcon(imagenEscalada);
+            JLabel fondoLabel = new JLabel(fondo);
+            fondoLabel.setBounds(0, 0, anchoTablero, altoTablero);
+            fondoLabel.setLayout(null); 
+
+            // Dibujar todos los barcos de la lista
+            for (Map<String, Object> barco : barcosColocados) {
+                int fila = (int) barco.get("fila");
+                int columna = (int) barco.get("columna");
+                int tamaño = (int) barco.get("tamaño");
+                boolean rotado = (boolean) barco.get("rotado");
+
+                // Asignar la imagen del barco según su tamaño
+                String ruta = "";
+                switch (tamaño) {
+                    case 1:
+                        ruta = "/Images/Submarine.png";  
+                        break;
+                    case 2:
+                        ruta = "/Images/Destroyer.png"; 
+                        break;
+                    case 3:
+                        ruta = "/Images/Cruise.png";   
+                        break;
+                    case 4:
+                        ruta = "/Images/Battleship.png"; 
+                        break;
+                    default:
+                        ruta = "/Images/Battleship.png";
+                        break;
+                }
+
+                // Cargar la imagen del barco
+                ImageIcon barcoIcon = cargarIcono(ruta);
+                if (barcoIcon == null) {
+                    System.out.println("No se pudo cargar la imagen del barco: " + ruta);
+                } else {
+                    Image img = barcoIcon.getImage();
+
+                    // Escalar la imagen de acuerdo al tamaño del barco
+                    Image barcoEscalado;
+                    if (rotado) {
+                        img = rotateImage(img);
+                        barcoEscalado = img.getScaledInstance(cellSize, cellSize * tamaño, Image.SCALE_SMOOTH);
+                    } else {
+                        barcoEscalado = img.getScaledInstance(cellSize * tamaño, cellSize, Image.SCALE_SMOOTH);
+                    }
+
+                    ImageIcon barcoFinal = new ImageIcon(barcoEscalado);
+                    JLabel barcoLabel = new JLabel(barcoFinal);
+
+                    int x = columna * cellSize;
+                    int y = fila * cellSize;
+                    if (rotado) {
+                        barcoLabel.setBounds(x-6, y, cellSize, cellSize * tamaño);
+                    } else {
+                        barcoLabel.setBounds(x, y-8, cellSize * tamaño, cellSize);
+                    }
+
+                    fondoLabel.add(barcoLabel);
+                }
+            }
+
+            miTablero.add(fondoLabel);
+        }
+
+        miTablero.revalidate();
+        miTablero.repaint();
+    }
+    
+    private void dibujarOponenteTablero() {
+        oponenteTablero.removeAll();
+        oponenteTablero.setLayout(null);
+
+        int cellSize = 40;
+        int filas = 10;
+        int columnas = 10;
+        int offset = cellSize;
+
+        int anchoTablero = (columnas + 1) * cellSize;
+        int altoTablero = (filas + 1) * cellSize;
+
+        ImageIcon fondoOriginal = cargarIcono("/Images/Board.png");
+        Image imagenEscalada = fondoOriginal.getImage().getScaledInstance(anchoTablero, altoTablero, Image.SCALE_SMOOTH);
+        ImageIcon fondo = new ImageIcon(imagenEscalada);
+
+        JLabel fondoLabel = new JLabel(fondo);
+        fondoLabel.setBounds(0, 0, anchoTablero, altoTablero);
+        fondoLabel.setLayout(null);
+
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                JButton celda = new JButton();
+                celda.setBackground(new Color(255, 255, 255, 0)); 
+                celda.setBorder(BorderFactory.createLineBorder(Color.GREEN));
+                celda.setBounds((columna + 1) * cellSize, (fila + 1) * cellSize, cellSize, cellSize); 
+                celda.setActionCommand(fila + "," + columna);
+                celda.setFocusable(false);
+
+                // Aquí verificas si la celda fue impactada o no
+                celda.addActionListener(e -> {
+                    String[] pos = e.getActionCommand().split(",");
+                    int x = Integer.parseInt(pos[0]);
+                    int y = Integer.parseInt(pos[1]);
+                    if (siImpactado(x, y)) {
+                        ImageIcon imagen = cargarIcono("/Images/failure.png");
+                        celda.setIcon(imagen);
+                        celda.setEnabled(false);
+                        System.out.println("¡Impactado! (" + x + "," + y + ")");
+                    } else {
+                        // Cambiar imagen a "hit.png"
+                        ImageIcon imagen = cargarIcono("/Images/hit.png");
+                        celda.setIcon(imagen);
+                        celda.setEnabled(false);
+                        System.out.println("¡No Impactado! (" + x + "," + y + ")");
+                    }
+                });
+                fondoLabel.add(celda);
+            }
+        }
+
+        oponenteTablero.add(fondoLabel);
+        oponenteTablero.setPreferredSize(new Dimension(anchoTablero, altoTablero));
+        oponenteTablero.revalidate();
+        oponenteTablero.repaint();
+    }
+    
+    
+    //METODO PARA SABER SI LA CASILLA FUE IMPACTADA A UN BARCO O NO
+    private boolean siImpactado(int x, int y) {
+        //SOLO ES PARA SIMULAR
+        double probabilidadImpacto = Math.random(); 
+    return probabilidadImpacto < 0.5;
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel miTablero;
+    private javax.swing.JPanel oponenteTablero;
     // End of variables declaration//GEN-END:variables
 }

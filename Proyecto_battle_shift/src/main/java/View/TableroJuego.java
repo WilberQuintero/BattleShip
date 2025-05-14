@@ -301,12 +301,13 @@ public class TableroJuego extends javax.swing.JFrame {
                             tableroJPanel.setComponentZOrder(lbl, 0);
                             tableroJPanel.revalidate();
                             tableroJPanel.repaint();
-
+                            
                             // Guardar información del barco
                             Map<String, Object> barcoInfo = new HashMap<>();
                             barcoInfo.put("fila", row);
                             barcoInfo.put("columna", col);
                             barcoInfo.put("tamaño", tamaño);
+                            barcoInfo.put("rotado", isRotado);
                             barcosColocados.add(barcoInfo);
 
                             btn.setVisible(false); // Ocultar botón
