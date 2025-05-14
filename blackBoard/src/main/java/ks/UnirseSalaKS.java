@@ -41,10 +41,12 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
     }
 
 
-   @Override
-    @SuppressWarnings("unchecked") // Si necesitas castear alguna lista genérica que venga del blackboard antiguo
+  @Override
     public void procesarEvento(Socket clienteRetador, Evento evento) {
-        if (clienteRetador == null || evento == null) { /* ... error ... */ return; }
+        if (clienteRetador == null || evento == null) {
+            System.err.println("UNIRSE_SALA_KS: Cliente o Evento nulo.");
+            return;
+        }
 
         String idSala = (String) evento.obtenerDato("idSala");
         if (idSala == null || idSala.isBlank()) {
@@ -70,90 +72,127 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
             enviarRespuestaError(clienteRetador, "La sala '" + idSala + "' no existe.");
             return;
         }
-        System.out.println("UNIRSE_SALA_KS: Partida '" + idSala + "' encontrada. Estado actual: " + partida.getEstado());
+        System.out.println("UNIRSE_SALA_KS: Partida '" + idSala + "' encontrada. Anfitrión: " +
+                           (partida.getJugador1() != null ? partida.getJugador1().getNombre() : "N/A") +
+                           ", Jugador2: " + (partida.getJugador2() != null ? partida.getJugador2().getNombre() : "N/A") +
+                           ", Estado actual: " + partida.getEstado());
 
-        // 3. Validaciones de la partida
-        if (partida.getJugador2() != null) {
-            // La sala ya tiene dos jugadores.
-            // ¿Es el mismo jugador intentando unirse de nuevo?
-            if (partida.getJugador1() != null && partida.getJugador1().getNombre().equals(retadorDTO.getNombre())) {
-                 enviarRespuesta(clienteRetador, "UNIDO_OK", Map.of("mensaje", "Ya eres el anfitrión de esta sala.", "idSala", idSala, "rol", "ANFITRION"));
-                 return;
-            } else if (partida.getJugador2().getNombre().equals(retadorDTO.getNombre())) {
-                enviarRespuesta(clienteRetador, "UNIDO_OK", Map.of("mensaje", "Ya te has unido a esta sala como retador.", "idSala", idSala, "rol", "RETADOR"));
-                return;
-            } else {
-                enviarRespuestaError(clienteRetador, "La sala '" + idSala + "' está llena.");
-                return;
-            }
-        }
+        // 3. Validaciones de la partida y del jugador que se une
 
-        // Verificar que el retador no sea el mismo que el anfitrión
+        // Verificar si el retador ya es el anfitrión (jugador1)
         if (partida.getJugador1() != null && partida.getJugador1().getNombre().equals(retadorDTO.getNombre())) {
-            enviarRespuestaError(clienteRetador, "No puedes unirte a tu propia sala como oponente.");
-            // Podrías enviar un UNIDO_OK si quieres que el anfitrión pueda "re-entrar" a su lobby.
-            // Pero la lógica actual asume que unirse es para un segundo jugador distinto.
+            System.out.println("UNIRSE_SALA_KS: Cliente " + retadorDTO.getNombre() + " ya es el anfitrión de esta sala.");
+            enviarRespuesta(clienteRetador, "UNIDO_OK", Map.of(
+                "mensaje", "Ya eres el anfitrión de esta sala.",
+                "idSala", idSala,
+                "rol", "ANFITRION"
+            ));
             return;
         }
 
-        // 4. El retador puede unirse. Configurar el JugadorDTO del retador.
-        int dimensionTablero = 10; // O obtener de la partida.getJugador1().getTableroFlota().getDimension()
+        // Verificar si el retador ya es el jugador2
+        if (partida.getJugador2() != null && partida.getJugador2().getNombre().equals(retadorDTO.getNombre())) {
+            System.out.println("UNIRSE_SALA_KS: Cliente " + retadorDTO.getNombre() + " ya se unió como retador a esta sala.");
+            enviarRespuesta(clienteRetador, "UNIDO_OK", Map.of(
+                "mensaje", "Ya te has unido a esta sala como retador.",
+                "idSala", idSala,
+                "rol", "RETADOR"
+            ));
+            return;
+        }
+
+        // Verificar si la sala está llena (es decir, si jugador2 ya está ocupado por OTRO jugador)
+        if (partida.getJugador2() != null) {
+            // Como ya validamos que el retador no es jugador2, si jugador2 no es null, la sala está llena.
+            System.out.println("UNIRSE_SALA_KS: Sala '" + idSala + "' está llena. Jugador2 actual: " + partida.getJugador2().getNombre());
+            enviarRespuestaError(clienteRetador, "La sala '" + idSala + "' está llena.");
+            return;
+        }
+
+        // --- Si llegamos aquí, el jugador puede unirse como jugador2 ---
+
+        // 4. Configurar el JugadorDTO del retador con sus tableros vacíos
+        int dimensionTablero = 10; // Podría tomarse del partida.getJugador1().getTableroFlota().getDimension() si j1 existe
+        if (partida.getJugador1() != null && partida.getJugador1().getTableroFlota() != null) {
+            dimensionTablero = partida.getJugador1().getTableroFlota().getDimension();
+        }
+
         if (retadorDTO.getTableroFlota() == null) {
             TableroFlotaDTO tfdto = new TableroFlotaDTO();
             tfdto.setDimension(dimensionTablero);
             retadorDTO.setTableroFlota(tfdto);
+        } else { // Asegurar que la dimensión sea consistente
+            retadorDTO.getTableroFlota().setDimension(dimensionTablero);
         }
+
         if (retadorDTO.getTableroSeguimiento() == null) {
             TableroSeguimientoDTO tsdto = new TableroSeguimientoDTO();
             tsdto.setDimension(dimensionTablero);
             retadorDTO.setTableroSeguimiento(tsdto);
+        } else {
+            retadorDTO.getTableroSeguimiento().setDimension(dimensionTablero);
         }
-        retadorDTO.setHaConfirmadoTablero(false); // Aún no ha colocado barcos
+        retadorDTO.setHaConfirmadoTablero(false);
 
         // 5. Añadir al retador a la PartidaDTO y actualizar estado
         partida.setJugador2(retadorDTO);
-        partida.setEstado(EstadoPartida.CONFIGURACION); // Ambos jugadores están, listos para configurar barcos
-        System.out.println("UNIRSE_SALA_KS: Jugador '" + retadorDTO.getNombre() + "' asignado como jugador2 en PartidaDTO.");
+        // El estado cambia a CONFIGURACION, indicando que ambos jugadores están y pueden proceder a colocar barcos.
+        partida.setEstado(EstadoPartida.CONFIGURACION);
+        System.out.println("UNIRSE_SALA_KS: Jugador '" + retadorDTO.getNombre() + "' asignado como jugador2 en PartidaDTO para sala '" + idSala + "'.");
         System.out.println("UNIRSE_SALA_KS: Estado de PartidaDTO actualizado a: " + partida.getEstado());
 
         // 6. Actualizar la PartidaDTO en el Blackboard
         if (blackboard.actualizarPartida(partida)) {
-            System.out.println("UNIRSE_SALA_KS: PartidaDTO '" + idSala + "' actualizada en Blackboard con el nuevo jugador.");
+            System.out.println("UNIRSE_SALA_KS: PartidaDTO '" + idSala + "' actualizada en Blackboard.");
 
             // 7. Notificar al retador que se unió exitosamente
             enviarRespuesta(clienteRetador, "UNIDO_OK", Map.of(
-                "mensaje", "Te has unido a la sala '" + idSala + "'. Esperando para colocar barcos.",
+                "mensaje", "Te has unido a la sala '" + idSala + "'. Prepárate para colocar barcos.",
                 "idSala", idSala,
                 "rol", "RETADOR",
-                // Opcional: Enviar el PartidaDTO completo para que el cliente actualice su estado.
-                // "partidaDTOJson": new Gson().toJson(partida) // (Necesitarías Gson y Base64 si lo envías así)
-                // Por ahora, el cliente esperará un evento de ACTUALIZACION_PARTIDA o INICIAR_COLOCACION
-                "nombreOponente", partida.getJugador1().getNombre()
+                "nombreOponente", (partida.getJugador1() != null ? partida.getJugador1().getNombre() : "N/A")
             ));
-
-            // 8. Notificar al anfitrión (jugador1) que un oponente se ha unido
             Socket socketAnfitrion = blackboard.getSocketDeUsuario(partida.getJugador1().getNombre());
-            if (socketAnfitrion != null) {
-                Evento notificacionAnfitrion = new Evento("NUEVO_JUGADOR_EN_SALA");
-                notificacionAnfitrion.agregarDato("idSala", idSala);
-                notificacionAnfitrion.agregarDato("nombreOponente", retadorDTO.getNombre());
-                // Opcional: Enviar el PartidaDTO completo también al anfitrión.
-                // notificacionAnfitrion.agregarDato("partidaDTOJson", new Gson().toJson(partida));
-                server.enviarEventoACliente(socketAnfitrion, notificacionAnfitrion);
-                System.out.println("UNIRSE_SALA_KS: Notificación NUEVO_JUGADOR_EN_SALA enviada al anfitrión: " + partida.getJugador1().getNombre());
+           
+            // 8. Notificar al anfitrión (jugador1) que un oponente se ha unido
+            if (partida.getJugador1() != null) {
+               
+                if (socketAnfitrion != null) {
+                    Evento notificacionAnfitrion = new Evento("NUEVO_JUGADOR_EN_SALA"); // Mantenemos el nombre del evento
+                    notificacionAnfitrion.agregarDato("idSala", idSala);
+                    // En tu código original era "jugadorInfo", "Jugador " + ip. Mantendremos nombre.
+                    notificacionAnfitrion.agregarDato("jugadorInfo", retadorDTO.getNombre()); // Nombre del jugador que se unió
+                    server.enviarEventoACliente(socketAnfitrion, notificacionAnfitrion);
+                    System.out.println("UNIRSE_SALA_KS: Notificación NUEVO_JUGADOR_EN_SALA enviada al anfitrión: " + partida.getJugador1().getNombre());
+                } else {
+                     System.err.println("UNIRSE_SALA_KS: No se encontró socket para el anfitrión '" + partida.getJugador1().getNombre() + "' para notificar.");
+                }
             }
+                
 
-            // 9. (Importante) Ahora que ambos jugadores están, generar evento para iniciar la fase de colocación
-            System.out.println("UNIRSE_SALA_KS: Ambos jugadores presentes en sala '" + idSala + "'. Disparando evento INICIAR_FASE_COLOCACION.");
-            Evento eventoInicioColocacion = new Evento("INICIAR_FASE_COLOCACION");
+            // 9. Lógica de "Sala Llena" - Disparar evento para iniciar colocación
+            // (Esta parte ya estaba en tu código original y es correcta)
+            // Ahora que hay dos jugadores (jugador1 y jugador2 no son null)
+            System.out.println("UNIRSE_SALA_KS: ¡Sala '" + idSala + "' llena con 2 jugadores! Disparando evento INICIAR_FASE_COLOCACION.");
+
+             Evento eventoInicioColocacion = new Evento("INICIAR_FASE_COLOCACION");
             eventoInicioColocacion.agregarDato("idSala", idSala);
-            // Este evento es interno del servidor, el cliente origen podría ser null o el retador.
-            // Lo procesará otra KS (IniciarColocacionKS).
-            blackboard.enviarEventoBlackBoard(null, eventoInicioColocacion); // Cliente origen null para eventos sistémicos
-
+            blackboard.enviarEventoBlackBoard(null, eventoInicioColocacion); // Evento sistémico, clienteOrigen null
+            
+            
+            
+            // Notificar al backend controller (si aún es parte de tu flujo)
             if (controller != null) {
                 controller.notificarCambio("SALA_LLENA;" + idSala + ";jugador1=" + partida.getJugador1().getNombre() + ";jugador2=" + partida.getJugador2().getNombre());
             }
+            
+            Evento iniciarPartida = new Evento("INICIAR_PARTIDA_SALA");
+            iniciarPartida.agregarDato("idSala", idSala);
+            if (socketAnfitrion != null) { // Solo si el anfitrión necesita un evento especial
+                 blackboard.enviarEventoBlackBoard(socketAnfitrion, iniciarPartida);
+            }
+            
+       
 
         } else {
             System.err.println("UNIRSE_SALA_KS: Falló la actualización de PartidaDTO en Blackboard para sala '" + idSala + "'.");
@@ -162,7 +201,6 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
 
         blackboard.respuestaFuenteC(clienteRetador, evento);
     }
-
   
 
     private void enviarRespuestaError(Socket cliente, String mensajeError) {
