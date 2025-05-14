@@ -62,6 +62,7 @@ public class TableroJuego extends javax.swing.JFrame {
     private final String miNombreUsuario;
     private final String flotaString; // Flota recibida como String "Nombre:Tamaño,..."
     private List<String> barcosParaColocar; // Flota parseada
+    private List<Integer> barcosPorColocar = new ArrayList<>();
 
     // Variables para tu lógica de colocación (ejemplos)
     private String barcoSeleccionado = null; // Qué barco está colocando el usuario
@@ -182,6 +183,21 @@ public class TableroJuego extends javax.swing.JFrame {
             ImageIcon iconBase = cargarIcono(ruta);
             tamañoBarcoR=tamaño;
             
+            barcosPorColocar.clear();
+            for (Map.Entry<String, Integer> entry : tiposBarcos.entrySet()) {
+                int tamano;
+                switch (entry.getKey()) {
+                    case "crucero": tamano = 3; break;
+                    case "submarino": tamano = 1; break;
+                    case "barco": tamano = 2; break;
+                    case "artillero":
+                    default: tamano = 4; break;
+                }
+                for (int i = 0; i < entry.getValue(); i++) {
+                    barcosPorColocar.add(tamano);
+                }
+            }
+            
             for (int i = 0; i < cantidad; i++) {
                 
                 final Image img= iconBase.getImage()
@@ -270,7 +286,9 @@ public class TableroJuego extends javax.swing.JFrame {
                                     posicionesOcupadas.add(row + "," + (col + i)); // Horizontal
                                 }
                             }
-
+                            
+                            barcosPorColocar.remove((Integer) tamaño); 
+                            System.out.println("Barcos restantes por colocar: " + barcosPorColocar);
                             // Colocar el barco usando la imagen rotada o no, según el estado
                             JLabel lbl = new JLabel(new ImageIcon(rotatedImage));
                             if (isRotado) {
@@ -293,6 +311,11 @@ public class TableroJuego extends javax.swing.JFrame {
 
                             btn.setVisible(false); // Ocultar botón
                         }
+                        
+                        if (todosBarcosColocados()) {
+                            readyButton.setEnabled(true);
+                        }
+                        
                     }
                 });
 
@@ -632,6 +655,8 @@ public class TableroJuego extends javax.swing.JFrame {
                mostrarError("Error interno: Controlador no disponible.");
          }
     }//GEN-LAST:event_readyButtonActionPerformed
+
+
 // Acción al cerrar ventana
      private void formWindowClosing(java.awt.event.WindowEvent evt) {
          // Preguntar si quiere abandonar la partida
@@ -657,13 +682,10 @@ public class TableroJuego extends javax.swing.JFrame {
 
      /** Verifica si todos los barcos de la lista han sido colocados */
      private boolean todosBarcosColocados() {
-          // TODO: Implementar esta lógica
-          // Debe verificar si la lista 'barcosPorColocar' está vacía.
-        return false;
-          // TODO: Implementar esta lógica
-          // Debe verificar si la lista 'barcosPorColocar' está vacía.
-         
-     }
+        return barcosPorColocar.isEmpty();
+    }
+     
+     
 
      /** Convierte el estado lógico del tablero a JSON String */
      private String serializarTableroAJson() {
