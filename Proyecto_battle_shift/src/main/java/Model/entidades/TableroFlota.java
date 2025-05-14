@@ -55,6 +55,16 @@ public class TableroFlota {
         }
         return ResultadoDisparo.AGUA;
     }
+    
+    /**
+     * NUEVO MÉTODO: Limpia todos los barcos del tablero.
+     * Necesario si quieres reemplazar la flota actual con una nueva desde la UI.
+     */
+    public void limpiarBarcos() {
+        if (this.barcos != null) {
+            this.barcos.clear();
+        }
+    }
 
     public boolean estanTodosBarcosHundidos() {
         if (barcos.isEmpty()) return false; // No hay barcos que hundir

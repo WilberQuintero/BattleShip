@@ -38,6 +38,8 @@ public class controladorPartidaEspera {
         this.vistaEspera = vista; // Guardar referencia a la vista
         System.out.println("CONTROLLER [Espera]: Controlador inicializado y vista asignada.");
     }
+    
+    
 
     // El método setVista no es estrictamente necesario si siempre se pasa en el constructor,
     // pero puede ser útil si se reasigna la vista (poco común).
@@ -241,4 +243,9 @@ public class controladorPartidaEspera {
         }
         return true;
     }
+    
+    public String getIdSala() {
+        return this.idSala;
+    }
+    
 }

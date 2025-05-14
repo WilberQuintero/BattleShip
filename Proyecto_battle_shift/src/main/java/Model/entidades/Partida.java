@@ -122,6 +122,27 @@ public class Partida {
         }
         return false;
     }
+    
+   public Jugador getJugadorPorNombre(String nombre) {
+        if (jugador1 != null && jugador1.getNombre().equals(nombre)) {
+            return jugador1;
+        }
+        if (jugador2 != null && jugador2.getNombre().equals(nombre)) {
+            return jugador2;
+        }
+        return null;
+    }
+
+    public int getDimensionTablero() {
+        // Si 'dimensionTablero' es un atributo de Partida y se guarda en crearJuego:
+        // return this.dimensionTablero; 
+        
+        // Alternativa si no lo guardas explícitamente en Partida:
+        if (this.jugador1 != null && this.jugador1.getTableroFlota() != null) {
+             return this.jugador1.getTableroFlota().getDimension();
+        }
+        return 10; // O tu DIMENSION_TABLERO_DEFAULT de controladorInicio
+    }
 
     // Getters
     public String getIdPartida() { return idPartida; }

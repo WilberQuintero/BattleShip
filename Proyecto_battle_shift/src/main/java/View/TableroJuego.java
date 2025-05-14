@@ -115,6 +115,17 @@ public class TableroJuego extends javax.swing.JFrame {
         configurarUIInicial();
         prepararTableroParaColocacion(); // Configurar listeners del tablero
     }
+    
+     public controladorInicio getControladorPrincipal() {
+        return this.controladorPrincipal;
+    }
+     
+      /**
+     * NUEVO GETTER: Permite al controladorTablero acceder a la lista de barcos de la UI.
+     */
+    public List<Map<String, Object>> getBarcosColocadosEnUI() {
+        return this.barcosColocados;
+    }
 
     /** Configura elementos iniciales de la UI */
     private void configurarUIInicial() {
@@ -621,43 +632,64 @@ public class TableroJuego extends javax.swing.JFrame {
 
     private void readyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_readyButtonActionPerformed
        System.out.println("VIEW [TableroJuego]: Botón Confirmar Colocación presionado.");
-       System.out.println("Barcos colocados:");
-            for (Map<String, Object> barco : barcosColocados) {
-                int fila = (int) barco.get("fila");
-                int columna = (int) barco.get("columna");
-                int tamaño = (int) barco.get("tamaño");
-                System.out.println("Barco tamaño " + tamaño + " en (" + fila + ", " + columna + ")");
+        
+        // Tu validación existente (ej. todos los barcos fueron colocados desde la UI)
+        if (!todosBarcosColocados()) { 
+            mostrarError("Aún faltan barcos por colocar de la lista inicial.");
+            return;
         }
-         // 1. VALIDAR que todos los barcos estén colocados (ya debería estar hecho para habilitar el botón)
-         if (!todosBarcosColocados()) { // Necesitas implementar esta función
-              mostrarError("Aún faltan barcos por colocar.");
-              return;
-         }
 
-         // 2. Serializar el tablero a JSON
-         System.out.println("VIEW [TableroJuego]: Serializando tablero...");
-         String tableroJson = serializarTableroAJson(); // Necesitas implementar esta función
-         System.out.println("VIEW [TableroJuego]: Tablero JSON: " + tableroJson); // Imprime para depurar
+        if (controlador == null) {
+            mostrarError("Error interno: Controlador de tablero no disponible.");
+            return;
+        }
 
-         if (tableroJson == null) {
-              mostrarError("Error al generar la configuración del tablero.");
-              return;
-         }
+        // 1. Notificar al controlador para que actualice el MODELO con los barcos de la UI
+        System.out.println("VIEW [TableroJuego]: Solicitando al controlador poblar el modelo de flota...");
+        controlador.poblarModeloFlotaDesdeVista(); 
+        // Este método en controladorTablero usará getBarcosColocadosEnUI() y getControladorPrincipal().
 
-         
-         
-         // 3. Enviar al controlador
-         if (controlador != null) {
-              System.out.println("VIEW [TableroJuego]: Llamando a controlador.enviarColocacionLista...");
-//              controlador.enviarColocacionLista(tableroJson);
-              // 4. Deshabilitar UI y mostrar mensaje de espera
-              deshabilitarColocacion("Esperando al oponente...");
-         } else {
-               mostrarError("Error interno: Controlador no disponible.");
-         }
+        // 2. Notificar al controlador para que envíe el evento "Jugador Listo" con la flota del MODELO
+        System.out.println("VIEW [TableroJuego]: Solicitando al controlador enviar evento de jugador listo...");
+        controlador.enviarEventoJugadorListoConFlota();
+        
+        // La deshabilitación de la UI se maneja ahora dentro de enviarEventoJugadorListoConFlota
+        // a través de una llamada a this.deshabilitarColocacion()
     }//GEN-LAST:event_readyButtonActionPerformed
 
+public void deshabilitarColocacion(String mensaje) {
+        SwingUtilities.invokeLater(() -> {
+            System.out.println("VIEW [TableroJuego]: Deshabilitando colocación. Mensaje: " + mensaje);
+            
+            if (readyButton != null) readyButton.setEnabled(false);
+            if (cancelButton != null) {
+                cancelButton.setEnabled(false); // O cambiar su función a "Salir" o algo así
+                // cancelButton.setText("Salir"); 
+            }
+            
+            // Deshabilitar los botones de selección de barcos en jPanel2
+            if(jPanel2 != null){ 
+                for(Component comp : jPanel2.getComponents()){
+                    if (comp instanceof JButton) { // Asegurarse que solo deshabilita botones
+                        comp.setEnabled(false);
+                    }
+                }
+                jPanel2.repaint(); // Refrescar panel
+            }
 
+            // Idealmente, también deberías deshabilitar la interacción con el tableroJPanel
+            // para evitar más clics que intenten colocar barcos.
+            // Una forma simple es remover los listeners de clic de las celdas o del panel.
+            // Otra es poner un "glass pane" encima.
+            // Por ahora, deshabilitar los botones de barcos es un buen primer paso.
+
+            if (numberLabel != null) { 
+                numberLabel.setText(mensaje);
+            } else {
+                JOptionPane.showMessageDialog(this, mensaje, "Colocación Finalizada", JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+    }
 // Acción al cerrar ventana
      private void formWindowClosing(java.awt.event.WindowEvent evt) {
          // Preguntar si quiere abandonar la partida
@@ -702,17 +734,7 @@ public class TableroJuego extends javax.swing.JFrame {
           return "{\"barcos\":[{\"nombre\":\"Ejemplo\",\"pos\":[[0,0],[0,1]]}]}"; // Placeholder
      }
 
-     /** Deshabilita la UI de colocación y muestra un mensaje */
-     private void deshabilitarColocacion(String mensaje) {
-          // TODO: Deshabilitar la interacción con el tablero (quitar listeners?)
-          // TODO: Deshabilitar la lista de selección de barcos
-          if(readyButton != null) readyButton.setEnabled(false);
-          if(cancelButton != null) cancelButton.setEnabled(false);
-          if(numberLabel != null) numberLabel.setText(mensaje);
-           System.out.println("VIEW [TableroJuego]: UI de colocación deshabilitada. Mensaje: " + mensaje);
-           
-           
-     }
+    
 
      /** Muestra un mensaje de error */
      public void mostrarError(String mensaje) {

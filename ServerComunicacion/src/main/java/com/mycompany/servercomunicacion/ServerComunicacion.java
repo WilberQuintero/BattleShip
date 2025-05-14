@@ -401,6 +401,21 @@ public class ServerComunicacion {
          return conectado && socket != null && socket.isConnected() && !socket.isClosed();
     }
     
+    /**
+     * NUEVO MÉTODO PÚBLICO:
+     * Envía un evento de juego genérico o preformateado al servidor.
+     * Internamente utiliza el método privado enviarMensaje.
+     * @param eventoCompleto El string completo del evento a enviar.
+     */
+    public void enviarEventoJuego(String eventoCompleto) {
+        if (!validarEstadoConexion("enviar evento de juego")) {
+            // validarEstadoConexion ya notifica al listener si hay error
+            return;
+        }
+        // Llama a tu método privado existente para enviar el mensaje
+        enviarMensaje(eventoCompleto);
+    }
+    
     
 
     /**
