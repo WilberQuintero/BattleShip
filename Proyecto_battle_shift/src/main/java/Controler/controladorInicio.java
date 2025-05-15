@@ -327,17 +327,48 @@ public class controladorInicio implements ServerEventListener {
                             System.out.println("    [EDT] Tipo de Espera [" + finalTipo + "] no reconocido en switch interno.");
                             break;
                     }
-                } else if (delegadoCrearUnir != null && esParaCrearUnir) {
-                     boolean exito = !(finalTipo.startsWith("ERROR_"));
-                     if (finalTipo.contains("CREAR_SALA")) { 
-                        System.out.println("    [EDT] Evento CREAR_SALA (" + finalTipo + ") procesado por delegadoCrearUnir.");
-                        delegadoCrearUnir.procesarRespuestaCrearSala(exito, finalDatos);
-                    } else if (finalTipo.contains("UNIRSE_SALA") || finalTipo.equals("UNIDO_OK") || finalTipo.equals("ERROR_UNIRSE_SALA") ) {
-                       System.out.println("    [EDT] Evento UNIRSE_SALA (" + finalTipo + ") procesado por delegadoCrearUnir.");
-                       delegadoCrearUnir.procesarRespuestaUnirseSala(exito, finalDatos);
-                    } else {
-                         System.out.println("    [EDT] Tipo de Crear/Unir [" + finalTipo + "] no reconocido específicamente en este bloque.");
-                    }
+} else if (delegadoCrearUnir != null && esParaCrearUnir) {
+    boolean exito = !(finalTipo.startsWith("ERROR_"));
+    System.out.println("    [EDT] Evento para Crear/Unir (" + finalTipo + ") detectado.");
+
+    // >>> INICIO LÓGICA ADITIVA PARA CREAR PARTIDA en UNIDO_OK <<<
+    if (finalTipo.equals("UNIDO_OK") && exito) {
+        String idSalaUnida = (String) finalDatos.get("idSala");
+        String nombreOponenteDelServidor = (String) finalDatos.get("nombreOponente");
+        String miNombreComoRetador = this.nombreUsuarioRegistrado; // El que se está uniendo
+
+        if (idSalaUnida != null && nombreOponenteDelServidor != null && miNombreComoRetador != null &&
+            !miNombreComoRetador.equals(nombreOponenteDelServidor)) { // Asegurar que los nombres sean distintos
+
+            if (!partidasActivas.containsKey(idSalaUnida)) {
+                // El servidor indica el rol. Si soy RETADOR, el 'nombreOponenteDelServidor' es el ANFITRION (J1).
+                // Tu Partida.crearJuego(id, nombreJ1, nombreJ2, dim)
+                String nombreJ1 = nombreOponenteDelServidor; // El anfitrión
+                String nombreJ2 = miNombreComoRetador;      // Yo, el retador
+
+                Partida nuevaPartida = Partida.crearJuego(idSalaUnida, nombreJ1, nombreJ2, DIMENSION_TABLERO_DEFAULT);
+                partidasActivas.put(idSalaUnida, nuevaPartida);
+                System.out.println("    [EDT] MODELO Partida '" + idSalaUnida + "' CREADA (desde UNIDO_OK por retador) con J1=" + nombreJ1 + ", J2=" + nombreJ2);
+            } else {
+                System.out.println("    [EDT] MODELO Partida '" + idSalaUnida + "' ya existía (verificado en UNIDO_OK del retador).");
+                // Aquí se podría actualizar el estado de la partida si es necesario,
+                // por ejemplo, si el anfitrión la creó solo con J1 y ahora se añade J2.
+                // Pero tu Partida.crearJuego crea con ambos.
+            }
+        } else {
+            System.err.println("    [EDT] UNIDO_OK (retador): Datos insuficientes o nombres iguales para crear Partida. MiNombre: " + miNombreComoRetador + ", Oponente: " + nombreOponenteDelServidor);
+        }
+    }
+    // >>> FIN LÓGICA ADITIVA <<<
+
+    // Delegar a controladorCrearPartida para la navegación y otros procesamientos de UI
+    if (finalTipo.contains("CREAR_SALA")) { 
+        delegadoCrearUnir.procesarRespuestaCrearSala(exito, finalDatos);
+    } else if (finalTipo.equals("UNIDO_OK") || finalTipo.equals("ERROR_UNIRSE_SALA") || finalTipo.contains("UNIRSE_SALA")) {
+        delegadoCrearUnir.procesarRespuestaUnirseSala(exito, finalDatos);
+    } else {
+        System.out.println("    [EDT] Tipo de Crear/Unir [" + finalTipo + "] no reconocido específicamente para delegación.");
+    }
                 } else if (esRegistro) {
                     if (finalTipo.equals("REGISTRO_OK")) {
                         this.nombreUsuarioRegistrado = (String) finalDatos.get("nombre");
