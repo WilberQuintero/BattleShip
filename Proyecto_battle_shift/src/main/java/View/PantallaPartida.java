@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -24,18 +26,15 @@ import javax.swing.JLabel;
  *
  * @author javie
  */
-public class Partida extends javax.swing.JFrame {
+public class PantallaPartida extends javax.swing.JFrame {
 
     private List<Map<String, Object>> barcosColocados = new ArrayList<>();
     
     /**
      * Creates new form Partida
      */
-    public Partida() {
+    public PantallaPartida() {
         initComponents();
-        
-        dibujarTableros();
-        
     }
 
     /**
@@ -145,63 +144,17 @@ public class Partida extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Partida.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Partida.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Partida.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Partida.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new Partida().setVisible(true);
-            }
-        });
-    }
     
-    private void dibujarTableros(){
+    public void dibujarTableros(String flotaString){
         dibujarOponenteTablero();
-        
-        //solo para probar si se colocan
-        Map<String, Object> barco1 = new HashMap<>();
-        barco1.put("fila", 2);
-        barco1.put("columna", 3);
-        barco1.put("tamaño", 3);
-        barco1.put("rotado", false);
-
-        Map<String, Object> barco2 = new HashMap<>();
-        barco2.put("fila", 5);
-        barco2.put("columna", 1);
-        barco2.put("tamaño", 4);
-        barco2.put("rotado", true);
-
-        barcosColocados.clear();
-        barcosColocados.add(barco1);
-        barcosColocados.add(barco2);
-
+        System.out.println("FLOTA QUE LLEGA en METODO DIBUJAR TABLERO:  "+flotaString);
+        this.barcosColocados=obtenerBarcosDesdeFlota(flotaString);
+        System.out.println("PRIMER BARCO DE LA FLOTA GUARDADA:   "+barcosColocados.getFirst());
+        System.out.println("ULTIMO BARCO DE LA FLOTA GUARDADA:   "+barcosColocados.getLast());
         dibujarMiTablero();
     }
+    
+    
     
     
     
@@ -227,47 +180,46 @@ public class Partida extends javax.swing.JFrame {
     }
     
     
-    
-    private Map<String, Integer> obtenerMapaDesdeFlota(String flotaString) {
-        Map<String, Integer> mapa = new HashMap<>();
+    private List<Map<String, Object>> obtenerBarcosDesdeFlota(String flotaString) {
+          List<Map<String, Object>> barcos = new ArrayList<>();
 
-        if (flotaString == null || flotaString.isEmpty()) return mapa;
+        // Dividir por espacio, ya que los barcos están separados por espacios
+        String[] partes = flotaString.trim().split("\\s+");
 
-        if (flotaString.startsWith("flota=")) {
-            flotaString = flotaString.substring(6);
-        }
+        for (int i = 0; i < partes.length; i++) {
+            try {
+                // Ejemplo: partes[i] = "PORTAAVIONES:"
+                // partes[i+1] = "4,"
+                // partes[i+2] = "0,0,"
+                // partes[i+3] = "HORIZONTAL"
 
-        String[] partes = flotaString.split(",");
-        for (String parte : partes) {
-            String[] tipoYValor = parte.split(":");
-            if (tipoYValor.length == 2) {
-                String tipo = tipoYValor[0].trim().toLowerCase();
-                int cantidad;
-                try {
-                    cantidad = Integer.parseInt(tipoYValor[1].trim());
-                } catch (NumberFormatException e) {
-                    cantidad = 0;
-                }
+                if (!partes[i].contains(":")) continue;
 
-                switch (tipo) {
-                    case "portaaviones":
-                        tipo = "artillero";
-                        break;
-                    case "crucero":
-                    case "submarino":
-                    case "barco":
-                        break;
-                    default:
-                        System.out.println("Tipo de barco desconocido: " + tipo);
-                        continue;
-                }
+                // Extraer los 4 elementos que definen al barco
+                int tamaño = Integer.parseInt(partes[i + 1].replace(",", "").trim());
+                String[] coords = partes[i + 2].replace(",", "").trim().split("\\s*,?\\s*");
+                int columna = Integer.parseInt(coords[0]);
+                int fila = Integer.parseInt(coords[1]);
+                boolean rotado = partes[i + 3].trim().equalsIgnoreCase("VERTICAL");
 
-                mapa.put(tipo, cantidad);
+                Map<String, Object> barco = new HashMap<>();
+                barco.put("columna", columna);
+                barco.put("fila", fila);
+                barco.put("tamaño", tamaño);
+                barco.put("rotado", rotado);
+
+                barcos.add(barco);
+
+                i += 3; // Saltar a la siguiente entrada de barco
+
+            } catch (Exception e) {
+                System.out.println("Error al procesar barco a partir de: " + partes[i] + " -> " + e.getMessage());
             }
         }
 
-        return mapa;
+        return barcos;
     }
+    
     
     
     private ImageIcon cargarIcono(String ruta) {
@@ -287,83 +239,87 @@ public class Partida extends javax.swing.JFrame {
         int filas = 10;
         int columnas = 10;
 
-        int anchoTablero = columnas * cellSize;
-        int altoTablero = filas * cellSize;
+        int anchoTablero = (columnas + 1) * cellSize;
+        int altoTablero = (filas + 1) * cellSize;
 
         miTablero.setPreferredSize(new Dimension(anchoTablero, altoTablero));
-        
+
         // Fondo del tablero
         ImageIcon fondoOriginal = cargarIcono("/Images/Board.png");
         if (fondoOriginal == null) {
             System.out.println("No se pudo cargar la imagen de fondo");
-        } else {
-            Image imagenEscalada = fondoOriginal.getImage().getScaledInstance(anchoTablero, altoTablero, Image.SCALE_SMOOTH);
-            ImageIcon fondo = new ImageIcon(imagenEscalada);
-            JLabel fondoLabel = new JLabel(fondo);
-            fondoLabel.setBounds(0, 0, anchoTablero, altoTablero);
-            fondoLabel.setLayout(null); 
-
-            // Dibujar todos los barcos de la lista
-            for (Map<String, Object> barco : barcosColocados) {
-                int fila = (int) barco.get("fila");
-                int columna = (int) barco.get("columna");
-                int tamaño = (int) barco.get("tamaño");
-                boolean rotado = (boolean) barco.get("rotado");
-
-                // Asignar la imagen del barco según su tamaño
-                String ruta = "";
-                switch (tamaño) {
-                    case 1:
-                        ruta = "/Images/Submarine.png";  
-                        break;
-                    case 2:
-                        ruta = "/Images/Destroyer.png"; 
-                        break;
-                    case 3:
-                        ruta = "/Images/Cruise.png";   
-                        break;
-                    case 4:
-                        ruta = "/Images/Battleship.png"; 
-                        break;
-                    default:
-                        ruta = "/Images/Battleship.png";
-                        break;
-                }
-
-                // Cargar la imagen del barco
-                ImageIcon barcoIcon = cargarIcono(ruta);
-                if (barcoIcon == null) {
-                    System.out.println("No se pudo cargar la imagen del barco: " + ruta);
-                } else {
-                    Image img = barcoIcon.getImage();
-
-                    // Escalar la imagen de acuerdo al tamaño del barco
-                    Image barcoEscalado;
-                    if (rotado) {
-                        img = rotateImage(img);
-                        barcoEscalado = img.getScaledInstance(cellSize, cellSize * tamaño, Image.SCALE_SMOOTH);
-                    } else {
-                        barcoEscalado = img.getScaledInstance(cellSize * tamaño, cellSize, Image.SCALE_SMOOTH);
-                    }
-
-                    ImageIcon barcoFinal = new ImageIcon(barcoEscalado);
-                    JLabel barcoLabel = new JLabel(barcoFinal);
-
-                    int x = columna * cellSize;
-                    int y = fila * cellSize;
-                    if (rotado) {
-                        barcoLabel.setBounds(x-6, y, cellSize, cellSize * tamaño);
-                    } else {
-                        barcoLabel.setBounds(x, y-8, cellSize * tamaño, cellSize);
-                    }
-
-                    fondoLabel.add(barcoLabel);
-                }
-            }
-
-            miTablero.add(fondoLabel);
+            return;
         }
 
+        Image imagenEscalada = fondoOriginal.getImage().getScaledInstance(anchoTablero, altoTablero, Image.SCALE_SMOOTH);
+        ImageIcon fondo = new ImageIcon(imagenEscalada);
+        JLabel fondoLabel = new JLabel(fondo);
+        fondoLabel.setBounds(0, 0, anchoTablero, altoTablero);
+        fondoLabel.setLayout(null);
+
+        // Crear botones invisibles en cada celda (como en el tablero del oponente)
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                JButton celda = new JButton();
+                celda.setText("");
+                celda.setEnabled(false); // 👈 No permite clics
+                celda.setBorder(BorderFactory.createLineBorder(Color.BLUE));
+                celda.setContentAreaFilled(false);
+                celda.setOpaque(false);
+                celda.setFocusable(false);
+                celda.setBounds((columna + 1) * cellSize, (fila + 1) * cellSize, cellSize, cellSize);
+                fondoLabel.add(celda);
+            }
+        }
+
+        // Dibujar todos los barcos de la lista
+        for (Map<String, Object> barco : barcosColocados) {
+            int fila = (int) barco.get("fila");
+            int columna = (int) barco.get("columna");
+            int tamaño = (int) barco.get("tamaño");
+            boolean rotado = (boolean) barco.get("rotado");
+
+            String ruta;
+            switch (tamaño) {
+                case 1: ruta = "/Images/Submarine.png"; break;
+                case 2: ruta = "/Images/Destroyer.png"; break;
+                case 3: ruta = "/Images/Cruise.png"; break;
+                case 4: ruta = "/Images/Battleship.png"; break;
+                default: ruta = "/Images/Battleship.png"; break;
+            }
+
+            ImageIcon barcoIcon = cargarIcono(ruta);
+            if (barcoIcon == null) {
+                System.out.println("No se pudo cargar la imagen del barco: " + ruta);
+                continue;
+            }
+
+            Image img = barcoIcon.getImage();
+            Image barcoEscalado;
+
+            if (rotado) {
+                img = rotateImage(img);
+                barcoEscalado = img.getScaledInstance(cellSize, cellSize * tamaño, Image.SCALE_SMOOTH);
+            } else {
+                barcoEscalado = img.getScaledInstance(cellSize * tamaño, cellSize, Image.SCALE_SMOOTH);
+            }
+
+            ImageIcon barcoFinal = new ImageIcon(barcoEscalado);
+            JLabel barcoLabel = new JLabel(barcoFinal);
+
+            int x = (columna + 1) * cellSize;
+            int y = (fila + 1) * cellSize;
+
+            if (rotado) {
+                barcoLabel.setBounds(x, y, cellSize, cellSize * tamaño);
+            } else {
+                barcoLabel.setBounds(x, y, cellSize * tamaño, cellSize);
+            }
+
+            fondoLabel.add(barcoLabel);
+        }
+
+        miTablero.add(fondoLabel);
         miTablero.revalidate();
         miTablero.repaint();
     }
@@ -391,30 +347,33 @@ public class Partida extends javax.swing.JFrame {
         for (int fila = 0; fila < filas; fila++) {
             for (int columna = 0; columna < columnas; columna++) {
                 JButton celda = new JButton();
-                celda.setBackground(new Color(255, 255, 255, 0)); 
+                celda.setText("");
+                celda.setBackground(new Color(255, 255, 255, 0));
                 celda.setBorder(BorderFactory.createLineBorder(Color.GREEN));
-                celda.setBounds((columna + 1) * cellSize, (fila + 1) * cellSize, cellSize, cellSize); 
+                celda.setBounds((columna + 1) * cellSize, (fila + 1) * cellSize, cellSize, cellSize);
                 celda.setActionCommand(fila + "," + columna);
                 celda.setFocusable(false);
+                celda.setContentAreaFilled(false);
+                celda.setOpaque(false);
 
-                // Aquí verificas si la celda fue impactada o no
                 celda.addActionListener(e -> {
                     String[] pos = e.getActionCommand().split(",");
                     int x = Integer.parseInt(pos[0]);
                     int y = Integer.parseInt(pos[1]);
+
                     if (siImpactado(x, y)) {
                         ImageIcon imagen = cargarIcono("/Images/failure.png");
                         celda.setIcon(imagen);
-                        celda.setEnabled(false);
                         System.out.println("¡Impactado! (" + x + "," + y + ")");
                     } else {
-                        // Cambiar imagen a "hit.png"
                         ImageIcon imagen = cargarIcono("/Images/hit.png");
                         celda.setIcon(imagen);
-                        celda.setEnabled(false);
                         System.out.println("¡No Impactado! (" + x + "," + y + ")");
                     }
+
+                    celda.setEnabled(false);
                 });
+
                 fondoLabel.add(celda);
             }
         }
@@ -433,6 +392,42 @@ public class Partida extends javax.swing.JFrame {
     return probabilidadImpacto < 0.5;
     }
 
+    
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(PantallaPartida.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(PantallaPartida.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(PantallaPartida.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(PantallaPartida.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new PantallaPartida().setVisible(true);
+            }
+        });
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;

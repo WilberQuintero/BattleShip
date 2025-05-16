@@ -4,12 +4,16 @@
  */
 package Controler;
 
+import View.PantallaPartida;
 import Model.entidades.*; // Asumiendo que aquí están tus entidades
 import enums.*;          // Asumiendo que aquí están tus enums
 import java.util.UUID;   // Para generar un ID de partida único
 
 public class GeneradorPartidaEjemplo {
-
+    
+    public static PantallaPartida partidaPantalla1=new PantallaPartida();
+    public static PantallaPartida partidaPantalla2=new PantallaPartida();
+    
     public static final int DIMENSION_TABLERO = 10;
 
     public static Partida crearPartidaDeEjemploListaParaJugar() {
@@ -28,6 +32,7 @@ public class GeneradorPartidaEjemplo {
         // 2. Colocar barcos para Jugador 1
         System.out.println("Colocando barcos para " + jugador1.getNombre() + "...");
         colocarFlotaEstandar(jugador1, true); // true para colocar en la parte "superior"
+        
         jugador1.setHaConfirmadoTablero(true);
         System.out.println("Barcos de " + jugador1.getNombre() + " colocados y tablero confirmado.");
 
@@ -36,7 +41,8 @@ public class GeneradorPartidaEjemplo {
         colocarFlotaEstandar(jugador2, false); // false para colocar en la parte "inferior"
         jugador2.setHaConfirmadoTablero(true);
         System.out.println("Barcos de " + jugador2.getNombre() + " colocados y tablero confirmado.");
-
+        
+        colocarFlota(jugador1,jugador2);
         // 4. Iniciar la partida (esto debería establecer el estado y el turno)
         boolean partidaIniciada = partida.iniciarPartida();
         if (partidaIniciada) {
@@ -62,15 +68,18 @@ public class GeneradorPartidaEjemplo {
         System.out.println("Objeto Partida de ejemplo creado y listo.");
         return partida;
     }
+    
+    
 
     private static void colocarFlotaEstandar(Jugador jugador, boolean esJugador1Layout) {
+        
         // Reglas: 2 Portaaviones (4), 2 Cruceros (3), 4 Submarinos (2), 3 Barcos Patrulla (1)
         int yOffset = esJugador1Layout ? 0 : 5; // Colocar barcos de J2 más abajo para evitar colisiones visuales simples
 
         // Portaaviones (x2)
         jugador.colocarBarco(TipoNave.PORTAAVIONES, new Posicion(0, yOffset + 0), Orientacion.HORIZONTAL); // A1-D1 o F1-I1
         jugador.colocarBarco(TipoNave.PORTAAVIONES, new Posicion(0, yOffset + 2), Orientacion.HORIZONTAL); // A3-D3 o F3-I3
-
+        System.out.println(TipoNave.PORTAAVIONES +" "+new Posicion(0, yOffset + 0)+" "+ Orientacion.HORIZONTAL);
         // Cruceros (x2)
         jugador.colocarBarco(TipoNave.CRUCERO, new Posicion(5, yOffset + 0), Orientacion.VERTICAL);   // F1-F3 o K1-K3
         jugador.colocarBarco(TipoNave.CRUCERO, new Posicion(7, yOffset + 1), Orientacion.VERTICAL);   // H2-H4 o M2-M4
@@ -86,16 +95,17 @@ public class GeneradorPartidaEjemplo {
         } else {
             jugador.colocarBarco(TipoNave.SUBMARINO, new Posicion(1, yOffset + 1), Orientacion.VERTICAL); // B7,B8
         }
-
-
         // Barcos Patrulla (x3)
         jugador.colocarBarco(TipoNave.BARCO_PATRULLA, new Posicion(9, yOffset + 0), Orientacion.HORIZONTAL); // J1 o O1
         jugador.colocarBarco(TipoNave.BARCO_PATRULLA, new Posicion(9, yOffset + 2), Orientacion.HORIZONTAL); // J3 o O3
         jugador.colocarBarco(TipoNave.BARCO_PATRULLA, new Posicion(9, yOffset + 4), Orientacion.HORIZONTAL); // J5 o O5
-
+        
+        
         // Verificar que todos los barcos se hayan podido agregar (según la lógica de TableroFlota.agregarBarco)
         // Para este ejemplo, asumimos que las posiciones son válidas y no se superponen con esta distribución simple.
         // En una implementación real, la UI o una lógica de IA se encargaría de la colocación válida.
+        
+        
     }
 
     public static void main(String[] args) {
@@ -107,10 +117,12 @@ public class GeneradorPartidaEjemplo {
         if (partidaEjemplo.getJugador1() != null && partidaEjemplo.getJugador1().getTableroFlota() != null) {
             System.out.println("Tablero Flota de " + partidaEjemplo.getJugador1().getNombre() + ":");
             imprimirTableroFlota(partidaEjemplo.getJugador1().getTableroFlota());
+            partidaPantalla1.show();
         }
         if (partidaEjemplo.getJugador2() != null && partidaEjemplo.getJugador2().getTableroFlota() != null) {
             System.out.println("\nTablero Flota de " + partidaEjemplo.getJugador2().getNombre() + ":");
             imprimirTableroFlota(partidaEjemplo.getJugador2().getTableroFlota());
+            partidaPantalla2.show();
         }
          if (partidaEjemplo.getJugador1() != null && partidaEjemplo.getJugador1().getTableroSeguimiento() != null) {
             System.out.println("\nTablero Seguimiento de " + partidaEjemplo.getJugador1().getNombre() + " (debería estar vacío):");
@@ -172,4 +184,24 @@ public class GeneradorPartidaEjemplo {
             System.out.println();
         }
     }
+
+    private static String flotaJugador(Jugador jugador){
+        StringBuilder flotaString = new StringBuilder();
+        for(int i = 0;i<jugador.getTableroFlota().getDimension();i++){
+            flotaString.append(jugador.getTableroFlota().getBarcos().get(i)+" ");
+        }
+        return flotaString.toString();
+    }
+    
+    private static void colocarFlota(Jugador jugador1, Jugador  jugador2) {
+        String flotaJugador1 = flotaJugador(jugador1);
+        String flotaJugador2 = flotaJugador(jugador2);
+        System.out.println("Flota J1:\n" + flotaJugador1);
+        System.out.println("Flota J2:\n" + flotaJugador2);
+        partidaPantalla1.dibujarTableros(flotaJugador1);
+        partidaPantalla2.dibujarTableros(flotaJugador2);
+    }
+
+    
+    
 }

@@ -97,4 +97,11 @@ public class Barco {
     public void setEstado(EstadoNave estado) { this.estado = estado; }
     // No se suelen poner setters para tipo, longitud, posicionesOcupadas una vez creado,
     // a menos que la lógica del juego lo requiera explícitamente (raro para un barco ya colocado).
+
+    @Override
+    public String toString() {
+        return tipo + ": " + longitud + ", " + posicionesOcupadas.getFirst().getX()+","+ posicionesOcupadas.getFirst().getY() + ", " + orientacion;
+    }
+    
+    
 }
