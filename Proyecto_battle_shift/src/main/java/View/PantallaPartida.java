@@ -4,6 +4,7 @@
  */
 package View;
 
+import Controler.TableroListener;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -29,6 +30,8 @@ import javax.swing.JLabel;
 public class PantallaPartida extends javax.swing.JFrame {
 
     private List<Map<String, Object>> barcosColocados = new ArrayList<>();
+    private boolean turno;
+    private TableroListener listener;
     
     /**
      * Creates new form Partida
@@ -145,17 +148,24 @@ public class PantallaPartida extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     
-    public void dibujarTableros(String flotaString){
+    public void dibujarTableros(String flotaString,String nombre, boolean turno){
+        this.turno=turno;
         dibujarOponenteTablero();
         System.out.println("FLOTA QUE LLEGA en METODO DIBUJAR TABLERO:  "+flotaString);
         this.barcosColocados=obtenerBarcosDesdeFlota(flotaString);
         System.out.println("PRIMER BARCO DE LA FLOTA GUARDADA:   "+barcosColocados.getFirst());
         System.out.println("ULTIMO BARCO DE LA FLOTA GUARDADA:   "+barcosColocados.getLast());
         dibujarMiTablero();
+        this.setTitle(nombre);
     }
     
-    
-    
+    /**
+     *  Es para poder controlar los botos y que la vista no los modifique  
+     * @param listener
+     */
+    public void setTableroListener(TableroListener listener) {
+        this.listener = listener;
+    }
     
     
     private Image rotateImage(Image img) {
@@ -220,9 +230,12 @@ public class PantallaPartida extends javax.swing.JFrame {
         return barcos;
     }
     
+    public void setTurno(boolean turno){
+        this.turno=turno;
+    }
     
     
-    private ImageIcon cargarIcono(String ruta) {
+    public ImageIcon cargarIcono(String ruta) {
         URL url = getClass().getResource(ruta);
         if (url == null) {
             System.err.println("No se encontró la imagen: " + ruta);
@@ -357,21 +370,13 @@ public class PantallaPartida extends javax.swing.JFrame {
                 celda.setOpaque(false);
 
                 celda.addActionListener(e -> {
+                    if (!turno || listener == null) return;
+
                     String[] pos = e.getActionCommand().split(",");
                     int x = Integer.parseInt(pos[0]);
                     int y = Integer.parseInt(pos[1]);
 
-                    if (siImpactado(x, y)) {
-                        ImageIcon imagen = cargarIcono("/Images/failure.png");
-                        celda.setIcon(imagen);
-                        System.out.println("¡Impactado! (" + x + "," + y + ")");
-                    } else {
-                        ImageIcon imagen = cargarIcono("/Images/hit.png");
-                        celda.setIcon(imagen);
-                        System.out.println("¡No Impactado! (" + x + "," + y + ")");
-                    }
-
-                    celda.setEnabled(false);
+                    listener.onCeldaSeleccionada(x, y, celda); 
                 });
 
                 fondoLabel.add(celda);
