@@ -208,6 +208,38 @@ public class controladorPartidaEspera {
         vistaEspera.volverAPantallaAnterior("El oponente ha salido de la sala.");
     }
 
+    public void mostrarMensajeEsperaFlota(String mensaje) {
+    if (vistaEspera != null) {
+        SwingUtilities.invokeLater(() -> vistaEspera.mostrarMensajeDeEstado(mensaje));
+    }
+}
+
+public void mostrarMensajeOponenteListo(String mensaje) {
+     if (vistaEspera != null) {
+        SwingUtilities.invokeLater(() -> vistaEspera.mostrarMensajeDeEstado(mensaje));
+    }
+}
+
+public void mostrarErrorColocacion(String mensajeError) {
+    if (vistaEspera != null) {
+        // El método mostrarError en tu PartidaEspera toma (mensaje, esCriticoQueCierraVista)
+        SwingUtilities.invokeLater(() -> vistaEspera.mostrarError(mensajeError, false)); // false para no cerrar la vista
+    }
+}
+
+// Para cerrar la vista cuando se inicia el combate o hay error fatal
+public void cerrarVista() {
+    if (vistaEspera != null) {
+        SwingUtilities.invokeLater(() -> vistaEspera.dispose());
+         System.out.println("CONTROLLER [Espera]: Vista PartidaEspera cerrada.");
+    }
+}
+
+public boolean isVistaActiva() {
+    return vistaEspera != null && vistaEspera.isDisplayable();
+}
+    
+    
     /**
      * Procesa un error específico de esta sala recibido del servidor.
      * Llamado por controladorInicio al recibir "ERROR_SALA".

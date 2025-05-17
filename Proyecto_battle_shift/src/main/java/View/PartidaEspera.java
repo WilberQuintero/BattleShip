@@ -70,7 +70,17 @@ private javax.swing.JList<String> listaJugadores;
         // Iniciar tu animación de carga
         iniciarAnimacionCarga(); // Llama al método para iniciar el Timer
     }
-    
+    public void mostrarMensajeDeEstado(String mensaje) {
+    // Actualiza un JLabel en tu UI para mostrar este mensaje
+    // Ejemplo: lblEstadoActual.setText(mensaje);
+    System.out.println("VISTA [PartidaEspera]: Mostrando mensaje de estado: " + mensaje);
+    JOptionPane.showMessageDialog(this, mensaje, "Información de Partida", JOptionPane.INFORMATION_MESSAGE); // O un JLabel
+}
+
+public void mostrarErrorColocacion(String mensajeError) {
+    // Podría ser similar a mostrarError, pero específico para la fase de colocación
+    mostrarError("Error en Flota: " + mensajeError, false); // false si no es crítico para cerrar
+}
     /**
      * Muestra un mensaje de estado o error en el JLabel jLabelInfoOponente.
      * @param mensaje El mensaje a mostrar.

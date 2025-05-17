@@ -32,8 +32,8 @@ import java.util.Map; // Para procesar respuestas del servidor
  * Maneja la colocación de barcos y la lógica de disparos.
  */
 public class controladorTablero {
-
-   private final ServerComunicacion serverComunicacion;
+private final ServerComunicacion serverComunicacion;
+   
     private final String idSala;
     private final String miNombreUsuario;
     private TableroJuego vistaTablero;
@@ -58,6 +58,9 @@ public class controladorTablero {
             // Considera un manejo de error más robusto si esto es un estado inválido
         }
     }
+   
+   
+   
    
    
    /**

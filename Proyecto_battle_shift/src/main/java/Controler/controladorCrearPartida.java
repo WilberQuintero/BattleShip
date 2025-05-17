@@ -227,7 +227,13 @@ public class controladorCrearPartida {
          }
          System.out.println("DEBUG [CrearPartida]: Fin de procesarRespuestaUnirseSala.");
     }
-    
+    // Para cerrar la vista cuando se inicia el combate o hay error fatal
+public void cerrarVista() {
+    if (vistaUnirseJugar != null) {
+        SwingUtilities.invokeLater(() -> vistaUnirseJugar.dispose());
+         System.out.println("CONTROLLER [Espera]: Vista vistaUnirseJugar cerrada.");
+    }
+}
     
     // Dentro de la clase controladorCrearPartida.java
 

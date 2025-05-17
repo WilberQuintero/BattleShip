@@ -36,6 +36,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.TransferHandler;
 import View.IconTransferHandler;
+import com.mycompany.servercomunicacion.ServerComunicacion;
 import java.awt.Component;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -58,6 +59,10 @@ public class TableroJuego extends javax.swing.JFrame {
 // --- Atributos ---
     private final controladorInicio controladorPrincipal;
     private final controladorTablero controlador; // Controlador específico
+    private final ServerComunicacion serverComunicacion = null;
+    private PantallaPartida vistaPartida;
+    
+    
     private final String idSala;
     private final String miNombreUsuario;
     private final String flotaString; // Flota recibida como String "Nombre:Tamaño,..."
