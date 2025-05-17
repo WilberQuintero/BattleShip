@@ -8,6 +8,8 @@ import View.PantallaPartida;
 import Model.entidades.*; // Asumiendo que aquí están tus entidades
 import enums.*;          // Asumiendo que aquí están tus enums
 import java.util.UUID;   // Para generar un ID de partida único
+import javax.swing.ImageIcon;
+import javax.swing.SwingUtilities;
 
 public class GeneradorPartidaEjemplo {
     
@@ -72,7 +74,7 @@ public class GeneradorPartidaEjemplo {
     
 
     private static void colocarFlotaEstandar(Jugador jugador, boolean esJugador1Layout) {
-        
+            
         // Reglas: 2 Portaaviones (4), 2 Cruceros (3), 4 Submarinos (2), 3 Barcos Patrulla (1)
         int yOffset = esJugador1Layout ? 0 : 5; // Colocar barcos de J2 más abajo para evitar colisiones visuales simples
 
@@ -109,6 +111,7 @@ public class GeneradorPartidaEjemplo {
     }
 
     public static void main(String[] args) {
+        GeneradorPartidaEjemplo ejemplo = new GeneradorPartidaEjemplo();
         Partida partidaEjemplo = crearPartidaDeEjemploListaParaJugar();
 
         // Aquí tus compañeros pueden tomar 'partidaEjemplo' y pasarlo a sus vistas.
@@ -118,6 +121,7 @@ public class GeneradorPartidaEjemplo {
             System.out.println("Tablero Flota de " + partidaEjemplo.getJugador1().getNombre() + ":");
             imprimirTableroFlota(partidaEjemplo.getJugador1().getTableroFlota());
             partidaPantalla1.show();
+            ejemplo.verificarDisparo();
         }
         if (partidaEjemplo.getJugador2() != null && partidaEjemplo.getJugador2().getTableroFlota() != null) {
             System.out.println("\nTablero Flota de " + partidaEjemplo.getJugador2().getNombre() + ":");
@@ -128,6 +132,30 @@ public class GeneradorPartidaEjemplo {
             System.out.println("\nTablero Seguimiento de " + partidaEjemplo.getJugador1().getNombre() + " (debería estar vacío):");
             imprimirTableroSeguimiento(partidaEjemplo.getJugador1().getTableroSeguimiento());
         }
+    }
+    
+    /**
+     *  En este metodo se conecta el controlador con las casillas de la vista. Son botones y solo se les puede interactuar si es el turno del jugador.
+     */
+    public void verificarDisparo() {
+        partidaPantalla1.setTableroListener((fila, columna, celda) -> {
+            boolean impactado = verificarImpacto(fila, columna); 
+            
+            SwingUtilities.invokeLater(() -> {
+                ImageIcon icono = partidaPantalla1.cargarIcono(impactado ? "/Images/failure.png" : "/Images/hit.png");
+                celda.setIcon(icono);
+                celda.setEnabled(false);
+
+                System.out.println((impactado ? "¡Impactado!" : "¡No impactado!") + " (" + fila + "," + columna + ")");
+
+                partidaPantalla1.setTurno(false); 
+            });
+        });
+    }
+    
+    private boolean verificarImpacto(int fila, int columna){
+         double probabilidad = Math.random(); 
+        return probabilidad < 0.5;
     }
 
     // Método helper para imprimir un TableroFlota (simplificado)
@@ -198,8 +226,9 @@ public class GeneradorPartidaEjemplo {
         String flotaJugador2 = flotaJugador(jugador2);
         System.out.println("Flota J1:\n" + flotaJugador1);
         System.out.println("Flota J2:\n" + flotaJugador2);
-        partidaPantalla1.dibujarTableros(flotaJugador1);
-        partidaPantalla2.dibujarTableros(flotaJugador2);
+        partidaPantalla1.dibujarTableros(flotaJugador1,jugador1.getNombre(),true);
+        partidaPantalla2.dibujarTableros(flotaJugador2,jugador2.getNombre(),false);
+        
     }
 
     
