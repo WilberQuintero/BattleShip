@@ -530,6 +530,7 @@ public class TableroJuego extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         cancelButton = new javax.swing.JButton();
         readyButton = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -545,18 +546,19 @@ public class TableroJuego extends javax.swing.JFrame {
         tableroJPanelLayout.setHorizontalGroup(
             tableroJPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(tableroJPanelLayout.createSequentialGroup()
+                .addContainerGap()
                 .addComponent(numberLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 422, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addContainerGap(22, Short.MAX_VALUE))
         );
         tableroJPanelLayout.setVerticalGroup(
             tableroJPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(tableroJPanelLayout.createSequentialGroup()
                 .addGap(179, 179, 179)
                 .addComponent(numberLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(203, Short.MAX_VALUE))
+                .addContainerGap(213, Short.MAX_VALUE))
         );
 
-        jPanel1.add(tableroJPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 20, 440, 440));
+        jPanel1.add(tableroJPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 10, 450, 450));
 
         jPanel2.setBackground(new java.awt.Color(204, 204, 204));
 
@@ -587,7 +589,7 @@ public class TableroJuego extends javax.swing.JFrame {
                 cancelButtonActionPerformed(evt);
             }
         });
-        jPanel1.add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(690, 260, 120, 40));
+        jPanel1.add(cancelButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(680, 240, 120, 40));
 
         readyButton.setBackground(new java.awt.Color(189, 236, 182));
         readyButton.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
@@ -598,7 +600,9 @@ public class TableroJuego extends javax.swing.JFrame {
                 readyButtonActionPerformed(evt);
             }
         });
-        jPanel1.add(readyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(690, 160, 120, 40));
+        jPanel1.add(readyButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(680, 160, 120, 40));
+
+        jLabel2.setText("NOTA: Rote con \"clic\" derecho cuando seleccione una nave.");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -607,12 +611,18 @@ public class TableroJuego extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 833, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel2)
+                .addGap(247, 247, 247))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 470, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(13, Short.MAX_VALUE))
         );
 
         pack();
@@ -806,6 +816,7 @@ public void deshabilitarColocacion(String mensaje) {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JLabel numberLabel;
