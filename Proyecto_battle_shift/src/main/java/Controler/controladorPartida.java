@@ -9,6 +9,7 @@ import java.util.Base64;
 import java.nio.charset.StandardCharsets;
 import javax.swing.SwingUtilities;
 import java.util.Map; // Para procesar datos de eventos del servidor
+import javax.swing.JButton;
 
 public class controladorPartida {
 
@@ -236,6 +237,70 @@ public class controladorPartida {
             vistaPartida.mostrarFinDePartida("Partida Terminada. Motivo: " + motivo);
         }
         // Aquí podrías deshabilitar tableros, mostrar botón de "Volver al menú", etc.
+    }
+    
+     // Este método se llama cuando el jugador hace clic en una celda del tablero del oponente
+    
+    public void onCeldaSeleccionada(int fila, int columna, JButton celdaBoton) {
+        System.out.println("CONTROLADOR_PARTIDA: Clic en tablero de seguimiento: Fila=" + fila + ", Columna=" + columna + " por " + nombreJugadorLocal);
+
+        if (partidaActual == null || jugadorLocalEntidad == null) {
+            vistaPartida.mostrarError("Error crítico: Datos de partida o jugador no inicializados.", true);
+            return;
+        }
+        
+        if (partidaActual.getEstado() != EstadoPartida.EN_CURSO) {
+            vistaPartida.mostrarMensajeGeneral("La partida no está en curso o ya ha finalizado.");
+            return;
+        }
+
+        // 1. Validar si es el turno del jugador local
+        Jugador jugadorEnTurnoModelo = partidaActual.obtenerJugadorEnTurno();
+        if (jugadorEnTurnoModelo == null || !jugadorEnTurnoModelo.getNombre().equals(this.nombreJugadorLocal)) {
+            vistaPartida.mostrarMensajeGeneral("No es tu turno.");
+            System.out.println("CONTROLADOR_PARTIDA: Intento de disparo fuera de turno por " + this.nombreJugadorLocal +
+                               ". Turno actual de: " + (jugadorEnTurnoModelo != null ? jugadorEnTurnoModelo.getNombre() : "Nadie"));
+            return;
+        }
+
+        // 2. Validar si ya se disparó en esa casilla usando el TableroSeguimiento del jugador local
+        Posicion posicionDisparo = new Posicion(columna, fila); // Tu clase Posicion (X, Y)
+        TableroSeguimiento miTableroSeguimiento = jugadorLocalEntidad.getTableroSeguimiento();
+
+        if (miTableroSeguimiento == null) {
+            vistaPartida.mostrarError("Error interno: Tablero de seguimiento no encontrado.", true);
+            return;
+        }
+
+        if (miTableroSeguimiento.yaSeDisparoEn(posicionDisparo)) {
+            vistaPartida.mostrarMensajeGeneral("Ya has disparado en la casilla (" + fila + "," + columna + "). Elige otra.");
+            System.out.println("CONTROLADOR_PARTIDA: Intento de disparar a casilla ya atacada: " + posicionDisparo);
+            return;
+        }
+
+        // 3. Si las validaciones pasan, construir y enviar el evento
+        if (serverComunicacion != null && serverComunicacion.isConectado()) {
+            // Marcar la casilla en la UI como "pendiente" para feedback inmediato
+            if (vistaPartida != null) {
+                vistaPartida.marcarCasillaSeguimientoComoPendiente(fila, columna);
+            }
+
+            // Formato del evento: EVENTO;TIPO=REALIZAR_DISPARO;idSala=X;nombreJugador=Y;fila=R;columna=C
+            String eventoDisparoStr = String.format("EVENTO;TIPO=REALIZAR_DISPARO;idSala=%s;nombreJugador=%s;fila=%d;columna=%d",
+                                                 this.partidaActual.getIdPartida(), // Obtener idSala de partidaActual
+                                                 this.nombreJugadorLocal,
+                                                 fila,
+                                                 columna);
+            
+            System.out.println("CONTROLADOR_PARTIDA: Enviando evento de disparo: " + eventoDisparoStr);
+            serverComunicacion.enviarEventoJuego(eventoDisparoStr); // Usando el método público de ServerComunicacion
+
+            // Opcional: Deshabilitar el tablero del oponente temporalmente hasta recibir respuesta
+            // vistaPartida.actualizarEstadoTurno("Disparo realizado. Esperando resultado del servidor...", false);
+
+        } else {
+            vistaPartida.mostrarError("No estás conectado al servidor. No se pudo realizar el disparo.", false);
+        }
     }
 
 

@@ -55,6 +55,7 @@ public class PantallaPartida extends javax.swing.JFrame {
         // Es buena práctica inicializar aquí si los tableros se dibujan una vez
         // o tener métodos separados para dibujarlos/redibujarlos.
         // Por ahora, el dibujado principal ocurrirá en configurarParaPartida.
+
         this.celdasTableroSeguimiento = new JButton[FILAS_TABLERO][COLUMNAS_TABLERO];
         inicializarTableroVacio(oponenteTablero, true); // true para hacerlo clickeable (TableroSeguimiento)
         inicializarTableroVacio(miTablero, false);      // false para no clickeable (TableroFlota)
@@ -183,6 +184,9 @@ public class PantallaPartida extends javax.swing.JFrame {
     
     }//GEN-LAST:event_btnAbandonarActionPerformed
 
+    
+    
+    
     /**
      * Configura la vista completa de la partida con los datos recibidos.
      * Este es el método principal que llamará el controladorPartida.
@@ -214,13 +218,13 @@ public class PantallaPartida extends javax.swing.JFrame {
         dibujarTableroSeguimiento(jugadorLocal.getTableroSeguimiento()); 
         
         if (partida.obtenerJugadorEnTurno() != null) {
-            actualizarEstadoTurno(
-                "Turno de: " + partida.obtenerJugadorEnTurno().getNombre(),
-                partida.obtenerJugadorEnTurno().getNombre().equals(nombreJugadorEsteCliente)
-            );
-        } else {
-            actualizarEstadoTurno("Esperando inicio de turno...", false);
-        }
+    actualizarEstadoTurno( // << Aquí se establece esTurnoDelJugadorLocal y se habilitan/deshabilitan botones
+        "Turno de: " + partida.obtenerJugadorEnTurno().getNombre(),
+        partida.obtenerJugadorEnTurno().getNombre().equals(nombreJugadorEsteCliente)
+    );
+} else {
+    actualizarEstadoTurno("Esperando inicio de turno...", false);
+}
     }
      private void inicializarTableroVacio(JPanel panelTablero, boolean esClickeable) {
         panelTablero.removeAll();
@@ -246,21 +250,32 @@ public class PantallaPartida extends javax.swing.JFrame {
                 celda.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1)); // Borde sutil
                 celda.setFocusable(false);
 
-                if (esClickeable) { // Para el tablero de seguimiento (oponente)
-                    celda.setEnabled(this.esTurnoDelJugadorLocal); // Habilitar solo si es mi turno
-                    celda.setActionCommand(fila + "," + columna);
-                    final int f = fila; // Necesario para lambda
-                    final int c = columna; // Necesario para lambda
-                    celda.addActionListener(e -> {
-                        if (esTurnoDelJugadorLocal && listenerTableroSeguimiento != null) {
-                            listenerTableroSeguimiento.onCeldaSeleccionada(f, c, (JButton) e.getSource());
-                        }
-                    });
-                    celdasTableroSeguimiento[fila][columna] = celda; // Guardar referencia
-                } else { // Para el tablero de flota propio
-                    celda.setEnabled(false); // No se puede clickear en el tablero propio para disparar
-                }
-                fondoLabel.add(celda);
+               if (esClickeable) { // Esto se ejecuta para oponenteTablero
+    celda.setEnabled(this.esTurnoDelJugadorLocal); // Habilitar solo si es mi turno
+    celda.setActionCommand(fila + "," + columna);
+    final int f = fila;
+    final int c = columna;
+    celda.addActionListener(e -> {
+         System.out.println("VISTA DEBUG: ActionListener DISPARADO para celda (" + f + "," + c + ") del oponenteTablero"); 
+    System.out.println("VISTA DEBUG: Clic! esTurnoDelJugadorLocal=" + esTurnoDelJugadorLocal + 
+                       ", listenerTableroSeguimiento es null? " + (listenerTableroSeguimiento == null));
+    if (esTurnoDelJugadorLocal && listenerTableroSeguimiento != null) {
+        listenerTableroSeguimiento.onCeldaSeleccionada(f, c, (JButton) e.getSource());
+            // >>> PUNTO CRÍTICO DE DEBUG #2 <<<
+            System.out.println("DEBUG VISTA: Llamando a listenerTableroSeguimiento.onCeldaSeleccionada...");
+            listenerTableroSeguimiento.onCeldaSeleccionada(f, c, (JButton) e.getSource());
+        } else {
+            System.out.println("DEBUG VISTA: Clic ignorado. EsTurno=" + esTurnoDelJugadorLocal + ", Listener=" + (listenerTableroSeguimiento != null));
+            if (!esTurnoDelJugadorLocal) {
+                JOptionPane.showMessageDialog(this, "No es tu turno.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            } else if (listenerTableroSeguimiento == null) {
+                System.err.println("ERROR VISTA: listenerTableroSeguimiento es NULL al hacer clic!");
+            }
+            
+        }
+    });
+    celdasTableroSeguimiento[fila][columna] = celda; // Guardar referencia
+}
             }
         }
         panelTablero.add(fondoLabel);
@@ -332,6 +347,8 @@ public class PantallaPartida extends javax.swing.JFrame {
         miTablero.revalidate();
         miTablero.repaint();
     }
+    
+    
 
     /**
      * Prepara el tablero de seguimiento (oponente). Las celdas son clickeables.
@@ -471,6 +488,8 @@ public class PantallaPartida extends javax.swing.JFrame {
         miTablero.revalidate();
         miTablero.repaint();
     }
+    
+    
 
     /**
      * Actualiza el mensaje de turno y habilita/deshabilita la interacción.
@@ -478,6 +497,8 @@ public class PantallaPartida extends javax.swing.JFrame {
      * @param esMiTurno true si es el turno del jugador local, false en caso contrario.
      */
     public void actualizarEstadoTurno(String mensajeTurno, boolean esMiTurno) {
+        System.out.println("DEBUG VISTA: actualizarEstadoTurno - Mensaje: " + mensajeTurno + ", esMiTurno: " + esMiTurno); // <<< LOG
+  
         this.esTurnoDelJugadorLocal = esMiTurno;
         if (lblMensajeTurno != null) {
             lblMensajeTurno.setText(mensajeTurno);
@@ -532,6 +553,9 @@ public class PantallaPartida extends javax.swing.JFrame {
             System.out.println("VISTA [PantallaPartida]: Marcando ("+fila+","+columna+") como pendiente.");
         }
     }
+    
+   
+    
      /**
      * Muestra un mensaje de error al usuario.
      * @param mensaje El mensaje de error a mostrar.

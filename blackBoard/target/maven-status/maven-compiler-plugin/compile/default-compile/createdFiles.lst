@@ -1,12 +1,13 @@
 ks\IniciarPartidaKS.class
 com\mycompany\blackboard\BlackBoard.class
-com\mycompany\blackboard\Controller.class
 com\mycompany\blackboard\IKnowledgeSource.class
-ks\IniciarColocacionKS.class
 ks\ConnectionKS.class
 com\mycompany\blackboard\Sala.class
+ks\DisparoKS.class
 ks\IniciarCombateKS$1.class
-ks\RegistrarUsuarioKS.class
 ks\CrearSalaKS.class
 ks\IniciarCombateKS.class
 ks\UnirseSalaKS.class
+com\mycompany\blackboard\Controller.class
+ks\IniciarColocacionKS.class
+ks\RegistrarUsuarioKS.class

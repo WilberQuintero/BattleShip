@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import ks.DisparoKS;
 import ks.IniciarColocacionKS;
 import ks.IniciarCombateKS;
 import ks.RegistrarUsuarioKS;
@@ -100,6 +101,7 @@ public class BlackBoard implements IBlackboard {
         knowledgeSources.add(new RegistrarUsuarioKS(this, this.server, this.controller));
         knowledgeSources.add(new IniciarColocacionKS(this, this.server, this.controller));
         knowledgeSources.add(new IniciarCombateKS(this, this.server, this.controller));
+         knowledgeSources.add(new DisparoKS(this, this.server, this.controller));
 
         // TODO: Añadir futuras KS aquí...
 

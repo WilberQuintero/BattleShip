@@ -19,4 +19,5 @@ public interface TableroListener {
      * @param celda
      */
     void onCeldaSeleccionada(int fila, int columna, JButton celda);
+    
 }

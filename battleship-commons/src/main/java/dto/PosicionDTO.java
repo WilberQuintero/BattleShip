@@ -24,6 +24,17 @@ public class PosicionDTO implements Serializable {
     public int getY() { return y; }
     public void setY(int y) { this.y = y; }
     // Es buena idea implementar equals() y hashCode() si se usan en Sets o como claves de Map
-    @Override public boolean equals(Object o) { /* ... */ return false; }
-    @Override public int hashCode() { /* ... */ return 0; }
+    // En dto/PosicionDTO.java
+@Override
+public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    PosicionDTO that = (PosicionDTO) o;
+    return x == that.x && y == that.y;
+}
+
+@Override
+public int hashCode() {
+    return java.util.Objects.hash(x, y);
+}
 }
