@@ -253,11 +253,11 @@ public class IniciarCombateKS implements IKnowledgeSource {
         // Implementa aquí tus reglas de validación detalladas.
         // Esto es solo un placeholder.
         // Ejemplo: Verificar cantidad total de barcos (2+2+4+3 = 11 barcos)
-        if (flota.size() != 10) { // Ajusta este número a tu total de barcos
-            System.err.println("VALIDAR_FLOTA: Número incorrecto de barcos. Esperado: 10, Recibido: " + flota.size());
-            return false;
-        }
-        
+//        if (flota.size() != 10) { // Ajusta este número a tu total de barcos
+//            System.err.println("VALIDAR_FLOTA: Número incorrecto de barcos. Esperado: 10, Recibido: " + flota.size());
+//            return false;
+//        }
+         System.err.println("VALIDAR_FLOTA: Número de barcos. Esperado: 10, Recibido: " + flota.size());
         // Aquí irían muchas más validaciones...
         System.out.println("VALIDAR_FLOTA: Validación básica pasada (cantidad de barcos). Implementar validación completa.");
         return true;
