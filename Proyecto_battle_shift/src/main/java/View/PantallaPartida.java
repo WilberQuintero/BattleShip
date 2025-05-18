@@ -4,16 +4,7 @@
  */
 package View;
 
-
-import Controler.TableroListener; // Tu interfaz de listener
-import Model.entidades.Barco;     // Tu entidad Barco
-import Model.entidades.Jugador;
-import Model.entidades.Partida;
-import Model.entidades.Posicion;  // Tu entidad Posicion
-import Model.entidades.TableroFlota; // Tu entidad TableroFlota
-import Model.entidades.TableroSeguimiento; // Tu entidad TableroSeguimiento
-import enums.*; // Tu enum ResultadoDisparo
-
+import Controler.TableroListener;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -21,14 +12,16 @@ import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane; // Para mensajes simples
-import javax.swing.JPanel;    // Para los JPanels de los tableros
-
 
 /**
  *
@@ -36,29 +29,18 @@ import javax.swing.JPanel;    // Para los JPanels de los tableros
  */
 public class PantallaPartida extends javax.swing.JFrame {
 
-    // private List<Map<String, Object>> barcosColocados; // ELIMINADO
-    private boolean esTurnoDelJugadorLocal; // Reemplaza a 'turno' para mayor claridad
-    private TableroListener listenerTableroSeguimiento; // Renombrado para claridad
-
-    private static final int DIMENSION_CELDA = 40; // Tamaño de cada celda
-    private static final int FILAS_TABLERO = 10;   // Número de filas
-    private static final int COLUMNAS_TABLERO = 10; // Número de columnas
-        // Guardar referencias a los JButtons del tablero de seguimiento para actualizarlos
-    private JButton[][] celdasTableroSeguimiento;
-
+    private List<Map<String, Object>> barcosColocados = new ArrayList<>();
+    private boolean turno;
+    private TableroListener listener;
+    
     /**
      * Creates new form Partida
      */
-
     public PantallaPartida() {
         initComponents();
-        // Es buena práctica inicializar aquí si los tableros se dibujan una vez
-        // o tener métodos separados para dibujarlos/redibujarlos.
-        // Por ahora, el dibujado principal ocurrirá en configurarParaPartida.
-        this.celdasTableroSeguimiento = new JButton[FILAS_TABLERO][COLUMNAS_TABLERO];
-        inicializarTableroVacio(oponenteTablero, true); // true para hacerlo clickeable (TableroSeguimiento)
-        inicializarTableroVacio(miTablero, false);      // false para no clickeable (TableroFlota)
+        this.setLocationRelativeTo(null);
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -68,14 +50,16 @@ public class PantallaPartida extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jPanel1 = new javax.swing.JPanel();
         oponenteTablero = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
-        btnAbandonar = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
         miTablero = new javax.swing.JPanel();
-        lblMensajeTurno = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         oponenteTablero.setBackground(new java.awt.Color(232, 255, 255));
 
@@ -90,468 +74,309 @@ public class PantallaPartida extends javax.swing.JFrame {
             .addGap(0, 371, Short.MAX_VALUE)
         );
 
+        jPanel1.add(oponenteTablero, new org.netbeans.lib.awtextra.AbsoluteConstraints(510, 60, -1, -1));
+
         jLabel1.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         jLabel1.setText("Tus barcos");
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 30, -1, -1));
 
         jLabel2.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         jLabel2.setText("Oponente");
+        jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(710, 10, -1, 47));
 
-        btnAbandonar.setText("Abandonar");
-        btnAbandonar.addActionListener(new java.awt.event.ActionListener() {
+        jButton1.setText("Abandonar");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAbandonarActionPerformed(evt);
+                jButton1ActionPerformed(evt);
             }
         });
+        jPanel1.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(480, 520, -1, -1));
 
         miTablero.setBackground(new java.awt.Color(220, 240, 255));
-        miTablero.setPreferredSize(new java.awt.Dimension(361, 371));
+        miTablero.setPreferredSize(new java.awt.Dimension(360, 371));
 
         javax.swing.GroupLayout miTableroLayout = new javax.swing.GroupLayout(miTablero);
         miTablero.setLayout(miTableroLayout);
         miTableroLayout.setHorizontalGroup(
             miTableroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGap(0, 440, Short.MAX_VALUE)
         );
         miTableroLayout.setVerticalGroup(
             miTableroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGap(0, 440, Short.MAX_VALUE)
         );
 
-        lblMensajeTurno.setText("jLabel3");
+        jPanel1.add(miTablero, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 60, 440, 440));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(206, 206, 206)
-                        .addComponent(jLabel1))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(45, 45, 45)
-                        .addComponent(miTablero, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(410, 410, 410)
-                        .addComponent(btnAbandonar)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 57, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(lblMensajeTurno)
-                        .addGap(371, 371, 371))
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                            .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGap(249, 249, 249))
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                            .addComponent(oponenteTablero, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGap(47, 47, 47)))))
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1021, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(37, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(oponenteTablero, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(miTablero, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnAbandonar)
-                    .addComponent(lblMensajeTurno))
-                .addGap(35, 35, 35))
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 576, Short.MAX_VALUE)
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnAbandonarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAbandonarActionPerformed
-   
-        // TODO: Notificar al controlador que el jugador quiere abandonar.
-        // El controlador enviará el evento al servidor.
-        System.out.println("BOTON ABANDONAR PRESIONADO - Lógica pendiente en controladorPartida.");
-        if (listenerTableroSeguimiento != null) { // Podríamos necesitar otro listener para esto
-             // listenerTableroSeguimiento.onAbandonarPartida(); // Crear este método en la interfaz y el controlador
-        }
-        // Temporalmente:
-        JOptionPane.showMessageDialog(this, "Funcionalidad 'Abandonar Partida' pendiente de implementación completa con el servidor.");
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton1ActionPerformed
+
     
-    }//GEN-LAST:event_btnAbandonarActionPerformed
-
-    /**
-     * Configura la vista completa de la partida con los datos recibidos.
-     * Este es el método principal que llamará el controladorPartida.
-     * @param partida La entidad Partida con todos los datos.
-     * @param nombreJugadorEsteCliente El nombre del jugador para el cual esta vista es.
-     */
-    public void configurarParaPartida(Partida partida, String nombreJugadorEsteCliente) {
-        Jugador jugadorLocal = null;
-        Jugador oponente = null;
-
-        if (partida.getJugador1() != null && partida.getJugador1().getNombre().equals(nombreJugadorEsteCliente)) {
-            jugadorLocal = partida.getJugador1();
-            oponente = partida.getJugador2();
-        } else if (partida.getJugador2() != null && partida.getJugador2().getNombre().equals(nombreJugadorEsteCliente)) {
-            jugadorLocal = partida.getJugador2();
-            oponente = partida.getJugador1();
-        }
-
-        if (jugadorLocal == null) {
-            mostrarError("Error: No se pudo identificar al jugador local en la partida.", true);
-            return;
-        }
-
-        this.setTitle("Batalla Naval: " + nombreJugadorEsteCliente + (oponente != null ? " vs " + oponente.getNombre() : " (Esperando)"));
-
-        dibujarTableroFlotaPropio(jugadorLocal.getTableroFlota());
-        // El tablero de seguimiento se inicializa vacío y se actualiza con los disparos.
-        // Si hay disparos previos (ej. al reconectar), se pasarían aquí:
-        dibujarTableroSeguimiento(jugadorLocal.getTableroSeguimiento()); 
-        
-        if (partida.obtenerJugadorEnTurno() != null) {
-            actualizarEstadoTurno(
-                "Turno de: " + partida.obtenerJugadorEnTurno().getNombre(),
-                partida.obtenerJugadorEnTurno().getNombre().equals(nombreJugadorEsteCliente)
-            );
-        } else {
-            actualizarEstadoTurno("Esperando inicio de turno...", false);
-        }
-    }
-     private void inicializarTableroVacio(JPanel panelTablero, boolean esClickeable) {
-        panelTablero.removeAll();
-        panelTablero.setLayout(null); // Usar null layout para posicionar con setBounds
-
-        int anchoTotal = (COLUMNAS_TABLERO + 1) * DIMENSION_CELDA;
-        int altoTotal = (FILAS_TABLERO + 1) * DIMENSION_CELDA;
-        panelTablero.setPreferredSize(new Dimension(anchoTotal, altoTotal));
-
-        ImageIcon fondoOriginal = cargarIcono("/Images/Board.png"); // Asegúrate que esta ruta sea correcta
-        Image imagenEscalada = fondoOriginal.getImage().getScaledInstance(anchoTotal, altoTotal, Image.SCALE_SMOOTH);
-        JLabel fondoLabel = new JLabel(new ImageIcon(imagenEscalada));
-        fondoLabel.setBounds(0, 0, anchoTotal, altoTotal);
-        fondoLabel.setLayout(null); // Para que los botones se posicionen correctamente sobre el fondo
-
-        for (int fila = 0; fila < FILAS_TABLERO; fila++) {
-            for (int columna = 0; columna < COLUMNAS_TABLERO; columna++) {
-                JButton celda = new JButton();
-                celda.setText(""); // Sin texto inicial
-                celda.setBounds((columna + 1) * DIMENSION_CELDA, (fila + 1) * DIMENSION_CELDA, DIMENSION_CELDA, DIMENSION_CELDA);
-                celda.setContentAreaFilled(false); // Hacer el botón transparente
-                celda.setOpaque(false);
-                celda.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1)); // Borde sutil
-                celda.setFocusable(false);
-
-                if (esClickeable) { // Para el tablero de seguimiento (oponente)
-                    celda.setEnabled(this.esTurnoDelJugadorLocal); // Habilitar solo si es mi turno
-                    celda.setActionCommand(fila + "," + columna);
-                    final int f = fila; // Necesario para lambda
-                    final int c = columna; // Necesario para lambda
-                    celda.addActionListener(e -> {
-                        if (esTurnoDelJugadorLocal && listenerTableroSeguimiento != null) {
-                            listenerTableroSeguimiento.onCeldaSeleccionada(f, c, (JButton) e.getSource());
-                        }
-                    });
-                    celdasTableroSeguimiento[fila][columna] = celda; // Guardar referencia
-                } else { // Para el tablero de flota propio
-                    celda.setEnabled(false); // No se puede clickear en el tablero propio para disparar
-                }
-                fondoLabel.add(celda);
-            }
-        }
-        panelTablero.add(fondoLabel);
-        panelTablero.revalidate();
-        panelTablero.repaint();
-    }
-
-     
-     /**
-     * Dibuja el tablero de flota del jugador local.
-     * @param tableroFlota La entidad TableroFlota del jugador local.
-     */
-    public void dibujarTableroFlotaPropio(TableroFlota tableroFlota) {
-        inicializarTableroVacio(miTablero, false); // Redibuja el fondo y las celdas base (no clickeables)
-        JLabel fondoLabel = (JLabel) miTablero.getComponent(0); // Obtener el JLabel del fondo
-
-        if (tableroFlota == null || tableroFlota.getBarcos() == null) {
-            System.out.println("VISTA [PantallaPartida]: TableroFlota nulo o sin barcos para dibujar.");
-            return;
-        }
-
-        System.out.println("VISTA [PantallaPartida]: Dibujando " + tableroFlota.getBarcos().size() + " barcos propios.");
-        for (Barco barco : tableroFlota.getBarcos()) {
-            // Determinar la imagen del barco según su tipo/longitud
-            String rutaImagenBarco;
-            switch (barco.getTipo()) {
-                case PORTAAVIONES: rutaImagenBarco = "/Images/Battleship.png"; break; // Asumiendo que Battleship es tu portaaviones
-                case CRUCERO: rutaImagenBarco = "/Images/Cruise.png"; break;
-                case SUBMARINO: rutaImagenBarco = "/Images/Submarine.png"; break; // Cambia si tienes imagen específica para 2
-                case BARCO_PATRULLA: rutaImagenBarco = "/Images/Destroyer.png"; break; // Asumiendo Destroyer es para 1 o 2
-                default: rutaImagenBarco = "/Images/Battleship.png"; // Imagen por defecto
-            }
-            ImageIcon iconoBarco = cargarIcono(rutaImagenBarco);
-            if (iconoBarco.getImage() == null || iconoBarco.getIconWidth() == -1) continue;
-
-            Image img = iconoBarco.getImage();
-            Image barcoEscalado;
-            Posicion primeraPosicion = barco.getPosicionesOcupadas().get(0); // Asumimos que hay al menos una
-            int filaAncla = primeraPosicion.getY();
-            int colAncla = primeraPosicion.getX();
-
-            int barcoAnchoPx, barcoAltoPx;
-
-            if (barco.getOrientacion() == Orientacion.VERTICAL) {
-                img = rotateImage(img); // Rotar la imagen original
-                // Escalar la imagen rotada: ancho de 1 celda, alto de 'longitud' celdas
-                barcoAnchoPx = DIMENSION_CELDA;
-                barcoAltoPx = DIMENSION_CELDA * barco.getLongitud();
-            } else { // HORIZONTAL
-                // Escalar la imagen original: ancho de 'longitud' celdas, alto de 1 celda
-                barcoAnchoPx = DIMENSION_CELDA * barco.getLongitud();
-                barcoAltoPx = DIMENSION_CELDA;
-            }
-            barcoEscalado = img.getScaledInstance(barcoAnchoPx, barcoAltoPx, Image.SCALE_SMOOTH);
-            
-            JLabel barcoLabel = new JLabel(new ImageIcon(barcoEscalado));
-            barcoLabel.setBounds((colAncla + 1) * DIMENSION_CELDA, (filaAncla + 1) * DIMENSION_CELDA, barcoAnchoPx, barcoAltoPx);
-            fondoLabel.add(barcoLabel); // Añadir sobre el fondoLabel
-            fondoLabel.setComponentZOrder(barcoLabel, 0); // Dibujar barcos encima de las celdas base
-        }
-        
-        // Dibujar impactos sobre los barcos
-        for (Barco barco : tableroFlota.getBarcos()) {
-            for (Posicion posImpactada : barco.getPosicionesImpactadas()) {
-                 actualizarCasillaFlotaPropia(posImpactada.getY(), posImpactada.getX(), ResultadoDisparo.IMPACTO); // O HUNDIDO si el barco lo está
-            }
-        }
-
-        miTablero.revalidate();
-        miTablero.repaint();
-    }
-
-    /**
-     * Prepara el tablero de seguimiento (oponente). Las celdas son clickeables.
-     * No muestra barcos, solo los resultados de los disparos.
-     * @param tableroSeguimiento La entidad TableroSeguimiento del jugador local.
-     */
-    public void dibujarTableroSeguimiento(TableroSeguimiento tableroSeguimiento) {
-        inicializarTableroVacio(oponenteTablero, true); // Redibuja el fondo y las celdas base (clickeables)
-        // No se dibujan barcos aquí. Se actualizan las celdas con iconos de AGUA/IMPACTO/HUNDIDO
-        // a medida que llegan los resultados de los disparos.
-        if (tableroSeguimiento != null && tableroSeguimiento.getRegistrosDisparos() != null) {
-            for (Map.Entry<Posicion, ResultadoDisparo> registro : tableroSeguimiento.getRegistrosDisparos().entrySet()) {
-                Posicion pos = registro.getKey();
-                ResultadoDisparo res = registro.getValue();
-                actualizarCasillaSeguimiento(pos.getY(), pos.getX(), res, false); // false porque es tablero seguimiento
-            }
-        }
-        oponenteTablero.revalidate();
-        oponenteTablero.repaint();
+    public void dibujarTableros(String flotaString,String nombre, boolean turno){
+        this.turno=turno;
+        dibujarOponenteTablero();
+        System.out.println("FLOTA QUE LLEGA en METODO DIBUJAR TABLERO:  "+flotaString);
+        this.barcosColocados=obtenerBarcosDesdeFlota(flotaString);
+        System.out.println("PRIMER BARCO DE LA FLOTA GUARDADA:   "+barcosColocados.getFirst());
+        System.out.println("ULTIMO BARCO DE LA FLOTA GUARDADA:   "+barcosColocados.getLast());
+        dibujarMiTablero();
+        this.setTitle(nombre);
     }
     
-     public void setTableroListener(TableroListener listener) {
-        this.listenerTableroSeguimiento = listener;
+    /**
+     *  Es para poder controlar los botos y que la vista no los modifique  
+     * @param listener
+     */
+    public void setTableroListener(TableroListener listener) {
+        this.listener = listener;
     }
+    
+    
+    private Image rotateImage(Image img) {
+        int w = img.getWidth(null);
+        int h = img.getHeight(null);
 
-    public void setTurno(boolean esMiTurno) { // Este método ya lo tenías
-        this.esTurnoDelJugadorLocal = esMiTurno;
-        // Habilitar/deshabilitar las celdas del tablero de seguimiento
-        for (int i = 0; i < FILAS_TABLERO; i++) {
-            for (int j = 0; j < COLUMNAS_TABLERO; j++) {
-                if (celdasTableroSeguimiento[i][j] != null && celdasTableroSeguimiento[i][j].getIcon() == null) { // Solo si no tiene ya un ícono de resultado
-                    celdasTableroSeguimiento[i][j].setEnabled(esMiTurno);
-                }
+        // El nuevo BufferedImage debe ser suficientemente grande para contener la imagen rotada
+        BufferedImage rotated = new BufferedImage(h, w, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = rotated.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+        // Mover el punto de origen al centro del nuevo lienzo
+        g2d.translate(h / 2.0, w / 2.0);
+        g2d.rotate(Math.toRadians(90));
+        g2d.translate(-w / 2.0, -h / 2.0);
+
+        // Dibujar la imagen rotada
+        g2d.drawImage(img, 0, 0, null);
+        g2d.dispose();
+
+        return rotated;
+    }
+    
+    
+    private List<Map<String, Object>> obtenerBarcosDesdeFlota(String flotaString) {
+          List<Map<String, Object>> barcos = new ArrayList<>();
+
+        // Dividir por espacio, ya que los barcos están separados por espacios
+        String[] partes = flotaString.trim().split("\\s+");
+
+        for (int i = 0; i < partes.length; i++) {
+            try {
+                // Ejemplo: partes[i] = "PORTAAVIONES:"
+                // partes[i+1] = "4,"
+                // partes[i+2] = "0,0,"
+                // partes[i+3] = "HORIZONTAL"
+
+                if (!partes[i].contains(":")) continue;
+
+                // Extraer los 4 elementos que definen al barco
+                int tamaño = Integer.parseInt(partes[i + 1].replace(",", "").trim());
+                String[] coords = partes[i + 2].replace(",", "").trim().split("\\s*,?\\s*");
+                int columna = Integer.parseInt(coords[0]);
+                int fila = Integer.parseInt(coords[1]);
+                boolean rotado = partes[i + 3].trim().equalsIgnoreCase("VERTICAL");
+
+                Map<String, Object> barco = new HashMap<>();
+                barco.put("columna", columna);
+                barco.put("fila", fila);
+                barco.put("tamaño", tamaño);
+                barco.put("rotado", rotado);
+
+                barcos.add(barco);
+
+                i += 3; // Saltar a la siguiente entrada de barco
+
+            } catch (Exception e) {
+                System.out.println("Error al procesar barco a partir de: " + partes[i] + " -> " + e.getMessage());
             }
         }
-         if (lblMensajeTurno != null) { // Actualizar el JLabel
-            lblMensajeTurno.setText(esMiTurno ? "ES TU TURNO" : "Turno del oponente");
-        }
-    }
 
+        return barcos;
+    }
+    
+    public void setTurno(boolean turno){
+        this.turno=turno;
+    }
+    
+    
     public ImageIcon cargarIcono(String ruta) {
         URL url = getClass().getResource(ruta);
         if (url == null) {
             System.err.println("No se encontró la imagen: " + ruta);
-            return new ImageIcon(); // Devuelve un icono vacío para evitar NullPointerException
+            return new ImageIcon();
         }
         return new ImageIcon(url);
     }
-
-    private Image rotateImage(Image img) {
-        // ... (tu código de rotación se mantiene igual)
-        int w = img.getWidth(null);
-        int h = img.getHeight(null);
-        if (w <=0 || h <= 0) return img; // Evitar error con imágenes inválidas
-
-        BufferedImage rotated = new BufferedImage(h, w, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = rotated.createGraphics();
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2d.translate(h / 2.0, w / 2.0);
-        g2d.rotate(Math.toRadians(90));
-        g2d.translate(-w / 2.0, -h / 2.0);
-        g2d.drawImage(img, 0, 0, null);
-        g2d.dispose();
-        return rotated;
-    }
     
-     // --- NUEVOS MÉTODOS PARA ACTUALIZAR LA UI ---
+    private void dibujarMiTablero() {
+        miTablero.removeAll();
+        miTablero.setLayout(null);
 
-    /**
-     * Actualiza una celda específica en el tablero de seguimiento del jugador local.
-     * @param fila Fila de la celda.
-     * @param columna Columna de la celda.
-     * @param resultado El resultado del disparo (AGUA, IMPACTO, HUNDIDO).
-     * @param esImpactoEnMiFlota No se usa aquí, siempre es en flota enemiga.
-     */
-    public void actualizarCasillaSeguimiento(int fila, int columna, ResultadoDisparo resultado, boolean esImpactoEnMiFlotaIgnorado) {
-        if (fila < 0 || fila >= FILAS_TABLERO || columna < 0 || columna >= COLUMNAS_TABLERO) return;
+        int cellSize = 40;
+        int filas = 10;
+        int columnas = 10;
 
-        JButton celda = celdasTableroSeguimiento[fila][columna];
-        if (celda == null) return; // No debería pasar si se inicializó bien
+        int anchoTablero = (columnas + 1) * cellSize;
+        int altoTablero = (filas + 1) * cellSize;
 
-        ImageIcon icono = null;
-        switch (resultado) {
-            case AGUA:
-                icono = cargarIcono("/Images/failure.png"); // Agua
-                break;
-            case IMPACTO:
-            case HUNDIDO: // Tratar HUNDIDO igual que IMPACTO visualmente en tablero de seguimiento por ahora
-                icono = cargarIcono("/Images/hit.png"); // Impacto
-                break;
-            default: // Otro estado, o si quieres diferenciar HUNDIDO
-                break;
-        }
-        if (icono != null && icono.getImage() != null && icono.getIconWidth() > 0) {
-             // Escalar el icono al tamaño de la celda
-            Image img = icono.getImage().getScaledInstance(DIMENSION_CELDA - 5, DIMENSION_CELDA - 5, Image.SCALE_SMOOTH);
-            celda.setIcon(new ImageIcon(img));
-        }
-        celda.setEnabled(false); // Deshabilitar después de un disparo/resultado
-        oponenteTablero.repaint(); // Forzar redibujado del panel
-    }
+        miTablero.setPreferredSize(new Dimension(anchoTablero, altoTablero));
 
-    /**
-     * Actualiza una celda específica en el tablero de flota propio del jugador local.
-     * @param fila Fila de la celda impactada.
-     * @param columna Columna de la celda impactada.
-     * @param resultado El resultado (generalmente IMPACTO o HUNDIDO).
-     */
-    public void actualizarCasillaFlotaPropia(int fila, int columna, ResultadoDisparo resultado) {
-        // En el tablero propio, usualmente se dibuja un ícono de "fuego" o "daño"
-        // sobre la imagen del barco, o se cambia el color de la celda base.
-        // Esto es más complejo porque los barcos son JLabels que ocupan varias celdas.
-        // Una forma simple es añadir otro JLabel de "impacto" encima.
-
-        if (fila < 0 || fila >= FILAS_TABLERO || columna < 0 || columna >= COLUMNAS_TABLERO) return;
-        
-        System.out.println("VISTA [PantallaPartida]: Actualizando flota propia en (" + fila + "," + columna + ") con resultado: " + resultado);
-
-        ImageIcon iconoImpacto = null;
-        if (resultado == ResultadoDisparo.IMPACTO || resultado == ResultadoDisparo.HUNDIDO) {
-            iconoImpacto = cargarIcono("/Images/hit.png"); // Usar el mismo de impacto o uno específico
-        } else {
-            return; // No se hace nada visual por "AGUA" en el tablero propio (no debería ocurrir)
+        // Fondo del tablero
+        ImageIcon fondoOriginal = cargarIcono("/Images/Board.png");
+        if (fondoOriginal == null) {
+            System.out.println("No se pudo cargar la imagen de fondo");
+            return;
         }
 
-        if (iconoImpacto != null && iconoImpacto.getImage() != null && iconoImpacto.getIconWidth() > 0) {
-            JLabel fondoLabel = (JLabel) miTablero.getComponent(0); // Asume que el fondo es el primer componente
-            if (fondoLabel != null) {
-                JLabel lblImpacto = new JLabel();
-                Image img = iconoImpacto.getImage().getScaledInstance(DIMENSION_CELDA -5 , DIMENSION_CELDA -5, Image.SCALE_SMOOTH);
-                lblImpacto.setIcon(new ImageIcon(img));
-                lblImpacto.setBounds((columna + 1) * DIMENSION_CELDA, (fila + 1) * DIMENSION_CELDA, DIMENSION_CELDA, DIMENSION_CELDA);
-                fondoLabel.add(lblImpacto);
-                fondoLabel.setComponentZOrder(lblImpacto, 0); // Asegurar que esté encima de los barcos pero debajo de nuevas celdas
+        Image imagenEscalada = fondoOriginal.getImage().getScaledInstance(anchoTablero, altoTablero, Image.SCALE_SMOOTH);
+        ImageIcon fondo = new ImageIcon(imagenEscalada);
+        JLabel fondoLabel = new JLabel(fondo);
+        fondoLabel.setBounds(0, 0, anchoTablero, altoTablero);
+        fondoLabel.setLayout(null);
+
+        // Crear botones invisibles en cada celda (como en el tablero del oponente)
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                JButton celda = new JButton();
+                celda.setText("");
+                celda.setEnabled(false); // 👈 No permite clics
+                celda.setBorder(BorderFactory.createLineBorder(Color.BLUE));
+                celda.setContentAreaFilled(false);
+                celda.setOpaque(false);
+                celda.setFocusable(false);
+                celda.setBounds((columna + 1) * cellSize, (fila + 1) * cellSize, cellSize, cellSize);
+                fondoLabel.add(celda);
             }
         }
+
+        // Dibujar todos los barcos de la lista
+        for (Map<String, Object> barco : barcosColocados) {
+            int fila = (int) barco.get("fila");
+            int columna = (int) barco.get("columna");
+            int tamaño = (int) barco.get("tamaño");
+            boolean rotado = (boolean) barco.get("rotado");
+
+            String ruta;
+            switch (tamaño) {
+                case 1: ruta = "/Images/Submarine.png"; break;
+                case 2: ruta = "/Images/Destroyer.png"; break;
+                case 3: ruta = "/Images/Cruise.png"; break;
+                case 4: ruta = "/Images/Battleship.png"; break;
+                default: ruta = "/Images/Battleship.png"; break;
+            }
+
+            ImageIcon barcoIcon = cargarIcono(ruta);
+            if (barcoIcon == null) {
+                System.out.println("No se pudo cargar la imagen del barco: " + ruta);
+                continue;
+            }
+
+            Image img = barcoIcon.getImage();
+            Image barcoEscalado;
+
+            if (rotado) {
+                img = rotateImage(img);
+                barcoEscalado = img.getScaledInstance(cellSize, cellSize * tamaño, Image.SCALE_SMOOTH);
+            } else {
+                barcoEscalado = img.getScaledInstance(cellSize * tamaño, cellSize, Image.SCALE_SMOOTH);
+            }
+
+            ImageIcon barcoFinal = new ImageIcon(barcoEscalado);
+            JLabel barcoLabel = new JLabel(barcoFinal);
+
+            int x = (columna + 1) * cellSize;
+            int y = (fila + 1) * cellSize;
+
+            if (rotado) {
+                barcoLabel.setBounds(x, y, cellSize, cellSize * tamaño);
+            } else {
+                barcoLabel.setBounds(x, y, cellSize * tamaño, cellSize);
+            }
+
+            fondoLabel.add(barcoLabel);
+        }
+
+        miTablero.add(fondoLabel);
         miTablero.revalidate();
         miTablero.repaint();
     }
+    
+    private void dibujarOponenteTablero() {
+        oponenteTablero.removeAll();
+        oponenteTablero.setLayout(null);
 
-    /**
-     * Actualiza el mensaje de turno y habilita/deshabilita la interacción.
-     * @param mensajeTurno El mensaje a mostrar (Ej: "Turno de Juan").
-     * @param esMiTurno true si es el turno del jugador local, false en caso contrario.
-     */
-    public void actualizarEstadoTurno(String mensajeTurno, boolean esMiTurno) {
-        this.esTurnoDelJugadorLocal = esMiTurno;
-        if (lblMensajeTurno != null) {
-            lblMensajeTurno.setText(mensajeTurno);
-        }
-        System.out.println("VISTA [PantallaPartida]: Actualizando turno. Mensaje: " + mensajeTurno + ", EsMiTurno: " + esMiTurno);
+        int cellSize = 40;
+        int filas = 10;
+        int columnas = 10;
+        int offset = cellSize;
 
-        // Habilitar/deshabilitar las celdas del tablero de seguimiento (oponenteTablero)
-        for (int i = 0; i < FILAS_TABLERO; i++) {
-            for (int j = 0; j < COLUMNAS_TABLERO; j++) {
-                if (celdasTableroSeguimiento[i][j] != null) {
-                    // Solo habilitar si es mi turno Y la celda no tiene ya un resultado (icono)
-                    celdasTableroSeguimiento[i][j].setEnabled(esMiTurno && celdasTableroSeguimiento[i][j].getIcon() == null);
-                }
+        int anchoTablero = (columnas + 1) * cellSize;
+        int altoTablero = (filas + 1) * cellSize;
+
+        ImageIcon fondoOriginal = cargarIcono("/Images/Board.png");
+        Image imagenEscalada = fondoOriginal.getImage().getScaledInstance(anchoTablero, altoTablero, Image.SCALE_SMOOTH);
+        ImageIcon fondo = new ImageIcon(imagenEscalada);
+
+        JLabel fondoLabel = new JLabel(fondo);
+        fondoLabel.setBounds(0, 0, anchoTablero, altoTablero);
+        fondoLabel.setLayout(null);
+
+        for (int fila = 0; fila < filas; fila++) {
+            for (int columna = 0; columna < columnas; columna++) {
+                JButton celda = new JButton();
+                celda.setText("");
+                celda.setBackground(new Color(255, 255, 255, 0));
+                celda.setBorder(BorderFactory.createLineBorder(Color.GREEN));
+                celda.setBounds((columna + 1) * cellSize, (fila + 1) * cellSize, cellSize, cellSize);
+                celda.setActionCommand(fila + "," + columna);
+                celda.setFocusable(false);
+                celda.setContentAreaFilled(false);
+                celda.setOpaque(false);
+
+                celda.addActionListener(e -> {
+                    if (!turno || listener == null) return;
+
+                    String[] pos = e.getActionCommand().split(",");
+                    int x = Integer.parseInt(pos[0]);
+                    int y = Integer.parseInt(pos[1]);
+
+                    listener.onCeldaSeleccionada(x, y, celda); 
+                });
+
+                fondoLabel.add(celda);
             }
         }
-    }
 
-    /**
-     * Muestra un mensaje general en la pantalla (ej. usando JOptionPane).
-     * @param mensaje El mensaje a mostrar.
-     */
-    public void mostrarMensajeGeneral(String mensaje) {
-        JOptionPane.showMessageDialog(this, mensaje, "Información", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    /**
-     * Muestra el mensaje de fin de partida y deshabilita interacciones.
-     * @param mensaje El mensaje final (ej. "¡Has Ganado!").
-     */
-    public void mostrarFinDePartida(String mensaje) {
-        JOptionPane.showMessageDialog(this, mensaje, "Fin de la Partida", JOptionPane.INFORMATION_MESSAGE);
-        // Deshabilitar todos los botones del tablero de seguimiento
-        this.esTurnoDelJugadorLocal = false; // Nadie más puede jugar
-        actualizarEstadoTurno(mensaje, false); // Actualiza el label y deshabilita los botones
-        btnAbandonar.setText("Volver al Menú"); // Cambiar texto del botón
-        // Aquí el btnAbandonar.addActionListener debería reconfigurarse para llevar al menú principal.
-    }
-
-    /**
-     * (Opcional) Marca una casilla en el tablero de seguimiento como "disparo pendiente"
-     * mientras se espera la respuesta del servidor.
-     * @param fila Fila de la celda.
-     * @param columna Columna de la celda.
-     */
-    public void marcarCasillaSeguimientoComoPendiente(int fila, int columna) {
-         if (fila < 0 || fila >= FILAS_TABLERO || columna < 0 || columna >= COLUMNAS_TABLERO) return;
-        JButton celda = celdasTableroSeguimiento[fila][columna];
-        if (celda != null) {
-            // Podrías poner un ícono de "cargando" o simplemente deshabilitarlo
-            celda.setEnabled(false);
-            // celda.setIcon(cargarIcono("/Images/pending.png")); // Si tienes un ícono de pendiente
-            System.out.println("VISTA [PantallaPartida]: Marcando ("+fila+","+columna+") como pendiente.");
-        }
-    }
-     /**
-     * Muestra un mensaje de error al usuario.
-     * @param mensaje El mensaje de error a mostrar.
-     * @param esCritico Si es true y la lógica lo requiere, podría implicar cerrar la ventana o volver.
-     * Por ahora, solo muestra el diálogo. El controlador decidirá acciones adicionales.
-     */
-    public void mostrarError(String mensaje, boolean esCritico) {
-        String titulo = esCritico ? "Error Crítico" : "Error";
-        System.err.println("VISTA [PantallaPartida] MOSTRANDO ERROR (" + titulo + "): " + mensaje);
-        JOptionPane.showMessageDialog(this, mensaje, titulo, JOptionPane.ERROR_MESSAGE);
-        
-        // Si es un error crítico que impide continuar la partida, el controlador
-        // podría decidir cerrar esta ventana después de llamar a este método.
-        // Ejemplo: if (esCritico) { this.dispose(); /* y notificar al controlador principal */ }
+        oponenteTablero.add(fondoLabel);
+        oponenteTablero.setPreferredSize(new Dimension(anchoTablero, altoTablero));
+        oponenteTablero.revalidate();
+        oponenteTablero.repaint();
     }
     
- 
     
-    
+    //METODO PARA SABER SI LA CASILLA FUE IMPACTADA A UN BARCO O NO
+    private boolean siImpactado(int x, int y) {
+        //SOLO ES PARA SIMULAR
+        double probabilidadImpacto = Math.random(); 
+    return probabilidadImpacto < 0.5;
+    }
 
+    
     /**
      * @param args the command line arguments
      */
@@ -588,10 +413,10 @@ public class PantallaPartida extends javax.swing.JFrame {
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnAbandonar;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel lblMensajeTurno;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel miTablero;
     private javax.swing.JPanel oponenteTablero;
     // End of variables declaration//GEN-END:variables
