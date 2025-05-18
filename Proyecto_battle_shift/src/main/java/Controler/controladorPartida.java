@@ -1,13 +1,254 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Controler;
 
-/**
- *
- * @author Hector
- */
+import View.PantallaPartida; // Tu vista de la partida
+import Model.entidades.*;    // Tus entidades: Partida, Jugador, TableroFlota, etc.
+import enums.*;              // Tus enums: ResultadoDisparo, etc.
+import com.mycompany.servercomunicacion.ServerComunicacion; // Para comunicarse con el servidor
+import com.google.gson.Gson; // Si necesitas serializar algo (aunque para enviar disparos no es JSON completo)
+import java.util.Base64;
+import java.nio.charset.StandardCharsets;
+import javax.swing.SwingUtilities;
+import java.util.Map; // Para procesar datos de eventos del servidor
+
 public class controladorPartida {
+
+    private PantallaPartida vistaPartida;
+    private Partida partidaActual;
+    private ServerComunicacion serverComunicacion;
+    private String nombreJugadorLocal;
+    private Jugador jugadorLocalEntidad;
+    private Jugador oponenteEntidad;
+    private final Gson gson; // Útil para deserializar datos complejos si el servidor los envía
+
+    public static final int DIMENSION_TABLERO = 10; // Si es una constante global
+
+    /**
+     * Constructor para el controlador de una partida en curso.
+     * @param serverCom La instancia para comunicarse con el servidor.
+     * @param partidaEntidad La entidad Partida ya procesada (convertida desde DTO).
+     * @param nombreJugadorLocal El nombre del jugador que está usando esta instancia del cliente.
+     */
+    public controladorPartida(ServerComunicacion serverCom, Partida partidaEntidad, String nombreJugadorLocal) {
+        this.serverComunicacion = serverCom;
+        this.partidaActual = partidaEntidad;
+        this.nombreJugadorLocal = nombreJugadorLocal;
+        this.gson = new Gson();
+
+        // Identificar jugador local y oponente dentro de la entidad Partida
+        if (partidaActual.getJugador1() != null && partidaActual.getJugador1().getNombre().equals(nombreJugadorLocal)) {
+            this.jugadorLocalEntidad = partidaActual.getJugador1();
+            this.oponenteEntidad = partidaActual.getJugador2();
+        } else if (partidaActual.getJugador2() != null && partidaActual.getJugador2().getNombre().equals(nombreJugadorLocal)) {
+            this.jugadorLocalEntidad = partidaActual.getJugador2();
+            this.oponenteEntidad = partidaActual.getJugador1();
+        } else {
+            System.err.println("CONTROLADOR_PARTIDA FATAL: Jugador local '" + nombreJugadorLocal + "' no encontrado en la Partida.");
+            // Aquí deberías manejar este error crítico, quizás mostrando un mensaje y volviendo.
+            return;
+        }
+
+        this.vistaPartida = new PantallaPartida(); // Crear la instancia de la UI de la partida
+        // Configurar la vista con los datos iniciales de la partida
+        configurarVistaInicial();
+        configurarListenersDeDisparo(); // Configurar para que la UI notifique los disparos
+    }
+
+    /**
+     * Configura la vista con la información inicial de la partida.
+     * Este método reemplaza a tu antiguo "IniciarCombate" en términos de configuración de UI.
+     */
+    private void configurarVistaInicial() {
+        if (vistaPartida == null || partidaActual == null || jugadorLocalEntidad == null || oponenteEntidad == null) {
+            System.err.println("CONTROLADOR_PARTIDA: Error al configurar vista, datos incompletos.");
+            return;
+        }
+        System.out.println("CONTROLADOR_PARTIDA: Configurando vista para " + nombreJugadorLocal);
+
+        vistaPartida.setTitle("Batalla Naval - " + nombreJugadorLocal + " vs " + oponenteEntidad.getNombre());
+
+        // Dibujar el tablero de flota del jugador local
+        vistaPartida.dibujarTableroFlotaPropio(jugadorLocalEntidad.getTableroFlota());
+
+        // Dibujar el tablero de seguimiento del jugador local (inicialmente vacío de impactos)
+        vistaPartida.dibujarTableroSeguimiento(jugadorLocalEntidad.getTableroSeguimiento());
+
+        // Indicar de quién es el turno
+        actualizarInformacionDeTurno();
+
+        vistaPartida.setVisible(true);
+        System.out.println("CONTROLADOR_PARTIDA: Vista de partida configurada y visible.");
+    }
+
+    /**
+     * Configura los listeners en la vista para cuando el jugador haga clic en el tablero de seguimiento.
+     */
+    private void configurarListenersDeDisparo() {
+        if (vistaPartida == null) return;
+
+        vistaPartida.setTableroListener((fila, columna, celdaBoton) -> {
+            System.out.println("CONTROLADOR_PARTIDA: Clic en tablero de seguimiento: Fila=" + fila + ", Columna=" + columna);
+
+            if (partidaActual.getEstado() != EstadoPartida.EN_CURSO) {
+                vistaPartida.mostrarMensajeGeneral("La partida no está en curso.");
+                return;
+            }
+
+            if (partidaActual.obtenerJugadorEnTurno() == null || !partidaActual.obtenerJugadorEnTurno().getNombre().equals(nombreJugadorLocal)) {
+                vistaPartida.mostrarMensajeGeneral("No es tu turno.");
+                return;
+            }
+
+            // Verificar si ya se disparó en esa casilla (usando la entidad local)
+            if (jugadorLocalEntidad.getTableroSeguimiento().yaSeDisparoEn(new Posicion(columna, fila))) { // Asumiendo X=columna, Y=fila
+                vistaPartida.mostrarMensajeGeneral("Ya has disparado en esta casilla.");
+                return;
+            }
+
+            // Enviar evento de disparo al servidor
+            System.out.println("CONTROLADOR_PARTIDA: Enviando disparo a (" + fila + "," + columna + ") para partida " + partidaActual.getIdPartida());
+            String eventoDisparo = String.format("EVENTO;TIPO=REALIZAR_DISPARO;idSala=%s;nombreJugador=%s;fila=%d;columna=%d",
+                                                 partidaActual.getIdPartida(),
+                                                 nombreJugadorLocal,
+                                                 fila,
+                                                 columna);
+            serverComunicacion.enviarEventoJuego(eventoDisparo); // Necesitas este método en ServerComunicacion
+
+            // Opcional: Deshabilitar la celda en la UI inmediatamente para evitar doble clic
+            // celdaBoton.setEnabled(false); // O marcarla como "pendiente"
+            vistaPartida.marcarCasillaSeguimientoComoPendiente(fila, columna); // Necesitas este método en PantallaPartida
+        });
+    }
+
+    /**
+     * Actualiza la información de turno en la vista.
+     */
+    private void actualizarInformacionDeTurno() {
+        if (vistaPartida == null || partidaActual == null || partidaActual.obtenerJugadorEnTurno() == null) return;
+
+        String nombreTurno = partidaActual.obtenerJugadorEnTurno().getNombre();
+        boolean esMiTurno = nombreTurno.equals(nombreJugadorLocal);
+        vistaPartida.actualizarEstadoTurno("Turno de: " + nombreTurno + (esMiTurno ? " (¡TÚ!)" : ""), esMiTurno);
+        // El segundo parámetro 'esMiTurno' en actualizarEstadoTurno podría habilitar/deshabilitar
+        // la interacción con el tablero de seguimiento en la vista.
+    }
+
+
+    // --- Métodos para ser llamados por controladorInicio cuando llegan eventos del servidor ---
+
+    /**
+     * Procesa el resultado de un disparo recibido del servidor.
+     * @param datos Los datos del evento RESULTADO_DISPARO.
+     */
+    public void procesarResultadoDisparo(Map<String, Object> datos) {
+        // Datos esperados: idSala, fila, columna, resultado (AGUA, IMPACTO, HUNDIDO),
+        //                  nombreJugadorQueDisparo, nombreJugadorImpactado, (opcional) nombreBarcoHundido,
+        //                  (opcional) turnoActualizado (quién tiene el siguiente turno)
+        System.out.println("CONTROLADOR_PARTIDA: Procesando RESULTADO_DISPARO: " + datos);
+        if (vistaPartida == null || partidaActual == null) return;
+
+        String idSalaEvento = (String) datos.get("idSala");
+        if (!partidaActual.getIdPartida().equals(idSalaEvento)) {
+            System.err.println("CONTROLADOR_PARTIDA: Resultado de disparo para una sala incorrecta. Ignorando.");
+            return;
+        }
+
+        int fila = Integer.parseInt((String) datos.get("fila"));
+        int columna = Integer.parseInt((String) datos.get("columna"));
+        ResultadoDisparo resultado = ResultadoDisparo.valueOf(((String) datos.get("resultado")).toUpperCase());
+        String nombreAtacante = (String) datos.get("nombreJugadorQueDisparo");
+        String nombreDefensor = (String) datos.get("nombreJugadorImpactado"); // El jugador que recibió el disparo
+
+        Posicion posDisparo = new Posicion(columna, fila); // Asumiendo X=columna, Y=fila
+
+        if (nombreAtacante.equals(nombreJugadorLocal)) {
+            // Yo fui quien disparó. Actualizar mi Tablero de Seguimiento.
+            jugadorLocalEntidad.getTableroSeguimiento().marcarDisparo(posDisparo, resultado);
+            vistaPartida.actualizarCasillaSeguimiento(fila, columna, resultado, false); // false porque no es mi flota
+        } else if (nombreDefensor.equals(nombreJugadorLocal)) {
+            // Me dispararon a mí. Actualizar mi Tablero de Flota.
+            // El servidor ya actualizó el estado del barco, nosotros actualizamos la entidad local
+            // y la UI. La entidad Barco debería tener un método para registrar el impacto
+            // y actualizar su estado (INTACTA, AVERIADA, HUNDIDA).
+            jugadorLocalEntidad.getTableroFlota().recibirDisparo(posDisparo); // Esto debería actualizar el estado del barco afectado
+            vistaPartida.actualizarCasillaFlotaPropia(fila, columna, resultado); // La vista necesita saber el resultado
+            // Si un barco fue hundido, la vista podría mostrarlo de forma especial.
+            String tipoBarcoHundido = (String) datos.get("tipoBarcoHundido");
+            if (resultado == ResultadoDisparo.HUNDIDO && tipoBarcoHundido != null) {
+                vistaPartida.mostrarMensajeGeneral("¡Han hundido tu " + tipoBarcoHundido + "!");
+            }
+        }
+
+        // Actualizar turno (el servidor SIEMPRE debería enviar quién tiene el siguiente turno)
+        String siguienteTurno = (String) datos.get("turnoActualizado");
+        if (siguienteTurno != null) {
+            if (partidaActual.getJugador1().getNombre().equals(siguienteTurno)) {
+                partidaActual.SetJugadorEnTurno(partidaActual.getJugador1()); // Necesitas este setter en Partida
+            } else if (partidaActual.getJugador2().getNombre().equals(siguienteTurno)) {
+                partidaActual.SetJugadorEnTurno(partidaActual.getJugador2()); // Necesitas este setter en Partida
+            }
+            actualizarInformacionDeTurno();
+        }
+
+        // Verificar si hay un ganador
+        String ganador = (String) datos.get("ganador");
+        if (ganador != null) {
+            partidaActual.setEstado(ganador.equals(nombreJugadorLocal) ? EstadoPartida.FINALIZADA_GANA_J1 : EstadoPartida.FINALIZADA_GANA_J2); // Ajustar si J1 no siempre es local
+            vistaPartida.mostrarFinDePartida("¡Partida Terminada! Ganador: " + ganador);
+            // Deshabilitar más interacciones
+        }
+    }
+
+    /**
+     * Procesa un cambio de turno general (si no viene con RESULTADO_DISPARO).
+     * @param datos Datos del evento, esperando "nombreJugadorEnTurno".
+     */
+    public void procesarCambioDeTurno(Map<String, Object> datos) {
+        System.out.println("CONTROLADOR_PARTIDA: Procesando CAMBIO_DE_TURNO: " + datos);
+        if (partidaActual == null) return;
+
+        String nombreNuevoTurno = (String) datos.get("nombreJugadorEnTurno");
+        if (nombreNuevoTurno != null) {
+             if (partidaActual.getJugador1() != null && partidaActual.getJugador1().getNombre().equals(nombreNuevoTurno)) {
+                partidaActual.SetJugadorEnTurno(partidaActual.getJugador1());
+            } else if (partidaActual.getJugador2() != null && partidaActual.getJugador2().getNombre().equals(nombreNuevoTurno)) {
+                partidaActual.SetJugadorEnTurno(partidaActual.getJugador2());
+            }
+            actualizarInformacionDeTurno();
+        }
+    }
     
+    /**
+     * Procesa un evento de fin de partida.
+     * @param datos Datos del evento, esperando "ganador" y "motivo".
+     */
+    public void procesarFinDePartida(Map<String, Object> datos) {
+        System.out.println("CONTROLADOR_PARTIDA: Procesando FIN_DE_PARTIDA: " + datos);
+        if (vistaPartida == null || partidaActual == null) return;
+
+        String ganador = (String) datos.get("ganador");
+        String motivo = (String) datos.get("motivo"); // Ej: "Todos los barcos hundidos", "Oponente abandonó"
+
+        if (ganador != null) {
+            partidaActual.setEstado(EstadoPartida.FINALIZADA_GANA_J1); // Ajustar si necesitas saber quién es J1/J2
+            vistaPartida.mostrarFinDePartida("¡Partida Terminada! Ganador: " + ganador + ". Motivo: " + motivo);
+        } else {
+            partidaActual.setEstado(EstadoPartida.ABANDONADA); // O algún otro estado final
+            vistaPartida.mostrarFinDePartida("Partida Terminada. Motivo: " + motivo);
+        }
+        // Aquí podrías deshabilitar tableros, mostrar botón de "Volver al menú", etc.
+    }
+
+
+    // Método para cerrar la vista de partida (llamado por controladorInicio si hay desconexión general)
+    public void cerrarVistaPartida() {
+        if (vistaPartida != null && vistaPartida.isDisplayable()) {
+            vistaPartida.dispose();
+            System.out.println("CONTROLADOR_PARTIDA: Vista de partida cerrada.");
+        }
+    }
+    
+    // Getter para la vista, por si controladorInicio necesita accederla (ej. para cerrarla)
+    public PantallaPartida getVistaPartida() {
+        return vistaPartida;
+    }
 }

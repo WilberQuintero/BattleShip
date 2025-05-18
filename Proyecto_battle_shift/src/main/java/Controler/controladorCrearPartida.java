@@ -45,7 +45,9 @@ public class controladorCrearPartida {
     public void setVista(UnirseJugar vista) {
         this.vistaUnirseJugar = vista;
     }
-
+        public UnirseJugar getVista(){
+            return vistaUnirseJugar;
+        }
     // --- Métodos llamados por la Vista (UnirseJugar) ---
 
     /**

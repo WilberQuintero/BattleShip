@@ -50,7 +50,9 @@ public class controladorPartidaEspera {
 
     /** Eliminado porque ya no hay botón Listo */
     // public void jugadorListo() { ... }
-
+public PartidaEspera getVista(){
+    return vistaEspera;
+}
     /**
      * Envía el evento 'SALIR_SALA' al servidor cuando el usuario quiere abandonar.
      */
@@ -275,6 +277,8 @@ public boolean isVistaActiva() {
         }
         return true;
     }
+    
+    
     
     public String getIdSala() {
         return this.idSala;

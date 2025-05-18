@@ -5,6 +5,8 @@ com\mycompany\blackboard\IKnowledgeSource.class
 ks\IniciarColocacionKS.class
 ks\ConnectionKS.class
 com\mycompany\blackboard\Sala.class
+ks\IniciarCombateKS$1.class
 ks\RegistrarUsuarioKS.class
 ks\CrearSalaKS.class
+ks\IniciarCombateKS.class
 ks\UnirseSalaKS.class

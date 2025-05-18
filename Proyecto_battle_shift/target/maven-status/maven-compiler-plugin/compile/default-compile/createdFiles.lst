@@ -8,6 +8,7 @@ View\PantallaInicio$1.class
 Controler\controladorPartidaEspera.class
 View\Ajustes$2.class
 Model\entidades\TableroSeguimiento.class
+View\PantallaPartida$3.class
 View\TableroJuego$3.class
 View\Ajustes.class
 Model\entidades\Disparo.class
@@ -31,8 +32,10 @@ View\TableroJuego$1.class
 View\IconTransferHandler$1.class
 View\PantallaPartida.class
 View\Derrota$2.class
+Controler\TableroListener.class
 View\UnirseJugar$4.class
 Controler\GeneradorPartidaEjemplo.class
+Controler\controladorPartida.class
 View\Victoria.class
 View\UnirseJugar$2.class
 Model\entidades\Partida.class

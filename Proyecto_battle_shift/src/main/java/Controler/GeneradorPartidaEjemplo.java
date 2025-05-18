@@ -226,8 +226,7 @@ public class GeneradorPartidaEjemplo {
         String flotaJugador2 = flotaJugador(jugador2);
         System.out.println("Flota J1:\n" + flotaJugador1);
         System.out.println("Flota J2:\n" + flotaJugador2);
-        partidaPantalla1.dibujarTableros(flotaJugador1,jugador1.getNombre(),true);
-        partidaPantalla2.dibujarTableros(flotaJugador2,jugador2.getNombre(),false);
+    
         
     }
 
