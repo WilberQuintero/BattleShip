@@ -13,10 +13,10 @@ import java.net.Socket;
  */
 
 /**
- * Interfaz que define el contrato para una Fuente de Conocimiento (Knowledge Source)
- * dentro del patrón Blackboard.
+ * Interfaz que define el contrato para handlers
+ * dentro del patrón CHAIN-RESPONSABILITY.
  */
-public interface IKnowledgeSource {
+public interface IHandler {
 
     /**
      * Determina si esta fuente de conocimiento puede procesar el evento dado.

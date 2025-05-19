@@ -2,19 +2,19 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package ks;
+package Handlers;
 import dto.JugadorDTO; // Importa tu JugadorDTO
 /**
  *
  * @author caarl
  */
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 import com.mycompany.blackboard.Controller;
-import com.mycompany.blackboard.IKnowledgeSource;
 
 import java.net.Socket;
+import com.mycompany.blackboard.IHandler;
+import com.mycompany.battleship.commons.IHandlerCommons;
 
 
 
@@ -23,13 +23,13 @@ import java.net.Socket;
  * Knowledge Source encargada de procesar el registro de un nombre de usuario
  * para un cliente recién conectado.
  */
-public class RegistrarUsuarioKS implements IKnowledgeSource { // O IKnowledgeSource
+public class RegistrarUsuarioHandler implements IHandler { // O IHandler
 
-    private final IBlackboard blackboard;
+    private final IHandlerCommons blackboard;
     private final IServer server;
     private final Controller controller;
 
-    public RegistrarUsuarioKS(IBlackboard blackboard, IServer server, Controller controller) {
+    public RegistrarUsuarioHandler(IHandlerCommons blackboard, IServer server, Controller controller) {
         // Verificar nulos si es necesario
         this.blackboard = blackboard;
         this.server = server;
@@ -56,7 +56,7 @@ public class RegistrarUsuarioKS implements IKnowledgeSource { // O IKnowledgeSou
             return;
         }
 
-        System.out.println("REGISTRAR_USUARIO_KS: Procesando registro para nombre '" + nombre + "'...");
+        System.out.println("RegistrarUsuarioHandler: Procesando registro para nombre '" + nombre + "'...");
 
         // 2. Verificar si el nombre ya está en uso por OTRO socket
         if (blackboard.isNombreEnUso(nombre)) {
@@ -75,9 +75,9 @@ public class RegistrarUsuarioKS implements IKnowledgeSource { // O IKnowledgeSou
             // Inicializar otros campos del DTO si es necesario aquí
             // nuevoJugadorDTO.setListoParaJugar(false); // Por defecto ya es false
             // Los tableros se asignarán más adelante cuando se configuren
-            System.out.println("REGISTRAR_USUARIO_KS: JugadorDTO creado: " + nuevoJugadorDTO.toString());
+            System.out.println("RegistrarUsuarioHandler: JugadorDTO creado: " + nuevoJugadorDTO.toString());
         } catch (Exception e) { // Captura errores de creación si los hubiera
-            System.err.println("REGISTRAR_USUARIO_KS: Error creando JugadorDTO: " + e.getMessage());
+            System.err.println("RegistrarUsuarioHandler: Error creando JugadorDTO: " + e.getMessage());
             enviarError(cliente, "Error interno al procesar registro.");
             return;
         }
@@ -85,11 +85,11 @@ public class RegistrarUsuarioKS implements IKnowledgeSource { // O IKnowledgeSou
         // (Opcional) Verificar si el SOCKET tenía otro JugadorDTO asociado
         JugadorDTO jugadorPrevioDTO = blackboard.getJugadorDTO(cliente); // Usa el nuevo método
         if(jugadorPrevioDTO != null && !jugadorPrevioDTO.getNombre().equals(nombre)) {
-             System.out.println("REGISTRAR_USUARIO_KS WARN: Socket tenía JugadorDTO previo '" + jugadorPrevioDTO.getNombre() + "', se sobrescribirá.");
+             System.out.println("RegistrarUsuarioHandler WARN: Socket tenía JugadorDTO previo '" + jugadorPrevioDTO.getNombre() + "', se sobrescribirá.");
         }
 
         // 4. Registrar en Blackboard (pasando el DTO)
-        System.out.println("REGISTRAR_USUARIO_KS: Registrando JugadorDTO '" + nombre + "' en Blackboard...");
+        System.out.println("RegistrarUsuarioHandler: Registrando JugadorDTO '" + nombre + "' en Blackboard...");
         blackboard.registrarUsuario(cliente, nuevoJugadorDTO); // Llama al método MODIFICADO
 
         // 5. Enviar confirmación al cliente (solo el nombre es suficiente por ahora)
@@ -97,7 +97,7 @@ public class RegistrarUsuarioKS implements IKnowledgeSource { // O IKnowledgeSou
         respuestaOk.agregarDato("nombre", nuevoJugadorDTO.getNombre());
         respuestaOk.agregarDato("mensaje", "Usuario '" + nombre + "' registrado.");
         server.enviarEventoACliente(cliente, respuestaOk);
-        System.out.println("REGISTRAR_USUARIO_KS: Confirmación REGISTRO_OK enviada a '" + nombre + "'.");
+        System.out.println("RegistrarUsuarioHandler: Confirmación REGISTRO_OK enviada a '" + nombre + "'.");
 
         // 6. Notificar al Controller (backend), si aplica
         // ...
@@ -112,7 +112,7 @@ public class RegistrarUsuarioKS implements IKnowledgeSource { // O IKnowledgeSou
         if (server != null) {
             server.enviarEventoACliente(cliente, respuesta);
         } else {
-            System.err.println("REGISTRAR_USUARIO_KS ERROR: IServer es null. No se puede enviar error.");
+            System.err.println("RegistrarUsuarioHandler ERROR: IServer es null. No se puede enviar error.");
         }
     }
 }

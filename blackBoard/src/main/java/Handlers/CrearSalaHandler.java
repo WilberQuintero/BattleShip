@@ -2,12 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package ks;
+package Handlers;
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 import com.mycompany.blackboard.Controller;
-import com.mycompany.blackboard.IKnowledgeSource;
 
 import dto.JugadorDTO;
 import dto.TableroFlotaDTO;
@@ -21,18 +19,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID; // Para generar un ID de partida si es necesario
+import com.mycompany.blackboard.IHandler;
+import com.mycompany.battleship.commons.IHandlerCommons;
 /**
  *
  * @author Hector
  */
 
 
-// Asegúrate que implemente tu interfaz IKnowledgeSource correctamente
-public class CrearSalaKS implements IKnowledgeSource {
+// Asegúrate que implemente tu interfaz IHandler correctamente
+public class CrearSalaHandler implements IHandler {
 
     // Dependencias (final hace que deban asignarse en el constructor)
     private final IServer server;
-    private final IBlackboard blackboard;
+    private final IHandlerCommons blackboard;
     private final Controller controller; // Hacerlo final si siempre se requiere
 
     // --- CORRECCIÓN/RECOMENDACIÓN 1: Unificar Constructores ---
@@ -44,11 +44,11 @@ public class CrearSalaKS implements IKnowledgeSource {
 
     /**
      * Constructor recomendado que inicializa todas las dependencias necesarias.
-     * @param blackboard Instancia de IBlackboard.
+     * @param blackboard Instancia de IHandlerCommons.
      * @param server Instancia de IServer.
      * @param controller Instancia de Controller.
      */
-    public CrearSalaKS(IBlackboard blackboard, IServer server, Controller controller) {
+    public CrearSalaHandler(IHandlerCommons blackboard, IServer server, Controller controller) {
         // Es buena práctica verificar que las dependencias no sean nulas
         if (blackboard == null || server == null || controller == null) {
             throw new IllegalArgumentException("Las dependencias (Blackboard, Server, Controller) no pueden ser nulas.");
@@ -60,7 +60,7 @@ public class CrearSalaKS implements IKnowledgeSource {
 
     // Se recomienda eliminar este constructor si siempre necesitas el controller:
     /*
-    public CrearSalaKS(IServer server, IBlackboard blackboard) {
+    public CrearSalaHandler(IServer server, IHandlerCommons blackboard) {
         this.server = server;
         this.blackboard = blackboard;
         this.controller = null; // Esto puede llevar a NullPointerException si se usa controller
@@ -84,7 +84,7 @@ public class CrearSalaKS implements IKnowledgeSource {
         }
         idSala = idSala.trim();
 
-        System.out.println("CREAR_SALA_KS: Procesando para crear sala '" + idSala + "' por " + clienteHost.getInetAddress().getHostAddress());
+        System.out.println("CrearSalaHandler: Procesando para crear sala '" + idSala + "' por " + clienteHost.getInetAddress().getHostAddress());
 
         if (blackboard.existeSala(idSala)) {
             enviarRespuestaError(clienteHost, "La sala '" + idSala + "' ya existe.");
@@ -97,7 +97,7 @@ public class CrearSalaKS implements IKnowledgeSource {
             enviarRespuestaError(clienteHost, "Error: Usuario no registrado. No se puede crear sala.");
             return;
         }
-        System.out.println("CREAR_SALA_KS: Anfitrión es '" + anfitrionDTO.getNombre() + "'.");
+        System.out.println("CrearSalaHandler: Anfitrión es '" + anfitrionDTO.getNombre() + "'.");
 
         // 2. (Opcional, pero buena práctica) Asignar/Reasignar tableros DTO vacíos al anfitriónDTO
         // Esto asegura que cualquier estado previo de tableros de otra partida no se mezcle.
@@ -119,11 +119,11 @@ public class CrearSalaKS implements IKnowledgeSource {
         PartidaDTO nuevaPartida = new PartidaDTO(idSala, anfitrionDTO, EstadoPartida.ESPERANDO_OPONENTE);
         // El constructor de PartidaDTO debería inicializar jugador2 a null y nombreJugadorEnTurno a null.
 
-        System.out.println("CREAR_SALA_KS: PartidaDTO creada: " + nuevaPartida.toString());
+        System.out.println("CrearSalaHandler: PartidaDTO creada: " + nuevaPartida.toString());
 
         // 4. Agregar la PartidaDTO al Blackboard usando el nuevo método
         if (blackboard.agregarPartida(nuevaPartida)) {
-            System.out.println("CREAR_SALA_KS: Partida '" + idSala + "' con anfitrión '" + anfitrionDTO.getNombre() + "' agregada al Blackboard.");
+            System.out.println("CrearSalaHandler: Partida '" + idSala + "' con anfitrión '" + anfitrionDTO.getNombre() + "' agregada al Blackboard.");
 
             // Enviar respuesta de éxito al cliente
             enviarRespuesta(clienteHost, "SALA_CREADA_OK", Map.of(
@@ -137,7 +137,7 @@ public class CrearSalaKS implements IKnowledgeSource {
             }
         } else {
             // Esto no debería pasar si existeSala() funcionó, pero es un buen control.
-            System.err.println("CREAR_SALA_KS: Falló agregarPartida al Blackboard, la sala podría haber sido creada concurrentemente.");
+            System.err.println("CrearSalaHandler: Falló agregarPartida al Blackboard, la sala podría haber sido creada concurrentemente.");
             enviarRespuestaError(clienteHost, "Error interno al crear la sala. Intenta de nuevo.");
         }
 
@@ -153,7 +153,7 @@ public class CrearSalaKS implements IKnowledgeSource {
         if (server != null) {
              server.enviarEventoACliente(cliente, respuesta);
         } else {
-             System.err.println("CREAR_SALA_KS ERROR: Referencia a IServer es null. No se puede enviar respuesta de error.");
+             System.err.println("CrearSalaHandler ERROR: Referencia a IServer es null. No se puede enviar respuesta de error.");
         }
     }
 
@@ -165,7 +165,7 @@ public class CrearSalaKS implements IKnowledgeSource {
         if (server != null) {
             server.enviarEventoACliente(cliente, respuesta);
         } else {
-            System.err.println("CREAR_SALA_KS ERROR: Referencia a IServer es null. No se puede enviar respuesta.");
+            System.err.println("CrearSalaHandler ERROR: Referencia a IServer es null. No se puede enviar respuesta.");
         }
     }
 }

@@ -4,8 +4,8 @@
  */
 package com.mycompany.blackboard;
 
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
+import com.mycompany.battleship.commons.IHandlerCommons;
 
 
 
@@ -23,7 +23,7 @@ import com.mycompany.battleship.commons.IServer;
  */
 public class Controller {
 
-    private IBlackboard blackboard; // Usa la interfaz IBlackboard
+    private IHandlerCommons blackboard; // Usa la interfaz IHandlerCommons
     private final IServer server;   // Usa la interfaz IServer
 
     /**
@@ -39,10 +39,10 @@ public class Controller {
     }
 
     /**
-     * Asigna la instancia del BlackBoard (como IBlackboard) al Controller.
+     * Asigna la instancia del BlackBoard (como IHandlerCommons) al Controller.
      * @param blackboard La instancia del BlackBoard.
      */
-    public void setBlackboard(IBlackboard blackboard) { // Recibe IBlackboard
+    public void setBlackboard(IHandlerCommons blackboard) { // Recibe IHandlerCommons
          if (blackboard == null) {
            throw new IllegalArgumentException("La instancia de IBlackboard no puede ser nula.");
          }
@@ -96,10 +96,10 @@ public class Controller {
                 // if (blackboard != null) {
                 //     blackboard.enviarEventoBlackBoard(null, eventoInicio); // null como cliente origen
                 // }
-                // Opción 2: Llamar a un método específico del IServer o IBlackboard si existe.
+                // Opción 2: Llamar a un método específico del IServer o IHandlerCommons si existe.
                 // Opción 3: Directamente enviar mensajes a los clientes de la sala.
                 //           (Necesitaría obtener los sockets de los clientes de esa sala desde el blackboard)
-                // List<Socket> jugadoresSala = blackboard.getJugadoresEnSala(payload); // Necesitaría este método en IBlackboard
+                // List<Socket> jugadoresSala = blackboard.getJugadoresEnSala(payload); // Necesitaría este método en IHandlerCommons
                 // server.enviarMensajeAClientes(jugadoresSala, "Mensaje;Tipo=PartidaLista;Sala="+payload); // Necesitaría este método en IServer
                 break;
 
@@ -109,7 +109,7 @@ public class Controller {
                   // El payload debería ser el ID de la sala.
                   System.out.println("CONTROLLER: Datos de la sala '" + payload + "' actualizados.");
                   // Podría ser útil reenviar el estado actualizado de la sala a los clientes en ella.
-                  // Map<String, Object> datosSala = blackboard.getDatosSala(payload); // Necesitaría este método en IBlackboard
+                  // Map<String, Object> datosSala = blackboard.getDatosSala(payload); // Necesitaría este método en IHandlerCommons
                   // List<Socket> clientesEnSala = (List<Socket>) datosSala.get("jugadores"); // Asumiendo estructura
                   // String datosJson = convertirMapaAJson(datosSala); // Necesitaría un método para convertir
                   // server.enviarMensajeAClientes(clientesEnSala, "Update;Tipo=EstadoSala;Datos=" + datosJson);
@@ -120,7 +120,7 @@ public class Controller {
                  // El payload podría ser el ID de la partida o sala.
                  System.out.println("CONTROLLER: Partida iniciada para sala/partida: " + payload);
                  // Notificar a todos los involucrados en la partida.
-                 // List<Socket> jugadoresPartida = blackboard.getJugadoresEnPartida(payload); // Necesitaría método en IBlackboard
+                 // List<Socket> jugadoresPartida = blackboard.getJugadoresEnPartida(payload); // Necesitaría método en IHandlerCommons
                  // server.enviarMensajeAClientes(jugadoresPartida, "Mensaje;Tipo=PartidaIniciada;Detalles=...");
                  break;
 
@@ -140,8 +140,8 @@ public class Controller {
     /*
     private String obtenerListaJugadores() {
         if (blackboard == null) return "[]";
-        // Necesitaríamos una forma de obtener Jugadores del IBlackboard si fuera necesario
-        // IBlackboard necesitaría un método como getJugadores() -> List<PlayerData>
+        // Necesitaríamos una forma de obtener Jugadores del IHandlerCommons si fuera necesario
+        // IHandlerCommons necesitaría un método como getJugadores() -> List<PlayerData>
         // List<PlayerData> jugadores = blackboard.getJugadores();
         // return formatearListaJugadores(jugadores); // Método para convertir a String
         return "[Stub Player List]";

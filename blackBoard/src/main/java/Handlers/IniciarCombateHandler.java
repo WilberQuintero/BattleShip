@@ -1,11 +1,9 @@
-// En ks.IniciarCombateKS.java (Servidor)
-package ks;
+// En ks.IniciarCombateHandler.java (Servidor)
+package Handlers;
 
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 import com.mycompany.blackboard.Controller; // Si lo usas
-import com.mycompany.blackboard.IKnowledgeSource;
 
 // Importar DTOs, Enums, Gson, etc.
 import dto.BarcoDTO;
@@ -25,14 +23,16 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import com.mycompany.blackboard.IHandler;
+import com.mycompany.battleship.commons.IHandlerCommons;
 
-public class IniciarCombateKS implements IKnowledgeSource {
-    private final IBlackboard blackboard;
+public class IniciarCombateHandler implements IHandler {
+    private final IHandlerCommons blackboard;
     private final IServer server;
     private final Controller controller; // Opcional
     private final Gson gson; // Para deserializar JSON
 
-    public IniciarCombateKS(IBlackboard blackboard, IServer server, Controller controller) {
+    public IniciarCombateHandler(IHandlerCommons blackboard, IServer server, Controller controller) {
         this.blackboard = blackboard;
         this.server = server;
         this.controller = controller;
@@ -47,7 +47,7 @@ public class IniciarCombateKS implements IKnowledgeSource {
     @Override
     public void procesarEvento(Socket clienteQueEnvia, Evento evento) {
         if (clienteQueEnvia == null || evento == null) {
-            System.err.println("INICIAR_COMBATE_KS: Cliente o Evento nulo.");
+            System.err.println("IniciarCombateHandler: Cliente o Evento nulo.");
             return;
         }
 
@@ -64,12 +64,12 @@ public class IniciarCombateKS implements IKnowledgeSource {
         idSala = idSala.trim();
         nombreJugadorQueEnvia = nombreJugadorQueEnvia.trim();
 
-        System.out.println("INICIAR_COMBATE_KS: Recibida flota de '" + nombreJugadorQueEnvia + "' para sala '" + idSala + "'.");
+        System.out.println("IniciarCombateHandler: Recibida flota de '" + nombreJugadorQueEnvia + "' para sala '" + idSala + "'.");
 
         // 1. Validar que el jugador que envía es quien dice ser y está asociado a este socket
         JugadorDTO jugadorActualDTO = blackboard.getJugadorDTO(clienteQueEnvia);
         if (jugadorActualDTO == null || !jugadorActualDTO.getNombre().equals(nombreJugadorQueEnvia)) {
-            System.err.println("INICIAR_COMBATE_KS: Discrepancia entre socket y nombre de jugador reportado. Socket: " +
+            System.err.println("IniciarCombateHandler: Discrepancia entre socket y nombre de jugador reportado. Socket: " +
                                clienteQueEnvia.getInetAddress().getHostAddress() + ", Nombre en evento: " + nombreJugadorQueEnvia +
                                ", Nombre en BB para socket: " + (jugadorActualDTO != null ? jugadorActualDTO.getNombre() : "N/A"));
             enviarError(clienteQueEnvia, "Error de autenticación al enviar flota.", idSala);
@@ -88,7 +88,7 @@ public class IniciarCombateKS implements IKnowledgeSource {
              // Si ya está EN_CURSO o FINALIZADA, no se debería procesar esto.
              // ESPERANDO_OPONENTE podría ser válido si la lógica permite configurar antes de que el 2do jugador confirme.
              // Para este caso, asumimos que es CONFIGURACION (ambos jugadores unidos, listos para colocar).
-            System.err.println("INICIAR_COMBATE_KS: La partida '" + idSala + "' no está en estado de configuración. Estado actual: " + partida.getEstado());
+            System.err.println("IniciarCombateHandler: La partida '" + idSala + "' no está en estado de configuración. Estado actual: " + partida.getEstado());
             enviarError(clienteQueEnvia, "La partida no está en fase de configuración de flota.", idSala);
             return;
         }
@@ -107,7 +107,7 @@ public class IniciarCombateKS implements IKnowledgeSource {
         }
 
         if (jugadorQueConfirma.isHaConfirmadoTablero()) {
-            System.out.println("INICIAR_COMBATE_KS: Jugador '" + nombreJugadorQueEnvia + "' ya había confirmado su tablero.");
+            System.out.println("IniciarCombateHandler: Jugador '" + nombreJugadorQueEnvia + "' ya había confirmado su tablero.");
             // Podrías reenviar "esperando oponente" o un error si es un envío duplicado no deseado.
             // Por ahora, lo permitimos pero no reprocesaremos si ya está listo para combate.
              if (partida.getEstado() == EstadoPartida.EN_CURSO) {
@@ -131,7 +131,7 @@ public class IniciarCombateKS implements IKnowledgeSource {
             Type tipoListaBarcoDTO = new TypeToken<ArrayList<BarcoDTO>>() {}.getType();
             flotaRecibida = gson.fromJson(flotaJson, tipoListaBarcoDTO);
         } catch (Exception e) {
-            System.err.println("INICIAR_COMBATE_KS: Error al deserializar flotaJson para '" + nombreJugadorQueEnvia + "': " + e.getMessage());
+            System.err.println("IniciarCombateHandler: Error al deserializar flotaJson para '" + nombreJugadorQueEnvia + "': " + e.getMessage());
             enviarError(clienteQueEnvia, "Formato de flota inválido.", idSala);
             return;
         }
@@ -145,11 +145,11 @@ public class IniciarCombateKS implements IKnowledgeSource {
         // Esta validación es crucial y puede ser compleja. Por ahora, asumimos que es válida.
         boolean flotaValida = validarFlota(flotaRecibida, jugadorQueConfirma.getTableroFlota().getDimension());
         if (!flotaValida) {
-            System.err.println("INICIAR_COMBATE_KS: Flota recibida de '" + nombreJugadorQueEnvia + "' no es válida.");
+            System.err.println("IniciarCombateHandler: Flota recibida de '" + nombreJugadorQueEnvia + "' no es válida.");
             enviarError(clienteQueEnvia, "La configuración de tu flota no es válida. Por favor, revísala.", idSala);
             return;
         }
-        System.out.println("INICIAR_COMBATE_KS: Flota de '" + nombreJugadorQueEnvia + "' validada exitosamente.");
+        System.out.println("IniciarCombateHandler: Flota de '" + nombreJugadorQueEnvia + "' validada exitosamente.");
 
         // 6. Asignar la flota al TableroFlotaDTO del jugador y marcar como confirmado
         if (jugadorQueConfirma.getTableroFlota() == null) { // No debería ser null si se inicializó en Crear/UnirseSala
@@ -159,7 +159,7 @@ public class IniciarCombateKS implements IKnowledgeSource {
         }
         jugadorQueConfirma.getTableroFlota().setBarcos(flotaRecibida);
         jugadorQueConfirma.setHaConfirmadoTablero(true);
-        System.out.println("INICIAR_COMBATE_KS: Flota asignada y jugador '" + nombreJugadorQueEnvia + "' marcado como confirmado.");
+        System.out.println("IniciarCombateHandler: Flota asignada y jugador '" + nombreJugadorQueEnvia + "' marcado como confirmado.");
 
         // 7. Actualizar la PartidaDTO en el Blackboard
         blackboard.actualizarPartida(partida); // Guardar el estado del jugador que confirmó
@@ -171,7 +171,7 @@ public class IniciarCombateKS implements IKnowledgeSource {
         if (jugador1 != null && jugador1.isHaConfirmadoTablero() &&
             jugador2 != null && jugador2.isHaConfirmadoTablero()) {
             
-            System.out.println("INICIAR_COMBATE_KS: ¡Ambos jugadores listos en sala '" + idSala + "'! Iniciando combate.");
+            System.out.println("IniciarCombateHandler: ¡Ambos jugadores listos en sala '" + idSala + "'! Iniciando combate.");
 
             // AMBOS LISTOS: Iniciar el combate
             partida.setEstado(EstadoPartida.EN_CURSO);
@@ -180,8 +180,8 @@ public class IniciarCombateKS implements IKnowledgeSource {
             Random random = new Random();
             JugadorDTO jugadorConTurno = random.nextBoolean() ? jugador1 : jugador2;
             partida.setNombreJugadorEnTurno(jugadorConTurno.getNombre());
-            System.out.println("INICIAR_COMBATE_KS: Turno inicial para: " + jugadorConTurno.getNombre() + " en PartidaDTO (idSala: " + idSala + ")");
-System.out.println("INICIAR_COMBATE_KS: PartidaDTO ANTES de serializar - NombreJugadorEnTurno: " + partida.getNombreJugadorEnTurno());
+            System.out.println("IniciarCombateHandler: Turno inicial para: " + jugadorConTurno.getNombre() + " en PartidaDTO (idSala: " + idSala + ")");
+System.out.println("IniciarCombateHandler: PartidaDTO ANTES de serializar - NombreJugadorEnTurno: " + partida.getNombreJugadorEnTurno());
 
             // Actualizar la partida final en el Blackboard
             blackboard.actualizarPartida(partida);
@@ -203,11 +203,11 @@ System.out.println("INICIAR_COMBATE_KS: PartidaDTO ANTES de serializar - NombreJ
 
             if (socketJ1 != null) {
                 server.enviarEventoACliente(socketJ1, eventoIniciarCombate);
-                System.out.println("INICIAR_COMBATE_KS: Enviado INICIAR_COMBATE a J1: " + jugador1.getNombre());
+                System.out.println("IniciarCombateHandler: Enviado INICIAR_COMBATE a J1: " + jugador1.getNombre());
             }
             if (socketJ2 != null) {
                 server.enviarEventoACliente(socketJ2, eventoIniciarCombate);
-                System.out.println("INICIAR_COMBATE_KS: Enviado INICIAR_COMBATE a J2: " + jugador2.getNombre());
+                System.out.println("IniciarCombateHandler: Enviado INICIAR_COMBATE a J2: " + jugador2.getNombre());
             }
             
             if (controller != null) { // Notificar al controller del backend
@@ -216,7 +216,7 @@ System.out.println("INICIAR_COMBATE_KS: PartidaDTO ANTES de serializar - NombreJ
 
         } else {
             // Uno de los jugadores aún no está listo
-            System.out.println("INICIAR_COMBATE_KS: Jugador '" + nombreJugadorQueEnvia + "' listo. Esperando al oponente en sala '" + idSala + "'.");
+            System.out.println("IniciarCombateHandler: Jugador '" + nombreJugadorQueEnvia + "' listo. Esperando al oponente en sala '" + idSala + "'.");
             enviarRespuesta(clienteQueEnvia, "ESPERANDO_OPONENTE_FLOTA", Map.of(
                 "mensaje", "Tu flota está confirmada. Esperando configuración del oponente...",
                 "idSala", idSala

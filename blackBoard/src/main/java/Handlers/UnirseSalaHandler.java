@@ -2,13 +2,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package ks; // O tu paquete de knowledge sources
+package Handlers; // O tu paquete de knowledge sources
 
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 import com.mycompany.blackboard.Controller;
-import com.mycompany.blackboard.IKnowledgeSource;
 import dto.*;
 import enums.*;
 
@@ -16,20 +14,22 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import com.mycompany.blackboard.IHandler;
+import com.mycompany.battleship.commons.IHandlerCommons;
 
 /**
  * Knowledge Source para manejar el evento de un jugador uniéndose a una sala existente.
  */
-public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowledgeSource esté definida como en tu proyecto
+public class UnirseSalaHandler implements IHandler { // Asegúrate que IHandler esté definida como en tu proyecto
 
-    private final IBlackboard blackboard;
+    private final IHandlerCommons blackboard;
     private final IServer server;
     private final Controller controller; // Podríamos necesitar notificar al controller
 
     // Constante para la capacidad máxima de la sala (Battleship = 2 jugadores)
     private static final int MAX_JUGADORES_SALA = 2;
 
-    public UnirseSalaKS(IBlackboard blackboard, IServer server, Controller controller) {
+    public UnirseSalaHandler(IHandlerCommons blackboard, IServer server, Controller controller) {
         this.blackboard = blackboard;
         this.server = server;
         this.controller = controller;
@@ -44,7 +44,7 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
   @Override
     public void procesarEvento(Socket clienteRetador, Evento evento) {
         if (clienteRetador == null || evento == null) {
-            System.err.println("UNIRSE_SALA_KS: Cliente o Evento nulo.");
+            System.err.println("UnirseSalaHandler: Cliente o Evento nulo.");
             return;
         }
 
@@ -55,7 +55,7 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
         }
         idSala = idSala.trim();
 
-        System.out.println("UNIRSE_SALA_KS: Cliente " + clienteRetador.getInetAddress().getHostAddress() +
+        System.out.println("UnirseSalaHandler: Cliente " + clienteRetador.getInetAddress().getHostAddress() +
                            " intentando unirse a sala '" + idSala + "'");
 
         // 1. Obtener el JugadorDTO del retador (ya debe estar registrado)
@@ -64,7 +64,7 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
             enviarRespuestaError(clienteRetador, "Error: No estás registrado. Regístrate primero.");
             return;
         }
-        System.out.println("UNIRSE_SALA_KS: Retador es '" + retadorDTO.getNombre() + "'.");
+        System.out.println("UnirseSalaHandler: Retador es '" + retadorDTO.getNombre() + "'.");
 
         // 2. Obtener la PartidaDTO del Blackboard
         PartidaDTO partida = blackboard.getPartidaDTO(idSala);
@@ -72,7 +72,7 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
             enviarRespuestaError(clienteRetador, "La sala '" + idSala + "' no existe.");
             return;
         }
-        System.out.println("UNIRSE_SALA_KS: Partida '" + idSala + "' encontrada. Anfitrión: " +
+        System.out.println("UnirseSalaHandler: Partida '" + idSala + "' encontrada. Anfitrión: " +
                            (partida.getJugador1() != null ? partida.getJugador1().getNombre() : "N/A") +
                            ", Jugador2: " + (partida.getJugador2() != null ? partida.getJugador2().getNombre() : "N/A") +
                            ", Estado actual: " + partida.getEstado());
@@ -81,7 +81,7 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
 
         // Verificar si el retador ya es el anfitrión (jugador1)
         if (partida.getJugador1() != null && partida.getJugador1().getNombre().equals(retadorDTO.getNombre())) {
-            System.out.println("UNIRSE_SALA_KS: Cliente " + retadorDTO.getNombre() + " ya es el anfitrión de esta sala.");
+            System.out.println("UnirseSalaHandler: Cliente " + retadorDTO.getNombre() + " ya es el anfitrión de esta sala.");
             enviarRespuesta(clienteRetador, "UNIDO_OK", Map.of(
                 "mensaje", "Ya eres el anfitrión de esta sala.",
                 "idSala", idSala,
@@ -92,7 +92,7 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
 
         // Verificar si el retador ya es el jugador2
         if (partida.getJugador2() != null && partida.getJugador2().getNombre().equals(retadorDTO.getNombre())) {
-            System.out.println("UNIRSE_SALA_KS: Cliente " + retadorDTO.getNombre() + " ya se unió como retador a esta sala.");
+            System.out.println("UnirseSalaHandler: Cliente " + retadorDTO.getNombre() + " ya se unió como retador a esta sala.");
             enviarRespuesta(clienteRetador, "UNIDO_OK", Map.of(
                 "mensaje", "Ya te has unido a esta sala como retador.",
                 "idSala", idSala,
@@ -104,7 +104,7 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
         // Verificar si la sala está llena (es decir, si jugador2 ya está ocupado por OTRO jugador)
         if (partida.getJugador2() != null) {
             // Como ya validamos que el retador no es jugador2, si jugador2 no es null, la sala está llena.
-            System.out.println("UNIRSE_SALA_KS: Sala '" + idSala + "' está llena. Jugador2 actual: " + partida.getJugador2().getNombre());
+            System.out.println("UnirseSalaHandler: Sala '" + idSala + "' está llena. Jugador2 actual: " + partida.getJugador2().getNombre());
             enviarRespuestaError(clienteRetador, "La sala '" + idSala + "' está llena.");
             return;
         }
@@ -138,12 +138,12 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
         partida.setJugador2(retadorDTO);
         // El estado cambia a CONFIGURACION, indicando que ambos jugadores están y pueden proceder a colocar barcos.
         partida.setEstado(EstadoPartida.CONFIGURACION);
-        System.out.println("UNIRSE_SALA_KS: Jugador '" + retadorDTO.getNombre() + "' asignado como jugador2 en PartidaDTO para sala '" + idSala + "'.");
-        System.out.println("UNIRSE_SALA_KS: Estado de PartidaDTO actualizado a: " + partida.getEstado());
+        System.out.println("UnirseSalaHandler: Jugador '" + retadorDTO.getNombre() + "' asignado como jugador2 en PartidaDTO para sala '" + idSala + "'.");
+        System.out.println("UnirseSalaHandler: Estado de PartidaDTO actualizado a: " + partida.getEstado());
 
         // 6. Actualizar la PartidaDTO en el Blackboard
         if (blackboard.actualizarPartida(partida)) {
-            System.out.println("UNIRSE_SALA_KS: PartidaDTO '" + idSala + "' actualizada en Blackboard.");
+            System.out.println("UnirseSalaHandler: PartidaDTO '" + idSala + "' actualizada en Blackboard.");
 
             // 7. Notificar al retador que se unió exitosamente
             enviarRespuesta(clienteRetador, "UNIDO_OK", Map.of(
@@ -163,9 +163,9 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
                     // En tu código original era "jugadorInfo", "Jugador " + ip. Mantendremos nombre.
                     notificacionAnfitrion.agregarDato("jugadorInfo", retadorDTO.getNombre()); // Nombre del jugador que se unió
                     server.enviarEventoACliente(socketAnfitrion, notificacionAnfitrion);
-                    System.out.println("UNIRSE_SALA_KS: Notificación NUEVO_JUGADOR_EN_SALA enviada al anfitrión: " + partida.getJugador1().getNombre());
+                    System.out.println("UnirseSalaHandler: Notificación NUEVO_JUGADOR_EN_SALA enviada al anfitrión: " + partida.getJugador1().getNombre());
                 } else {
-                     System.err.println("UNIRSE_SALA_KS: No se encontró socket para el anfitrión '" + partida.getJugador1().getNombre() + "' para notificar.");
+                     System.err.println("UnirseSalaHandler: No se encontró socket para el anfitrión '" + partida.getJugador1().getNombre() + "' para notificar.");
                 }
             }
                 
@@ -173,7 +173,7 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
             // 9. Lógica de "Sala Llena" - Disparar evento para iniciar colocación
             // (Esta parte ya estaba en tu código original y es correcta)
             // Ahora que hay dos jugadores (jugador1 y jugador2 no son null)
-            System.out.println("UNIRSE_SALA_KS: ¡Sala '" + idSala + "' llena con 2 jugadores! Disparando evento INICIAR_FASE_COLOCACION.");
+            System.out.println("UnirseSalaHandler: ¡Sala '" + idSala + "' llena con 2 jugadores! Disparando evento INICIAR_FASE_COLOCACION.");
 
              Evento eventoInicioColocacion = new Evento("INICIAR_FASE_COLOCACION");
             eventoInicioColocacion.agregarDato("idSala", idSala);
@@ -195,7 +195,7 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
        
 
         } else {
-            System.err.println("UNIRSE_SALA_KS: Falló la actualización de PartidaDTO en Blackboard para sala '" + idSala + "'.");
+            System.err.println("UnirseSalaHandler: Falló la actualización de PartidaDTO en Blackboard para sala '" + idSala + "'.");
             enviarRespuestaError(clienteRetador, "Error interno al unirse a la sala.");
         }
 
@@ -216,4 +216,4 @@ public class UnirseSalaKS implements IKnowledgeSource { // Asegúrate que IKnowl
         }
         server.enviarEventoACliente(cliente, respuesta);
     }
-}
+} // O tu paquete de knowledge sources // O tu paquete de knowledge sources

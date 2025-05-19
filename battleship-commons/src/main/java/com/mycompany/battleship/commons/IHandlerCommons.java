@@ -20,7 +20,7 @@ import java.util.Map;  // Necesario para los métodos de sala
  * Expone los métodos necesarios para que otros componentes (Server, KS, Controller)
  * interactúen con él sin conocer la implementación concreta.
  */
-public interface IBlackboard {
+public interface IHandlerCommons {
 
     // --- Entrada de Eventos ---
     void enviarEventoBlackBoard(Socket cliente, Evento evento);

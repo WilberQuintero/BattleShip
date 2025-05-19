@@ -6,11 +6,10 @@ package com.mycompany.blackboard;
 
 // --- Importaciones Correctas ---
 import dto.*;
-import ks.CrearSalaKS;
-import ks.UnirseSalaKS;
-import ks.ConnectionKS;
+import Handlers.CrearSalaHandler;
+import Handlers.UnirseSalaHandler;
+import Handlers.ConnectionHandler;
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 
 import java.net.Socket;
@@ -20,19 +19,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import ks.DisparoKS;
-import ks.IniciarColocacionKS;
-import ks.IniciarCombateKS;
-import ks.RegistrarUsuarioKS;
+import Handlers.DisparoHandler;
+import Handlers.IniciarColocacionHandler;
+import Handlers.IniciarCombateHandler;
+import Handlers.RegistrarUsuarioHandler;
+import com.mycompany.battleship.commons.IHandlerCommons;
 
 
 
 /**
- * El Blackboard adaptado al estilo del ejemplo de Dominó.
  * Almacena el estado principal (clientes conectados, salas, nombres) y despacha eventos a las KS.
- * Implementa IBlackboard para exponer su funcionalidad al Server y KSs.
+ * Implementa IHandler para exponer su funcionalidad al Server y KSs.
  */
-public class BlackBoard implements IBlackboard {
+public class HandlerChain implements IHandlerCommons {
 
     // --- Estado Principal ---
     private final List<Socket> clientesConectados;
@@ -45,13 +44,13 @@ public class BlackBoard implements IBlackboard {
     // --- Componentes del Sistema ---
     private Controller controller;
     private final IServer server;
-    private final List<IKnowledgeSource> knowledgeSources; // Usar el nombre de interfaz correcto
+    private final List<IHandler> knowledgeSources; // Usar el nombre de interfaz correcto
 
     /**
      * Constructor del BlackBoard.
      * @param server La instancia del servidor (como IServer).
      */
-    public BlackBoard(IServer server) {
+    public HandlerChain(IServer server) {
         if (server == null) {
             throw new IllegalArgumentException("La instancia de IServer no puede ser nula.");
         }
@@ -75,11 +74,11 @@ public class BlackBoard implements IBlackboard {
              throw new IllegalArgumentException("La instancia del Controller no puede ser nula.");
         }
         if (this.controller != null) {
-            System.out.println("BLACKBOARD WARN: Intentando reasignar el Controller.");
+            System.out.println("CHAIN-RESPONSABILITY WARN: Intentando reasignar el Controller.");
             return;
         }
         this.controller = controller;
-        System.out.println("BLACKBOARD: Controller asignado.");
+        System.out.println("CHAIN-RESPONSABILITY: Controller asignado.");
         registrarFuentesDeConocimiento();
     }
 
@@ -88,28 +87,28 @@ public class BlackBoard implements IBlackboard {
      */
    private void registrarFuentesDeConocimiento() {
         if (this.controller == null || this.server == null) {
-             System.err.println("BLACKBOARD ERROR: No se pueden registrar KS sin Controller o IServer.");
+             System.err.println("CHAIN-RESPONSABILITY ERROR: No se pueden registrar KS sin Controller o IServer.");
              return;
         }
-        System.out.println("BLACKBOARD: Registrando Fuentes de Conocimiento...");
+        System.out.println("CHAIN-RESPONSABILITY: Registrando Fuentes de Conocimiento...");
         knowledgeSources.clear();
 
         // Asegúrate de que los nombres de clase y el constructor sean correctos
-        knowledgeSources.add(new ConnectionKS(this, this.server, this.controller));
-        knowledgeSources.add(new CrearSalaKS(this, this.server, this.controller));
-        knowledgeSources.add(new UnirseSalaKS(this, this.server, this.controller));
-        knowledgeSources.add(new RegistrarUsuarioKS(this, this.server, this.controller));
-        knowledgeSources.add(new IniciarColocacionKS(this, this.server, this.controller));
-        knowledgeSources.add(new IniciarCombateKS(this, this.server, this.controller));
-         knowledgeSources.add(new DisparoKS(this, this.server, this.controller));
+        knowledgeSources.add(new ConnectionHandler(this, this.server, this.controller));
+        knowledgeSources.add(new CrearSalaHandler(this, this.server, this.controller));
+        knowledgeSources.add(new UnirseSalaHandler(this, this.server, this.controller));
+        knowledgeSources.add(new RegistrarUsuarioHandler(this, this.server, this.controller));
+        knowledgeSources.add(new IniciarColocacionHandler(this, this.server, this.controller));
+        knowledgeSources.add(new IniciarCombateHandler(this, this.server, this.controller));
+         knowledgeSources.add(new DisparoHandler(this, this.server, this.controller));
 
         // TODO: Añadir futuras KS aquí...
 
-        System.out.println("BLACKBOARD: Fuentes de conocimiento registradas (" + knowledgeSources.size() + ")");
+        System.out.println("CHAIN-RESPONSABILITY: Fuentes de conocimiento registradas (" + knowledgeSources.size() + ")");
         knowledgeSources.forEach(ks -> System.out.println("  - " + ks.getClass().getSimpleName()));
     }
 
-    // --- Implementación COMPLETA de IBlackboard ---
+    // --- Implementación COMPLETA de IHandlerCommons ---
 
     @Override
     public void enviarEventoBlackBoard(Socket cliente, Evento evento) {
@@ -117,43 +116,43 @@ public class BlackBoard implements IBlackboard {
         System.out.println("DEBUG [BB.enviarEvento]: Método ingresado. Tipo=" + (evento != null ? evento.getTipo() : "NULL EVENTO"));
 
         if (evento == null) {
-            System.err.println("BLACKBOARD ERROR: Evento nulo recibido en enviarEventoBlackBoard.");
+            System.err.println("CHAIN-RESPONSABILITY ERROR: Evento nulo recibido en enviarEventoBlackBoard.");
             return;
         }
         String logCliente = (cliente != null && cliente.getInetAddress() != null) ? cliente.getInetAddress().getHostAddress() : "N/A";
-        System.out.println("BLACKBOARD: Recibido evento '" + evento.getTipo() + "' para cliente: " + logCliente);
+        System.out.println("CHAIN-RESPONSABILITY: Recibido evento '" + evento.getTipo() + "' para cliente: " + logCliente);
 
         if (knowledgeSources.isEmpty()) {
-             System.err.println("BLACKBOARD WARN: No hay Knowledge Sources registradas.");
+             System.err.println("CHAIN-RESPONSABILITY WARN: No hay Knowledge Sources registradas.");
              return;
         }
 
         boolean eventoProcesado = false;
         // Usar el nombre de interfaz correcto aquí
-        List<IKnowledgeSource> sourcesSnapshot = new ArrayList<>(knowledgeSources);
+        List<IHandler> sourcesSnapshot = new ArrayList<>(knowledgeSources);
 
-        System.out.println("DEBUG [BB.enviarEvento]: Iniciando bucle de despacho a KSs (" + sourcesSnapshot.size() + " KSs)...");
+        System.out.println("DEBUG [BB.enviarEvento]: Iniciando bucle de despacho a Handlers (" + sourcesSnapshot.size() + " KSs)...");
 
         // Usar el nombre de interfaz correcto aquí
-        for (IKnowledgeSource ks : sourcesSnapshot) {
+        for (IHandler ks : sourcesSnapshot) {
             try {
-                System.out.println("DEBUG [BB.enviarEvento]: Verificando KS: " + ks.getClass().getSimpleName());
+                System.out.println("DEBUG [BB.enviarEvento]: Verificando Handler: " + ks.getClass().getSimpleName());
                 if (ks.puedeProcesar(evento)) {
-                    System.out.println("BLACKBOARD: Despachando evento '" + evento.getTipo() + "' a " + ks.getClass().getSimpleName());
+                    System.out.println("CHAIN-RESPONSABILITY: Despachando evento '" + evento.getTipo() + "' a " + ks.getClass().getSimpleName());
                     ks.procesarEvento(cliente, evento);
                     eventoProcesado = true;
                 }
             } catch (Exception e) {
-                System.err.println("BLACKBOARD ERROR: EXCEPCIÓN AL PROCESAR por " + ks.getClass().getSimpleName() + " - " + e.getMessage());
+                System.err.println("CHAIN-RESPONSABILITY ERROR: EXCEPCIÓN AL PROCESAR por " + ks.getClass().getSimpleName() + " - " + e.getMessage());
                 e.printStackTrace();
             }
         }
         System.out.println("DEBUG [BB.enviarEvento]: Bucle de despacho finalizado.");
 
         if (!eventoProcesado) {
-            System.err.println("BLACKBOARD WARN: Ninguna KS pudo procesar el evento: " + evento.getTipo());
+            System.err.println("CHAIN-RESPONSABILITY WARN: Ninguna KS pudo procesar el evento: " + evento.getTipo());
         } else {
-            System.out.println("BLACKBOARD: Evento '" + evento.getTipo() + "' procesado por al menos una KS.");
+            System.out.println("CHAIN-RESPONSABILITY: Evento '" + evento.getTipo() + "' procesado por al menos una KS.");
         }
     }
 
@@ -164,22 +163,22 @@ public class BlackBoard implements IBlackboard {
 
     
     /**
-     * Agrega una nueva PartidaDTO al Blackboard.
+     * Agrega una nueva PartidaDTO al CHAIN-RESPONSABILITY.
      * @param partida La PartidaDTO a agregar.
      * @return true si se agregó, false si ya existía una partida con ese ID.
      */
      @Override
     public boolean agregarPartida(PartidaDTO partida) { // NUEVO método específico
         if (partida == null || partida.getIdPartida() == null) {
-            System.err.println("BLACKBOARD ERROR: Intento de agregar PartidaDTO nula o sin ID.");
+            System.err.println("CHAIN-RESPONSABILITY ERROR: Intento de agregar PartidaDTO nula o sin ID.");
             return false;
         }
         // putIfAbsent devuelve null si la clave no existía (y se insertó), o el valor existente si ya estaba.
         if (partidasActivas.putIfAbsent(partida.getIdPartida(), partida) == null) {
-            System.out.println("BLACKBOARD: Partida '" + partida.getIdPartida() + "' agregada. Estado: " + partida.getEstado());
+            System.out.println("CHAIN-RESPONSABILITY: Partida '" + partida.getIdPartida() + "' agregada. Estado: " + partida.getEstado());
             return true;
         } else {
-            System.out.println("BLACKBOARD WARN: Intento de agregar partida que ya existe: '" + partida.getIdPartida() + "'. No se sobrescribió.");
+            System.out.println("CHAIN-RESPONSABILITY WARN: Intento de agregar partida que ya existe: '" + partida.getIdPartida() + "'. No se sobrescribió.");
             return false;
         }
     }
@@ -196,28 +195,28 @@ public class BlackBoard implements IBlackboard {
 
     
     /**
-     * Actualiza una PartidaDTO existente en el Blackboard.
+     * Actualiza una PartidaDTO existente en el CHAIN-RESPONSABILITY.
      * @param partida La PartidaDTO con los datos actualizados.
      * @return true si se actualizó, false si la partida no existía.
      */
      @Override
     public boolean actualizarPartida(PartidaDTO partida) { // NUEVO método específico
         if (partida == null || partida.getIdPartida() == null) {
-            System.err.println("BLACKBOARD ERROR: Intento de actualizar PartidaDTO nula o sin ID.");
+            System.err.println("CHAIN-RESPONSABILITY ERROR: Intento de actualizar PartidaDTO nula o sin ID.");
             return false;
         }
         if (partidasActivas.containsKey(partida.getIdPartida())) {
             partidasActivas.put(partida.getIdPartida(), partida); // Sobrescribe
-            System.out.println("BLACKBOARD: Partida '" + partida.getIdPartida() + "' actualizada. Nuevo estado: " + partida.getEstado());
+            System.out.println("CHAIN-RESPONSABILITY: Partida '" + partida.getIdPartida() + "' actualizada. Nuevo estado: " + partida.getEstado());
             return true;
         } else {
-            System.err.println("BLACKBOARD WARN: Intento de actualizar partida inexistente '" + partida.getIdPartida() + "'.");
+            System.err.println("CHAIN-RESPONSABILITY WARN: Intento de actualizar partida inexistente '" + partida.getIdPartida() + "'.");
             return false;
         }
     }
     
     /**
-     * Elimina una partida del Blackboard.
+     * Elimina una partida del CHAIN-RESPONSABILITY.
      * @param idSala El ID de la sala/partida a eliminar.
      */
      @Override
@@ -225,9 +224,9 @@ public class BlackBoard implements IBlackboard {
         if (idSala != null) {
             PartidaDTO partidaEliminada = partidasActivas.remove(idSala);
             if (partidaEliminada != null) {
-                System.out.println("BLACKBOARD: Partida '" + idSala + "' eliminada.");
+                System.out.println("CHAIN-RESPONSABILITY: Partida '" + idSala + "' eliminada.");
             } else {
-                System.out.println("BLACKBOARD WARN: Intento de eliminar partida inexistente '" + idSala + "'.");
+                System.out.println("CHAIN-RESPONSABILITY WARN: Intento de eliminar partida inexistente '" + idSala + "'.");
             }
         }
     }
@@ -238,12 +237,12 @@ public class BlackBoard implements IBlackboard {
         // Implementación que evita sobrescribir y loguea
         if (id != null && datosSala != null) {
              if (salas.putIfAbsent(id, datosSala) == null) { // putIfAbsent devuelve null si la clave NO existía
-                  System.out.println("BLACKBOARD: Sala '" + id + "' agregada al mapa.");
+                  System.out.println("CHAIN-RESPONSABILITY: Sala '" + id + "' agregada al mapa.");
              } else {
-                  System.out.println("BLACKBOARD WARN: Intento de agregar sala que ya existe: '" + id + "'. No se sobrescribió.");
+                  System.out.println("CHAIN-RESPONSABILITY WARN: Intento de agregar sala que ya existe: '" + id + "'. No se sobrescribió.");
              }
         } else {
-             System.err.println("BLACKBOARD ERROR: Intento de agregar sala con ID o datos nulos.");
+             System.err.println("CHAIN-RESPONSABILITY ERROR: Intento de agregar sala con ID o datos nulos.");
         }
     }
 
@@ -263,14 +262,14 @@ public class BlackBoard implements IBlackboard {
         if (idSala != null && nuevosDatosSala != null) {
             if (salas.containsKey(idSala)) {
                  salas.put(idSala, nuevosDatosSala); // Sobrescribe
-                 System.out.println("BLACKBOARD: Datos actualizados para sala '" + idSala + "'.");
+                 System.out.println("CHAIN-RESPONSABILITY: Datos actualizados para sala '" + idSala + "'.");
                  // Notificar si es necesario
                  // if (controller != null) controller.notificarCambio("SALA_ACTUALIZADA;" + idSala);
             } else {
-                 System.err.println("BLACKBOARD WARN: Intento de actualizar sala inexistente '" + idSala + "'.");
+                 System.err.println("CHAIN-RESPONSABILITY WARN: Intento de actualizar sala inexistente '" + idSala + "'.");
             }
         } else {
-             System.err.println("BLACKBOARD ERROR: ID de sala o nuevos datos nulos al intentar actualizar.");
+             System.err.println("CHAIN-RESPONSABILITY ERROR: ID de sala o nuevos datos nulos al intentar actualizar.");
         }
     }
 
@@ -280,13 +279,13 @@ public class BlackBoard implements IBlackboard {
         if (clienteSocket != null && !clientesConectados.contains(clienteSocket)) {
             boolean added = clientesConectados.add(clienteSocket);
             if (added) {
-                 System.out.println("BLACKBOARD: Socket de cliente " + clienteSocket.getInetAddress().getHostAddress() + " registrado como activo.");
+                 System.out.println("CHAIN-RESPONSABILITY: Socket de cliente " + clienteSocket.getInetAddress().getHostAddress() + " registrado como activo.");
                  if (controller != null) {
                      controller.notificarCambio("CLIENTE_REGISTRADO");
                  }
             }
         } else if (clienteSocket != null) {
-             System.out.println("BLACKBOARD WARN: Intento de agregar cliente ya existente: " + clienteSocket.getInetAddress().getHostAddress());
+             System.out.println("CHAIN-RESPONSABILITY WARN: Intento de agregar cliente ya existente: " + clienteSocket.getInetAddress().getHostAddress());
         }
     }
 
@@ -297,19 +296,19 @@ public class BlackBoard implements IBlackboard {
               String nombreRemovido = nombrePorSocket.remove(clienteSocket);
               if (nombreRemovido != null) {
                    socketPorNombre.remove(nombreRemovido);
-                   System.out.println("BLACKBOARD: Mapeo de nombre '" + nombreRemovido + "' eliminado para socket desconectado.");
+                   System.out.println("CHAIN-RESPONSABILITY: Mapeo de nombre '" + nombreRemovido + "' eliminado para socket desconectado.");
               } else {
-                   System.out.println("BLACKBOARD WARN: Socket desconectado no tenía un nombre registrado.");
+                   System.out.println("CHAIN-RESPONSABILITY WARN: Socket desconectado no tenía un nombre registrado.");
               }
               boolean removed = clientesConectados.remove(clienteSocket);
               if (removed) {
-                  System.out.println("BLACKBOARD: Socket de cliente " + clienteSocket.getInetAddress().getHostAddress() + " eliminado de activos.");
+                  System.out.println("CHAIN-RESPONSABILITY: Socket de cliente " + clienteSocket.getInetAddress().getHostAddress() + " eliminado de activos.");
                   if (controller != null) {
                       controller.notificarCambio("CLIENTE_ELIMINADO"); // Podría incluir nombreRemovido
                   }
               } else {
                     // Si no estaba en clientesConectados, quizás ya fue removido
-                    System.out.println("BLACKBOARD INFO: Socket " + clienteSocket.getInetAddress().getHostAddress() + " no encontrado en lista clientesConectados durante remoción (posiblemente ya removido).");
+                    System.out.println("CHAIN-RESPONSABILITY INFO: Socket " + clienteSocket.getInetAddress().getHostAddress() + " no encontrado en lista clientesConectados durante remoción (posiblemente ya removido).");
               }
         }
     }
@@ -326,10 +325,10 @@ public class BlackBoard implements IBlackboard {
     public void respuestaFuenteC(Socket cliente, Evento eventoRespuesta) {
         // Implementación existente
          String logCliente = (cliente != null && cliente.getInetAddress() != null) ? cliente.getInetAddress().getHostAddress() : "N/A";
-         System.out.println("BLACKBOARD: KS reporta finalización para cliente " + logCliente + ". Evento: " + (eventoRespuesta != null ? eventoRespuesta.getTipo(): "NULL"));
+         System.out.println("CHAIN-RESPONSABILITY: KS reporta finalización para cliente " + logCliente + ". Evento: " + (eventoRespuesta != null ? eventoRespuesta.getTipo(): "NULL"));
     }
 
-    // --- NUEVOS Métodos Implementados de IBlackboard ---
+    // --- NUEVOS Métodos Implementados de IHandlerCommons ---
 
 /**
      * Verifica si un nombre de jugador ya está en uso (registrado en jugadorDTOPorNombre).
@@ -352,21 +351,21 @@ public class BlackBoard implements IBlackboard {
     @Override
     public synchronized void registrarUsuario(Socket cliente, JugadorDTO nuevoJugadorDTO) { // CAMBIO: Acepta JugadorDTO
         if (cliente == null || nuevoJugadorDTO == null) {
-            System.err.println("BLACKBOARD ERROR: registrarUsuario: Cliente o JugadorDTO nulo.");
+            System.err.println("CHAIN-RESPONSABILITY ERROR: registrarUsuario: Cliente o JugadorDTO nulo.");
             return;
         }
         String nombreNuevoJugador = nuevoJugadorDTO.getNombre();
 
-        System.out.println("BLACKBOARD [registrarUsuario]: Solicitud para registrar JugadorDTO: " + nombreNuevoJugador +
+        System.out.println("CHAIN-RESPONSABILITY [registrarUsuario]: Solicitud para registrar JugadorDTO: " + nombreNuevoJugador +
                            " con Socket: " + cliente.getInetAddress().getHostAddress() + ":" + cliente.getPort());
 
         // 1. Manejar si el Socket ya está asociado con otro JugadorDTO
         JugadorDTO jugadorAnteriorDelSocket = jugadorDTOPorSocket.get(cliente);
         if (jugadorAnteriorDelSocket != null) {
-            System.out.println("BLACKBOARD [registrarUsuario]: Socket ya asociado con JugadorDTO '" +
+            System.out.println("CHAIN-RESPONSABILITY [registrarUsuario]: Socket ya asociado con JugadorDTO '" +
                                jugadorAnteriorDelSocket.getNombre() + "'.");
             if (!jugadorAnteriorDelSocket.getNombre().equals(nombreNuevoJugador)) {
-                System.out.println("BLACKBOARD [registrarUsuario]: El nombre cambió. Eliminando mapeo antiguo nombre '" +
+                System.out.println("CHAIN-RESPONSABILITY [registrarUsuario]: El nombre cambió. Eliminando mapeo antiguo nombre '" +
                                    jugadorAnteriorDelSocket.getNombre() + "' de jugadorDTOPorNombre.");
                 jugadorDTOPorNombre.remove(jugadorAnteriorDelSocket.getNombre());
             }
@@ -375,7 +374,7 @@ public class BlackBoard implements IBlackboard {
         // 2. Manejar si el nombre ya está en uso por otro JugadorDTO (y potencialmente otro socket)
         JugadorDTO jugadorExistenteConEseNombre = jugadorDTOPorNombre.get(nombreNuevoJugador);
         if (jugadorExistenteConEseNombre != null) {
-            System.out.println("BLACKBOARD [registrarUsuario]: Nombre '" + nombreNuevoJugador +
+            System.out.println("CHAIN-RESPONSABILITY [registrarUsuario]: Nombre '" + nombreNuevoJugador +
                                "' ya asociado a JugadorDTO: " + jugadorExistenteConEseNombre.getNombre());
             // Buscar el socket asociado a este jugador existente
             Socket socketDelJugadorConNombreExistente = null;
@@ -390,7 +389,7 @@ public class BlackBoard implements IBlackboard {
             if (socketDelJugadorConNombreExistente != null && !socketDelJugadorConNombreExistente.equals(cliente)) {
                 // El nombre está en uso por un socket diferente. La KS debería haberlo prevenido.
                 // Si se decide permitir que la nueva conexión "robe" el nombre:
-                System.err.println("BLACKBOARD WARN [registrarUsuario]: Nombre '" + nombreNuevoJugador +
+                System.err.println("CHAIN-RESPONSABILITY WARN [registrarUsuario]: Nombre '" + nombreNuevoJugador +
                                    "' usado por OTRO socket (" + socketDelJugadorConNombreExistente.getInetAddress().getHostAddress() +
                                    "). Se desvinculará el socket antiguo.");
                 jugadorDTOPorSocket.remove(socketDelJugadorConNombreExistente);
@@ -402,7 +401,7 @@ public class BlackBoard implements IBlackboard {
         jugadorDTOPorNombre.put(nombreNuevoJugador, nuevoJugadorDTO);
 
         System.out.println("*****************************************************");
-        System.out.println("BLACKBOARD: >>> Usuario Registrado (con JugadorDTO) <<<");
+        System.out.println("CHAIN-RESPONSABILITY: >>> Usuario Registrado (con JugadorDTO) <<<");
         System.out.println("   Socket: " + cliente.getInetAddress().getHostAddress() + ":" + cliente.getPort());
         System.out.println("   JugadorDTO: " + nuevoJugadorDTO.toString()); // Usa el toString() de JugadorDTO
         System.out.println("   Total jugadorDTOPorSocket: " + jugadorDTOPorSocket.size());
@@ -468,7 +467,7 @@ public class BlackBoard implements IBlackboard {
         nombrePorSocket.put(cliente, nombre);
         // Log detallado
         System.out.println("*****************************************************");
-        System.out.println("BLACKBOARD: >>> Usuario Registrado en Mapas <<<");
+        System.out.println("CHAIN-RESPONSABILITY: >>> Usuario Registrado en Mapas <<<");
         System.out.println("    Socket: " + cliente.getInetAddress().getHostAddress() + ":" + cliente.getPort());
         System.out.println("    Nombre: '" + nombre + "'");
         System.out.println("    (Tablero y Turno se asignarán más adelante)");
@@ -481,7 +480,7 @@ public class BlackBoard implements IBlackboard {
     // --- Inspección (Método de ayuda para depuración) ---
      public void inspect() {
         // Implementación existente (con formato mejorado y mostrando nombres)
-        System.out.println("\n--- Inspección del Blackboard ---");
+        System.out.println("\n--- Inspección del CHAIN-RESPONSABILITY ---");
         System.out.println("Fuentes de Conocimiento Registradas: " + knowledgeSources.size());
         knowledgeSources.forEach(ks -> System.out.println("  - " + ks.getClass().getSimpleName()));
 
@@ -534,19 +533,19 @@ public class BlackBoard implements IBlackboard {
     public synchronized void usuarioDesconectado(Socket cliente) { // Renombrado/Añadido
         if (cliente == null) return;
 
-        System.out.println("BLACKBOARD: Procesando desconexión (usuarioDesconectado) para socket " + cliente.getInetAddress().getHostAddress());
+        System.out.println("CHAIN-RESPONSABILITY: Procesando desconexión (usuarioDesconectado) para socket " + cliente.getInetAddress().getHostAddress());
         JugadorDTO jugadorDesconectadoDTO = jugadorDTOPorSocket.remove(cliente);
 
         if (jugadorDesconectadoDTO != null) {
-            System.out.println("BLACKBOARD: JugadorDTO '" + jugadorDesconectadoDTO.getNombre() + "' estaba asociado al socket. Eliminando de jugadorDTOPorNombre.");
+            System.out.println("CHAIN-RESPONSABILITY: JugadorDTO '" + jugadorDesconectadoDTO.getNombre() + "' estaba asociado al socket. Eliminando de jugadorDTOPorNombre.");
             jugadorDTOPorNombre.remove(jugadorDesconectadoDTO.getNombre());
-            System.out.println("BLACKBOARD: JugadorDTO '" + jugadorDesconectadoDTO.getNombre() + "' eliminado completamente.");
+            System.out.println("CHAIN-RESPONSABILITY: JugadorDTO '" + jugadorDesconectadoDTO.getNombre() + "' eliminado completamente.");
             // Aquí iría la lógica para limpiar la presencia del jugador en las salas, etc.
         } else {
-            System.out.println("BLACKBOARD: No se encontró JugadorDTO asociado al socket " + cliente.getInetAddress().getHostAddress() + " para eliminar.");
+            System.out.println("CHAIN-RESPONSABILITY: No se encontró JugadorDTO asociado al socket " + cliente.getInetAddress().getHostAddress() + " para eliminar.");
         }
         clientesConectados.remove(cliente);
-        System.out.println("BLACKBOARD: Limpieza de usuarioDesconectado completada para socket " + cliente.getInetAddress().getHostAddress());
+        System.out.println("CHAIN-RESPONSABILITY: Limpieza de usuarioDesconectado completada para socket " + cliente.getInetAddress().getHostAddress());
     }
 
 }

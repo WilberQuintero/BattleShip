@@ -2,27 +2,27 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package ks;
+package Handlers;
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 import com.mycompany.blackboard.Controller;
-import com.mycompany.blackboard.IKnowledgeSource;
 
 import java.net.Socket;
 import java.util.*;
+import com.mycompany.blackboard.IHandler;
+import com.mycompany.battleship.commons.IHandlerCommons;
 /**
  *
  * @author Hector
  */
-public class IniciarPartidaKS implements IKnowledgeSource{
+public class IniciarPartidaHandler implements IHandler{
     
     // Dependencias (final hace que deban asignarse en el constructor)
     private final IServer server;
-    private final IBlackboard blackboard;
+    private final IHandlerCommons blackboard;
     private final Controller controller; // Hacerlo final si siempre se requiere
 
-    public IniciarPartidaKS(IBlackboard blackboard, IServer server, Controller controller) {
+    public IniciarPartidaHandler(IHandlerCommons blackboard, IServer server, Controller controller) {
           // Es buena práctica verificar que las dependencias no sean nulas
         if (blackboard == null || server == null || controller == null) {
             throw new IllegalArgumentException("Las dependencias (Blackboard, Server, Controller) no pueden ser nulas.");
@@ -40,21 +40,21 @@ public class IniciarPartidaKS implements IKnowledgeSource{
     @Override
     public void procesarEvento(Socket cliente, Evento evento) {
         String idSala = (String) evento.obtenerDato("idSala");
-        System.err.println("INICIAR_PARTIDA_KS INICIADA.");
+        System.err.println("IniciarPartidaHandler INICIADA.");
         if (idSala == null) {
-            System.err.println("INICIAR_PARTIDA_KS: idSala nulo.");
+            System.err.println("IniciarPartidaHandler: idSala nulo.");
             return;
         }
 
         Map<String, Object> datosSala = blackboard.getDatosSala(idSala);
         if (datosSala == null) {
-            System.err.println("INICIAR_PARTIDA_KS: Sala no encontrada.");
+            System.err.println("IniciarPartidaHandler: Sala no encontrada.");
             return;
         }
 
         List<Socket> jugadores = (List<Socket>) datosSala.get("jugadores");
         if (jugadores == null || jugadores.size() != 2) {
-            System.err.println("INICIAR_PARTIDA_KS: La sala no tiene exactamente 2 jugadores.");
+            System.err.println("IniciarPartidaHandler: La sala no tiene exactamente 2 jugadores.");
             return;
         }
 

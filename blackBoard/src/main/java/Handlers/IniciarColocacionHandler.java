@@ -2,17 +2,15 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package ks;
+package Handlers;
 
 /**
  *
  * @author caarl
  */
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 import com.mycompany.blackboard.Controller; // Controller del backend
-import com.mycompany.blackboard.IKnowledgeSource;
 
 import java.net.Socket;
 import java.util.List;
@@ -24,18 +22,20 @@ import dto.PartidaDTO;
 import dto.JugadorDTO;
 import enums.EstadoPartida; // Asegúrate que la ruta a tu enum sea correcta
 import enums.TipoNave;  
+import com.mycompany.blackboard.IHandler;
+import com.mycompany.battleship.commons.IHandlerCommons;
 
 /**
  * Knowledge Source que se activa cuando una sala está llena
  * para iniciar la fase de colocación de barcos por parte de los jugadores.
  */
-public class IniciarColocacionKS implements IKnowledgeSource { // O IKnowledgeSource
+public class IniciarColocacionHandler implements IHandler { // O IHandler
 
-    private final IBlackboard blackboard;
+    private final IHandlerCommons blackboard;
     private final IServer server;
     private final Controller controller;
 
-    public IniciarColocacionKS(IBlackboard blackboard, IServer server, Controller controller) {
+    public IniciarColocacionHandler(IHandlerCommons blackboard, IServer server, Controller controller) {
         this.blackboard = blackboard;
         this.server = server;
         this.controller = controller;
@@ -51,17 +51,17 @@ public class IniciarColocacionKS implements IKnowledgeSource { // O IKnowledgeSo
     public void procesarEvento(Socket clienteOrigenIgnorado, Evento evento) { // clienteOrigenIgnorado suele ser null para eventos sistémicos
         String idSala = (String) evento.obtenerDato("idSala");
         if (idSala == null || idSala.isBlank()) {
-            System.err.println("INICIAR_COLOCACION_KS: Evento no contenía idSala válido.");
+            System.err.println("IniciarColocacionHandler: Evento no contenía idSala válido.");
             return;
         }
         idSala = idSala.trim();
 
-        System.out.println("INICIAR_COLOCACION_KS: Procesando inicio de colocación para sala: " + idSala);
+        System.out.println("IniciarColocacionHandler: Procesando inicio de colocación para sala: " + idSala);
 
         // 1. Obtener la PartidaDTO del Blackboard
         PartidaDTO partida = blackboard.getPartidaDTO(idSala);
         if (partida == null) {
-            System.err.println("INICIAR_COLOCACION_KS: No se encontraron datos de PartidaDTO para la sala " + idSala);
+            System.err.println("IniciarColocacionHandler: No se encontraron datos de PartidaDTO para la sala " + idSala);
             return;
         }
 
@@ -70,11 +70,11 @@ public class IniciarColocacionKS implements IKnowledgeSource { // O IKnowledgeSo
         JugadorDTO j2 = partida.getJugador2();
 
         if (j1 == null || j2 == null) {
-            System.err.println("INICIAR_COLOCACION_KS: La partida '" + idSala + "' no tiene dos jugadores asignados. J1: " + (j1!=null) + ", J2: " + (j2!=null));
+            System.err.println("IniciarColocacionHandler: La partida '" + idSala + "' no tiene dos jugadores asignados. J1: " + (j1!=null) + ", J2: " + (j2!=null));
             // Podría ser que un jugador se desconectó justo antes. Considerar limpiar la sala o enviar error.
             return;
         }
-        System.out.println("INICIAR_COLOCACION_KS: Jugador 1: " + j1.getNombre() + ", Jugador 2: " + j2.getNombre());
+        System.out.println("IniciarColocacionHandler: Jugador 1: " + j1.getNombre() + ", Jugador 2: " + j2.getNombre());
 
 
         // 3. Actualizar Estado de la PartidaDTO en Blackboard
@@ -86,9 +86,9 @@ public class IniciarColocacionKS implements IKnowledgeSource { // O IKnowledgeSo
         // se envían después por los clientes y se guardan en los JugadorDTO respectivos.
 
         if (blackboard.actualizarPartida(partida)) {
-            System.out.println("INICIAR_COLOCACION_KS: Estado de partida '" + idSala + "' actualizado a " + partida.getEstado() + " en Blackboard.");
+            System.out.println("IniciarColocacionHandler: Estado de partida '" + idSala + "' actualizado a " + partida.getEstado() + " en Blackboard.");
         } else {
-            System.err.println("INICIAR_COLOCACION_KS: Error al actualizar partida '" + idSala + "' en Blackboard.");
+            System.err.println("IniciarColocacionHandler: Error al actualizar partida '" + idSala + "' en Blackboard.");
             // Considerar cómo manejar este error. ¿Reintentar? ¿Notificar?
             return;
         }
@@ -133,19 +133,19 @@ public class IniciarColocacionKS implements IKnowledgeSource { // O IKnowledgeSo
 
         if (socketJ1 != null) {
             server.enviarEventoACliente(socketJ1, eventoCliente);
-            System.out.println("INICIAR_COLOCACION_KS: Enviado INICIAR_COLOCACION a J1 (" + j1.getNombre() + ") para sala " + idSala);
+            System.out.println("IniciarColocacionHandler: Enviado INICIAR_COLOCACION a J1 (" + j1.getNombre() + ") para sala " + idSala);
         } else {
-            System.err.println("INICIAR_COLOCACION_KS: No se encontró socket para J1 (" + j1.getNombre() + ").");
+            System.err.println("IniciarColocacionHandler: No se encontró socket para J1 (" + j1.getNombre() + ").");
         }
 
         if (socketJ2 != null) {
             server.enviarEventoACliente(socketJ2, eventoCliente);
-            System.out.println("INICIAR_COLOCACION_KS: Enviado INICIAR_COLOCACION a J2 (" + j2.getNombre() + ") para sala " + idSala);
+            System.out.println("IniciarColocacionHandler: Enviado INICIAR_COLOCACION a J2 (" + j2.getNombre() + ") para sala " + idSala);
         } else {
-            System.err.println("INICIAR_COLOCACION_KS: No se encontró socket para J2 (" + j2.getNombre() + ").");
+            System.err.println("IniciarColocacionHandler: No se encontró socket para J2 (" + j2.getNombre() + ").");
         }
 
-        System.out.println("INICIAR_COLOCACION_KS: Proceso para sala " + idSala + " completado.");
+        System.out.println("IniciarColocacionHandler: Proceso para sala " + idSala + " completado.");
         // No se llama a blackboard.respuestaFuenteC porque este evento fue originado internamente por el servidor
         // (disparado por UnirseSalaKS).
     }

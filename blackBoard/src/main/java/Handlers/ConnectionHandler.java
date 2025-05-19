@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package ks;
+package Handlers;
 
 /**
  *
@@ -12,25 +12,25 @@ package ks;
 
 import com.mycompany.battleship.commons.Evento;
 import com.mycompany.battleship.commons.IServer;
-import com.mycompany.blackboard.BlackBoard;
+import com.mycompany.blackboard.HandlerChain;
 import com.mycompany.blackboard.Controller;
-import com.mycompany.blackboard.IKnowledgeSource;
 
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import com.mycompany.blackboard.IHandler;
 
 /**
  * Knowledge Source para manejar el evento de conexión inicial de un usuario.
  * Adaptada al estilo Dominó.
  */
-public class ConnectionKS implements IKnowledgeSource {
+public class ConnectionHandler implements IHandler {
 
-    private final BlackBoard blackboard;
+    private final HandlerChain blackboard;
     private final IServer server; // Podría necesitar el server para enviar respuestas directas
     private final Controller controller; // Podría necesitar notificar cambios específicos
 
-    public ConnectionKS(BlackBoard blackboard, IServer server, Controller controller) {
+    public ConnectionHandler(HandlerChain blackboard, IServer server, Controller controller) {
         this.blackboard = blackboard;
         this.server = server;
         this.controller = controller;
@@ -57,13 +57,13 @@ public class ConnectionKS implements IKnowledgeSource {
     @Override
     public void procesarEvento(Socket cliente, Evento evento) {
     if (cliente == null) {
-        System.err.println("ConnectionKS ERROR: Se recibió un socket nulo para procesar.");
+        System.err.println(" ERROR: Se recibió un socket nulo para procesar.");
         return;
     }
     
-    System.out.println("ConnectionKS: Procesando evento '" + evento.getTipo() + "' para " + cliente.getInetAddress().getHostAddress());
+    System.out.println(": Procesando evento '" + evento.getTipo() + "' para " + cliente.getInetAddress().getHostAddress());
     
-    // Registrar el socket del cliente en el BlackBoard (acción principal)
+    // Registrar el socket del cliente en el HandlerChain (acción principal)
     blackboard.agregarClienteSocket(cliente);
 
     // Procesar diferentes tipos de eventos
@@ -85,21 +85,21 @@ public class ConnectionKS implements IKnowledgeSource {
                 blackboard.agregarSala(idSala, nuevaSala);
 
                 // Notificar al cliente
-                server.enviarMensajeACliente(cliente, "SALA_CREADAConecctionKS;id=" + idSala);
+                server.enviarMensajeACliente(cliente, "SALA_CREADAConnectionHandler;id=" + idSala);
             } else {
                 server.enviarMensajeACliente(cliente, "ERROR;detalle=Faltan datos para crear la sala");
             }
             break;
             
         case "CONECTAR_USUARIO_SERVER":  // Manejo de conexión básica (tu lógica original)
-            // Acción secundaria: Notificar al BlackBoard
+            // Acción secundaria: Notificar al HandlerChain
             Evento eventoRespuesta = new Evento("CONEXION_PROCESADA");
             eventoRespuesta.agregarDato("clienteHost", cliente.getInetAddress().getHostAddress());
             blackboard.respuestaFuenteC(cliente, eventoRespuesta);
             break;
             
         default:
-            System.err.println("ConnectionKS ERROR: Tipo de evento no reconocido: " + evento.getTipo());
+            System.err.println("ConnectionHandler ERROR: Tipo de evento no reconocido: " + evento.getTipo());
             break;
     }
 }

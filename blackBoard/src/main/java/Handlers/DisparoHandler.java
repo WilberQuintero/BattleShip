@@ -6,13 +6,11 @@
  *
  * @author caarl
  */
-package ks;
+package Handlers;
 
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 import com.mycompany.blackboard.Controller; // Si necesitas notificar al controller del backend
-import com.mycompany.blackboard.IKnowledgeSource;
 
 import dto.*; // Tus DTOs: PartidaDTO, JugadorDTO, BarcoDTO, PosicionDTO, TableroFlotaDTO, TableroSeguimientoDTO
 import enums.*; // Tus Enums: ResultadoDisparo, EstadoPartida, EstadoNave, TipoNave
@@ -22,14 +20,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects; // Para Objects.equals
+import com.mycompany.blackboard.IHandler;
+import com.mycompany.battleship.commons.IHandlerCommons;
 
-public class DisparoKS implements IKnowledgeSource {
+public class DisparoHandler implements IHandler {
 
-    private final IBlackboard blackboard;
+    private final IHandlerCommons blackboard;
     private final IServer server;
     // private final Controller controller; // Opcional, si la KS necesita interactuar con él
 
-    public DisparoKS(IBlackboard blackboard, IServer server, Controller controller) {
+    public DisparoHandler(IHandlerCommons blackboard, IServer server, Controller controller) {
         this.blackboard = blackboard;
         this.server = server;
         // this.controller = controller;
@@ -50,12 +50,12 @@ public class DisparoKS implements IKnowledgeSource {
             fila = Integer.parseInt((String) evento.obtenerDato("fila"));
             columna = Integer.parseInt((String) evento.obtenerDato("columna"));
         } catch (NumberFormatException e) {
-            System.err.println("DISPARO_KS: Error al parsear fila/columna. Datos: " + evento.getDatos());
+            System.err.println("DisparoHandler: Error al parsear fila/columna. Datos: " + evento.getDatos());
             enviarErrorAlCliente(clienteQueDispara, idSala, "Coordenadas de disparo inválidas.");
             return;
         }
 
-        System.out.println("DISPARO_KS: Procesando disparo de '" + nombreJugadorAtacante + "' en sala '" + idSala + "' a (" + fila + "," + columna + ")");
+        System.out.println("DisparoHandler: Procesando disparo de '" + nombreJugadorAtacante + "' en sala '" + idSala + "' a (" + fila + "," + columna + ")");
 
         PartidaDTO partida = blackboard.getPartidaDTO(idSala);
 
@@ -108,7 +108,7 @@ public class DisparoKS implements IKnowledgeSource {
                             // El resultado del disparo sigue siendo el estado actual de la casilla/barco.
                             resultadoDisparo = (barco.getEstado() == EstadoNave.HUNDIDA) ? ResultadoDisparo.HUNDIDO : ResultadoDisparo.IMPACTO;
                              if (barco.getEstado() == EstadoNave.HUNDIDA) tipoNaveHundida = barco.getTipo(); // Si ya estaba hundido y le vuelven a dar
-                            System.out.println("DISPARO_KS: Disparo a casilla ya impactada de un barco " + barco.getEstado());
+                            System.out.println("DisparoHandler: Disparo a casilla ya impactada de un barco " + barco.getEstado());
                         }
                         break; // Salir del bucle de posiciones del barco
                     }
@@ -116,7 +116,7 @@ public class DisparoKS implements IKnowledgeSource {
                 if (barcoImpactado != null) break; // Salir del bucle de barcos
             }
         }
-        System.out.println("DISPARO_KS: Resultado del disparo: " + resultadoDisparo);
+        System.out.println("DisparoHandler: Resultado del disparo: " + resultadoDisparo);
 
         // --- 3. Actualizar TableroSeguimientoDTO del Atacante ---
         if (atacanteDTO.getTableroSeguimiento() != null) {
@@ -139,7 +139,7 @@ public class DisparoKS implements IKnowledgeSource {
                 partida.setEstado(EstadoPartida.FINALIZADA); // O un estado específico para ganador
                 partida.setNombreJugadorEnTurno(null); // Nadie más juega
                 mensajeFin = "¡" + nombreGanador + " ha ganado la partida! Todos los barcos de " + defensorDTO.getNombre() + " hundidos.";
-                System.out.println("DISPARO_KS: Partida finalizada. Ganador: " + nombreGanador);
+                System.out.println("DisparoHandler: Partida finalizada. Ganador: " + nombreGanador);
             }
         }
 
@@ -151,7 +151,7 @@ public class DisparoKS implements IKnowledgeSource {
                 partida.setNombreJugadorEnTurno(atacanteDTO.getNombre());
             }
         }
-        System.out.println("DISPARO_KS: Siguiente turno para: " + partida.getNombreJugadorEnTurno());
+        System.out.println("DisparoHandler: Siguiente turno para: " + partida.getNombreJugadorEnTurno());
         
         // --- 5. Actualizar PartidaDTO en Blackboard ---
         blackboard.actualizarPartida(partida);
@@ -188,7 +188,7 @@ public class DisparoKS implements IKnowledgeSource {
         if (socketDefensor != null && !socketDefensor.equals(socketAtacante)) { // No enviar dos veces si es el mismo por alguna razón
             server.enviarEventoACliente(socketDefensor, respuestaEvento);
         }
-        System.out.println("DISPARO_KS: Evento RESULTADO_DISPARO enviado a los clientes.");
+        System.out.println("DisparoHandler: Evento RESULTADO_DISPARO enviado a los clientes.");
         
         blackboard.respuestaFuenteC(clienteQueDispara, evento); // Notificar al blackboard que la KS terminó
     }
@@ -233,6 +233,6 @@ public class DisparoKS implements IKnowledgeSource {
         errorEvento.agregarDato("idSala", idSala);
         errorEvento.agregarDato("error", mensajeError);
         server.enviarEventoACliente(cliente, errorEvento);
-        System.err.println("DISPARO_KS: Error enviado a cliente: " + mensajeError);
+        System.err.println("DisparoHandler: Error enviado a cliente: " + mensajeError);
     }
 }

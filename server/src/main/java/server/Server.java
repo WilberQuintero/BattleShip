@@ -9,7 +9,6 @@ package server;
  * @author caarl
  */
 import com.mycompany.battleship.commons.Evento;
-import com.mycompany.battleship.commons.IBlackboard;
 import com.mycompany.battleship.commons.IServer;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -24,17 +23,17 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
+import com.mycompany.battleship.commons.IHandlerCommons;
 
 /**
  * Servidor principal adaptado al estilo Dominó.
- * Acepta conexiones y las pasa al BlackBoard como eventos a través de la interfaz IBlackboard.
- * Implementa IServer para exponer sus funcionalidades al sistema Blackboard.
+ * Implementa IServer para exponer sus funcionalidades al sistema HandlerChain.
  * También provee métodos para enviar mensajes a clientes.
  */
 public class Server implements Runnable, IServer { // Implementa IServer
 
 private final int port;
-    private IBlackboard blackboard; // Usa la interfaz IBlackboard
+    private IHandlerCommons blackboard; // Usa la interfaz IHandlerCommons
     private ServerSocket serverSocket;
     private volatile boolean running = true;
     // Mapa para mantener writers de clientes activos
@@ -49,16 +48,16 @@ private final int port;
     }
 
     /**
-     * Asigna la instancia del BlackBoard (como IBlackboard) al Server.
+     * Asigna la instancia del HandlerChain (como IHandler) al Server.
      * Debe llamarse antes de iniciar el hilo del servidor.
-     * @param blackboard La instancia del BlackBoard que implementa IBlackboard.
+     * @param blackboard La instancia del BlackBoard que implementa IHandlerCommons.
      */
-    public void setBlackboard(IBlackboard blackboard) {
+    public void setBlackboard(IHandlerCommons blackboard) {
         if (blackboard == null) {
-            throw new IllegalArgumentException("La instancia de IBlackboard no puede ser nula.");
+            throw new IllegalArgumentException("La instancia de IHandler no puede ser nula.");
         }
         this.blackboard = blackboard;
-        System.out.println("SERVER: IBlackboard asignado.");
+        System.out.println("SERVER: IHandler asignado.");
     }
 
     // Método parsearEvento (Confirmado que funciona)
@@ -101,7 +100,7 @@ private final int port;
     @Override
     public void run() {
         if (this.blackboard == null) {
-             System.err.println("SERVER CRITICAL ERROR: IBlackboard no asignado antes de iniciar. Deteniendo.");
+             System.err.println("SERVER CRITICAL ERROR: HandlerChain no asignado antes de iniciar. Deteniendo.");
              return;
         }
 
