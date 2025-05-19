@@ -272,6 +272,7 @@ public class TableroJuego extends javax.swing.JFrame {
                                 JOptionPane.showMessageDialog(null, "No puedes colocar el barco fuera del tablero.");
                                 return;
                             }
+                            
 
                             // Verifica si alguna posición ya está ocupada (horizontal)
                             for (int i = 0; i < tamaño; i++) {
@@ -325,7 +326,7 @@ public class TableroJuego extends javax.swing.JFrame {
                             barcoInfo.put("tamaño", tamaño);
                             barcoInfo.put("rotado", isRotado);
                             barcosColocados.add(barcoInfo);
-
+                            
                             btn.setVisible(false); // Ocultar botón
                         }
                         
@@ -632,7 +633,7 @@ public class TableroJuego extends javax.swing.JFrame {
         tableroJPanel.repaint(); // Forzar redibujado del tablero vacío
         readyButton.setEnabled(false);
         numberLabel.setText("Colocación reseteada. Vuelve a colocar.");
-        
+        barcosColocados.clear();
     }//GEN-LAST:event_cancelButtonActionPerformed
 
     private void readyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_readyButtonActionPerformed
