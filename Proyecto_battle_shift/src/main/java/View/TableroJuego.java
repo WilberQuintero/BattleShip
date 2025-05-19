@@ -324,7 +324,7 @@ public class TableroJuego extends javax.swing.JFrame {
                             barcoInfo.put("fila", row);
                             barcoInfo.put("columna", col);
                             barcoInfo.put("tamaño", tamaño);
-                            barcoInfo.put("rotado", isRotado);
+                            barcoInfo.put("isRotado", isRotado);
                             barcosColocados.add(barcoInfo);
                             
                             btn.setVisible(false); // Ocultar botón

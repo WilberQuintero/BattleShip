@@ -13,6 +13,7 @@ import Model.entidades.Posicion;  // Tu entidad Posicion
 import Model.entidades.TableroFlota; // Tu entidad TableroFlota
 import Model.entidades.TableroSeguimiento; // Tu entidad TableroSeguimiento
 import enums.*; // Tu enum ResultadoDisparo
+import static enums.TipoNave.SUBMARINO;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -69,33 +70,25 @@ public class PantallaPartida extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        oponenteTablero = new javax.swing.JPanel();
+        jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         btnAbandonar = new javax.swing.JButton();
         miTablero = new javax.swing.JPanel();
         lblMensajeTurno = new javax.swing.JLabel();
+        oponenteTablero = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        oponenteTablero.setBackground(new java.awt.Color(232, 255, 255));
-
-        javax.swing.GroupLayout oponenteTableroLayout = new javax.swing.GroupLayout(oponenteTablero);
-        oponenteTablero.setLayout(oponenteTableroLayout);
-        oponenteTableroLayout.setHorizontalGroup(
-            oponenteTableroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 361, Short.MAX_VALUE)
-        );
-        oponenteTableroLayout.setVerticalGroup(
-            oponenteTableroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 371, Short.MAX_VALUE)
-        );
+        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel1.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         jLabel1.setText("Tus barcos");
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 40, -1, -1));
 
         jLabel2.setFont(new java.awt.Font("Arial", 1, 18)); // NOI18N
         jLabel2.setText("Oponente");
+        jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(700, 30, -1, -1));
 
         btnAbandonar.setText("Abandonar");
         btnAbandonar.addActionListener(new java.awt.event.ActionListener() {
@@ -103,6 +96,7 @@ public class PantallaPartida extends javax.swing.JFrame {
                 btnAbandonarActionPerformed(evt);
             }
         });
+        jPanel1.add(btnAbandonar, new org.netbeans.lib.awtextra.AbsoluteConstraints(440, 550, -1, -1));
 
         miTablero.setBackground(new java.awt.Color(220, 240, 255));
         miTablero.setPreferredSize(new java.awt.Dimension(361, 371));
@@ -111,60 +105,46 @@ public class PantallaPartida extends javax.swing.JFrame {
         miTablero.setLayout(miTableroLayout);
         miTableroLayout.setHorizontalGroup(
             miTableroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGap(0, 361, Short.MAX_VALUE)
         );
         miTableroLayout.setVerticalGroup(
             miTableroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGap(0, 371, Short.MAX_VALUE)
         );
 
+        jPanel1.add(miTablero, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 70, -1, -1));
+
         lblMensajeTurno.setText("jLabel3");
+        jPanel1.add(lblMensajeTurno, new org.netbeans.lib.awtextra.AbsoluteConstraints(560, 550, -1, -1));
+
+        oponenteTablero.setBackground(new java.awt.Color(232, 255, 255));
+
+        javax.swing.GroupLayout oponenteTableroLayout = new javax.swing.GroupLayout(oponenteTablero);
+        oponenteTablero.setLayout(oponenteTableroLayout);
+        oponenteTableroLayout.setHorizontalGroup(
+            oponenteTableroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 520, Short.MAX_VALUE)
+        );
+        oponenteTableroLayout.setVerticalGroup(
+            oponenteTableroLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 371, Short.MAX_VALUE)
+        );
+
+        jPanel1.add(oponenteTablero, new org.netbeans.lib.awtextra.AbsoluteConstraints(500, 70, 520, -1));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(206, 206, 206)
-                        .addComponent(jLabel1))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(45, 45, 45)
-                        .addComponent(miTablero, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(410, 410, 410)
-                        .addComponent(btnAbandonar)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 57, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(oponenteTablero, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(48, 48, 48))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 148, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(188, 188, 188))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(lblMensajeTurno, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap())))
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 940, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 178, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(37, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(oponenteTablero, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(miTablero, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnAbandonar)
-                    .addComponent(lblMensajeTurno))
-                .addGap(35, 35, 35))
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 577, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 125, Short.MAX_VALUE))
         );
 
         pack();
@@ -329,8 +309,8 @@ private void inicializarTableroVacio(JPanel panelTablero, boolean esClickeable) 
             switch (barco.getTipo()) {
                 case PORTAAVIONES: rutaImagenBarco = "/Images/Battleship.png"; break; // Asumiendo que Battleship es tu portaaviones
                 case CRUCERO: rutaImagenBarco = "/Images/Cruise.png"; break;
-                case SUBMARINO: rutaImagenBarco = "/Images/Submarine.png"; break; // Cambia si tienes imagen específica para 2
-                case BARCO_PATRULLA: rutaImagenBarco = "/Images/Destroyer.png"; break; // Asumiendo Destroyer es para 1 o 2
+                case BARCO_PATRULLA: rutaImagenBarco = "/Images/Submarine.png"; break; // Asumiendo Destroyer es para 2
+                case SUBMARINO: rutaImagenBarco = "/Images/Destroyer.png"; break; // Cambia si tienes imagen específica para 1 
                 default: rutaImagenBarco = "/Images/Battleship.png"; // Imagen por defecto
             }
             ImageIcon iconoBarco = cargarIcono(rutaImagenBarco);
@@ -651,6 +631,7 @@ public void actualizarEstadoTurno(String mensajeTurno, boolean esMiTurno) {
     private javax.swing.JButton btnAbandonar;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JLabel lblMensajeTurno;
     private javax.swing.JPanel miTablero;
     private javax.swing.JPanel oponenteTablero;
