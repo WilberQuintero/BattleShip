@@ -6,6 +6,7 @@ com\mycompany\blackboard\Sala.class
 ks\DisparoKS.class
 ks\IniciarCombateKS$1.class
 ks\CrearSalaKS.class
+ks\AbandonarPartidaKS.class
 ks\IniciarCombateKS.class
 ks\UnirseSalaKS.class
 com\mycompany\blackboard\Controller.class

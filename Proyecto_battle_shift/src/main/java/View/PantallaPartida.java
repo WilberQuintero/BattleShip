@@ -5,15 +5,15 @@
 package View;
 
 
-import Controler.TableroListener; // Tu interfaz de listener
-import Model.entidades.Barco;     // Tu entidad Barco
+import Controler.TableroListener; 
+import Controler.controladorPartida;
+import Model.entidades.Barco;     
 import Model.entidades.Jugador;
 import Model.entidades.Partida;
-import Model.entidades.Posicion;  // Tu entidad Posicion
-import Model.entidades.TableroFlota; // Tu entidad TableroFlota
-import Model.entidades.TableroSeguimiento; // Tu entidad TableroSeguimiento
-import enums.*; // Tu enum ResultadoDisparo
-
+import Model.entidades.Posicion;  
+import Model.entidades.TableroFlota; 
+import Model.entidades.TableroSeguimiento; 
+import enums.*; 
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -171,16 +171,25 @@ public class PantallaPartida extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnAbandonarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAbandonarActionPerformed
-   
-        // TODO: Notificar al controlador que el jugador quiere abandonar.
-        // El controlador enviará el evento al servidor.
-        System.out.println("BOTON ABANDONAR PRESIONADO - Lógica pendiente en controladorPartida.");
-        if (listenerTableroSeguimiento != null) { // Podríamos necesitar otro listener para esto
-             // listenerTableroSeguimiento.onAbandonarPartida(); // Crear este método en la interfaz y el controlador
+     int confirm = JOptionPane.showConfirmDialog(this, 
+        "¿Seguro que quieres abandonar la partida?", 
+        "Abandonar Partida", 
+        JOptionPane.YES_NO_OPTION);
+
+    if (confirm == JOptionPane.YES_OPTION) {
+        if (listenerTableroSeguimiento instanceof controladorPartida) {
+            System.out.println("VISTA [PantallaPartida]: Llamando a controlador para abandonar partida...");
+            ((controladorPartida) listenerTableroSeguimiento).abandonarPartida();
+        } else {
+            mostrarError("Error al intentar abandonar: el controlador de partida no está disponible o es de un tipo incorrecto.", false);
+            System.err.println("VISTA [PantallaPartida] ERROR: listenerTableroSeguimiento no es instancia de controladorPartida en btnAbandonar.");
         }
-        // Temporalmente:
-        JOptionPane.showMessageDialog(this, "Funcionalidad 'Abandonar Partida' pendiente de implementación completa con el servidor.");
-    
+
+        // Cambiar a la pantalla UnirseJugar
+        UnirseJugar nuevaPantalla = new UnirseJugar();
+        nuevaPantalla.setVisible(true);
+        this.dispose(); // Cierra la ventana actual
+    }
     }//GEN-LAST:event_btnAbandonarActionPerformed
 
     

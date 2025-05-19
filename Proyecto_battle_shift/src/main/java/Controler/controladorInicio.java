@@ -12,6 +12,7 @@ import com.mycompany.servercomunicacion.ServerEventListener;
 import Model.entidades.Jugador;
 import Model.entidades.Partida;
 import Model.entidades.mappers.ModelConverter;
+import View.PantallaPartida;
 import com.google.gson.Gson;
 import dto.PartidaDTO;
 import java.util.HashMap;
@@ -66,32 +67,36 @@ public class controladorInicio implements ServerEventListener {
     public ServerComunicacion getServerComunicacion() { return serverComunicacion; }
     public String getNombreUsuarioRegistrado() { return nombreUsuarioRegistrado; }
 
-     public Partida getPartidaActual(String idSala) {
+    public Partida getPartidaActual(String idSala) {
         if (idSala == null) {
-            // Si idSala es null, intenta obtener la del delegadoEspera si está activo
-            if (this.controladorEsperaActual != null && this.controladorEsperaActual.getIdSala() != null) {
-                return partidasActivas.get(this.controladorEsperaActual.getIdSala());
-            }
-            // Si no, no podemos determinar una partida actual.
-            System.err.println("MODELO_CLIENTE: getPartidaActual llamado con idSala null y sin delegado de espera activo con sala.");
+            // Si idSala es null, intenta obtener la del delegadoEspera si está activo Y TIENE SALA ASIGNADA
+             if (this.controladorEsperaActual != null && this.controladorEsperaActual.getIdSala() != null) {
+                 return partidasActivas.get(this.controladorEsperaActual.getIdSala());
+             } else if (this.controladorDePartidaActual != null && this.controladorDePartidaActual.getPartidaActual() != null) {
+                 // Si estamos en una partida activa, obtenerla de su controlador
+                 return this.controladorDePartidaActual.getPartidaActual(); // Necesitarás un getter en controladorPartida
+             }
+            System.err.println("CONTROLLER [Inicio] WARN (getPartidaActual): idSala es null y no hay delegado de espera/partida activo con sala.");
             return null;
         }
         return partidasActivas.get(idSala);
     }
 
- // Método para establecer y limpiar el controlador de partida actual (ya lo teníamos)
     public void setControladorDePartidaActual(controladorPartida ctrlPartida) {
         this.controladorDePartidaActual = ctrlPartida;
     }
 
     public void limpiarControladorDePartidaActual() {
         if (this.controladorDePartidaActual != null) {
-            // Pedirle al controlador de partida que cierre su vista
-            this.controladorDePartidaActual.cerrarVistaPartida();
+            if (this.controladorDePartidaActual.getVistaPartida() != null && 
+                this.controladorDePartidaActual.getVistaPartida().isDisplayable()) {
+                this.controladorDePartidaActual.getVistaPartida().dispose();
+            }
             this.controladorDePartidaActual = null;
             System.out.println("CONTROLLER [Inicio]: Controlador de partida actual limpiado.");
         }
     }
+
     public void eliminarPartida(String idSala) {
         Partida p = partidasActivas.remove(idSala);
         if (p != null) {
@@ -134,12 +139,17 @@ public class controladorInicio implements ServerEventListener {
     public void setControladorCrearPartidaActual(controladorCrearPartida controlador) {
         System.out.println("CONTROLLER [Inicio]: Estableciendo controladorCrearPartidaActual: " + (controlador != null ? controlador.getClass().getSimpleName() : "null"));
         clearControladorEsperaActual();
+        limpiarControladorDePartidaActual(); // También limpiar controlador de partida si se vuelve a esta fase
         this.controladorCrearPartidaActual = controlador;
     }
 
     public void clearControladorCrearPartidaActual() {
         if (this.controladorCrearPartidaActual != null) {
             System.out.println("CONTROLLER [Inicio]: Limpiando controladorCrearPartidaActual.");
+            // Si la vista de crear/unir tiene un método para cerrarse si el controlador se limpia:
+            // if (this.controladorCrearPartidaActual.getVista() != null && this.controladorCrearPartidaActual.getVista().isDisplayable()) {
+            // this.controladorCrearPartidaActual.getVista().dispose();
+            // }
             this.controladorCrearPartidaActual = null;
         }
     }
@@ -147,12 +157,16 @@ public class controladorInicio implements ServerEventListener {
     public void setControladorEsperaActual(controladorPartidaEspera controlador) {
         System.out.println("CONTROLLER [Inicio]: Estableciendo controladorEsperaActual: " + (controlador != null ? controlador.getClass().getSimpleName() : "null"));
         clearControladorCrearPartidaActual();
+        limpiarControladorDePartidaActual();
         this.controladorEsperaActual = controlador;
     }
 
     public void clearControladorEsperaActual() {
         if (this.controladorEsperaActual != null) {
             System.out.println("CONTROLLER [Inicio]: Limpiando controladorEsperaActual.");
+            // if (this.controladorEsperaActual.getVista() != null && this.controladorEsperaActual.getVista().isDisplayable()) {
+            // this.controladorEsperaActual.getVista().dispose();
+            // }
             this.controladorEsperaActual = null;
         }
     }
@@ -172,107 +186,131 @@ public class controladorInicio implements ServerEventListener {
                     vistaInicio.reactivarBotonPlay();
                 });
             }
-            solicitarDesconexion();
+            // No llamar a solicitarDesconexion() aquí automáticamente, podría causar bucles si la conexión falla repetidamente.
+            // El listener de ServerComunicacion (onError o onDesconectado) manejará la limpieza si la conexión se pierde.
         }
     }
-  // En onDesconectado, asegúrate de llamar a limpiarControladorDePartidaActual()
+
     @Override
     public void onDesconectado(String motivo) {
         System.out.println("CONTROLLER [Inicio]: DESCONECTADO. Motivo: " + motivo);
-        clearControladorCrearPartidaActual(); // Ya lo tienes
-        clearControladorEsperaActual();     // Ya lo tienes
-        limpiarControladorDePartidaActual(); // Limpiar el controlador de juego también
+        clearControladorCrearPartidaActual();
+        clearControladorEsperaActual();
+        limpiarControladorDePartidaActual();
 
         nombreUsuarioPendiente = null;
         nombreUsuarioRegistrado = null;
-        partidasActivas.clear(); 
+        partidasActivas.clear();
+        System.out.println("CONTROLLER [Inicio]: Mapa de partidas activas limpiado tras desconexión.");
 
         SwingUtilities.invokeLater(() -> {
-            // ... (tu lógica para cerrar vistas y volver a PantallaInicio) ...
-             if (vistaUnirseJugar != null && vistaUnirseJugar.isDisplayable()) { vistaUnirseJugar.dispose(); this.vistaUnirseJugar = null; }
-             if (vistaPartidaEspera != null && vistaPartidaEspera != null && vistaPartidaEspera.isDisplayable()) { // Asumiendo que controladorEsperaActual tiene getVistaEspera()
-                vistaPartidaEspera.dispose(); 
-                this.vistaPartidaEspera = null; // Si guardas la vista directamente en controladorInicio
-             }
-             // La vista de partida se cierra a través de limpiarControladorDePartidaActual()
+            if (this.vistaUnirseJugar != null && this.vistaUnirseJugar.isDisplayable()) { this.vistaUnirseJugar.dispose(); this.vistaUnirseJugar = null; }
+            if (this.vistaPartidaEspera != null && this.vistaPartidaEspera.isDisplayable()) { this.vistaPartidaEspera.dispose(); this.vistaPartidaEspera = null; }
+            // La vista de partida (PantallaPartida) es cerrada por limpiarControladorDePartidaActual()
 
-            if (vistaInicio != null) {
-                if (!vistaInicio.isDisplayable()) vistaInicio.setVisible(true);
-                vistaInicio.mostrarEstadoDesconectado(motivo);
-                vistaInicio.reactivarBotonPlay();
+            if (this.vistaInicio != null) {
+                if (!this.vistaInicio.isDisplayable()) this.vistaInicio.setVisible(true);
+                this.vistaInicio.mostrarEstadoDesconectado(motivo);
+                this.vistaInicio.reactivarBotonPlay();
             } else {
-                 JOptionPane.showMessageDialog(null, "Desconectado: " + motivo, "Desconexión", JOptionPane.INFORMATION_MESSAGE);
+                 JOptionPane.showMessageDialog(null, "Desconectado: " + motivo + "\nPor favor, reinicie la aplicación.", "Desconexión", JOptionPane.WARNING_MESSAGE);
             }
         });
     }
 
- 
     @Override
     public void onError(String mensajeError) {
-        System.err.println("CONTROLLER [Inicio]: ERROR recibido: " + mensajeError);
-        nombreUsuarioPendiente = null; // Resetear nombre pendiente en caso de error de conexión/registro
+        System.err.println("CONTROLLER [Inicio]: ERROR DE COMUNICACIÓN recibido: " + mensajeError);
+        // Un error de comunicación a menudo implica una desconexión o un fallo al conectar.
+        // No necesariamente limpiamos nombreUsuarioRegistrado aquí, a menos que el error sea "no se pudo conectar".
+        // Si el error es durante una partida, el controladorDePartidaActual debería manejarlo.
         SwingUtilities.invokeLater(() -> {
             Component vistaActiva = null;
-            if (vistaPartidaEspera != null && vistaPartidaEspera.isDisplayable()) vistaActiva = vistaPartidaEspera;
-            else if (vistaUnirseJugar != null && vistaUnirseJugar.isDisplayable()) vistaActiva = vistaUnirseJugar;
-            else vistaActiva = vistaInicio;
-
-            if (vistaActiva instanceof PartidaEspera) {
-                ((PartidaEspera) vistaActiva).volverAPantallaAnterior(mensajeError);
-            } else if (vistaActiva instanceof UnirseJugar) {
-                ((UnirseJugar) vistaActiva).mostrarError(mensajeError);
-                ((UnirseJugar) vistaActiva).reactivarBotones();
-            } else if (vistaActiva instanceof PantallaInicio) {
-                ((PantallaInicio) vistaActiva).mostrarError(mensajeError);
-                ((PantallaInicio) vistaActiva).reactivarBotonPlay();
+            if (controladorDePartidaActual != null && controladorDePartidaActual.getVistaPartida() != null && controladorDePartidaActual.getVistaPartida().isDisplayable()) {
+                vistaActiva = controladorDePartidaActual.getVistaPartida();
+            } else if (vistaPartidaEspera != null && vistaPartidaEspera.isDisplayable()) {
+                vistaActiva = vistaPartidaEspera;
+            } else if (vistaUnirseJugar != null && vistaUnirseJugar.isDisplayable()) {
+                vistaActiva = vistaUnirseJugar;
             } else {
-                JOptionPane.showMessageDialog(null, mensajeError, "Error", JOptionPane.ERROR_MESSAGE);
+                vistaActiva = vistaInicio;
+            }
+
+            if (vistaActiva instanceof PantallaPartida) {
+                 ((PantallaPartida)vistaActiva).mostrarError("Error de comunicación: " + mensajeError, true); // true para error crítico en partida
+            } else if (vistaActiva instanceof PartidaEspera) {
+                ((PartidaEspera)vistaActiva).volverAPantallaAnterior("Error de comunicación: " + mensajeError);
+            } else if (vistaActiva instanceof UnirseJugar) {
+                ((UnirseJugar)vistaActiva).mostrarError("Error de comunicación: " + mensajeError);
+                ((UnirseJugar)vistaActiva).reactivarBotones();
+            } else if (vistaActiva instanceof PantallaInicio) {
+                ((PantallaInicio)vistaActiva).mostrarError("Error de comunicación: " + mensajeError);
+                ((PantallaInicio)vistaActiva).reactivarBotonPlay();
+                 nombreUsuarioPendiente = null; // Resetear si falla la conexión/registro desde PantallaInicio
+            } else {
+                JOptionPane.showMessageDialog(null, "Error de comunicación: " + mensajeError, "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
+         // Si el error implica desconexión, ServerComunicacion debería llamar a onDesconectado eventualmente.
     }
-    
-    // En Controler.controladorInicio.java
-private boolean esEventoDeJuegoEnCurso(String tipo) {
-    return tipo != null && (
-            tipo.equals("INICIAR_COMBATE") || // Ya lo tenías
-            tipo.equals("RESULTADO_DISPARO") || // <<<--- AÑADIR
-            tipo.equals("ERROR_DISPARO") ||     // <<<--- AÑADIR (si quieres manejarlo en controladorPartida)
-            tipo.equals("CAMBIO_DE_TURNO") || // Si tienes un evento explícito para esto
-            tipo.equals("FIN_PARTIDA")        // Ya lo tenías
-            // Añade otros tipos de eventos específicos del juego aquí
-    );
-}
+
+    // --- HELPER PARA DETERMINAR QUÉ TIPO DE EVENTO ES ---
+    private boolean esEventoDeJuegoEnCurso(String tipo) {
+        return tipo != null && (
+                tipo.equals("RESULTADO_DISPARO") ||
+                tipo.equals("ERROR_DISPARO") ||
+                tipo.equals("CAMBIO_DE_TURNO") || // Si el servidor envía este evento explícitamente
+                tipo.equals("FIN_PARTIDA") ||
+                tipo.equals("OPONENTE_ABANDONO_PARTIDA") // Un nuevo evento que podrías necesitar
+        );
+    }
+
+    private boolean esMensajeParaEspera(String tipo) {
+        return tipo != null && (
+                tipo.equals("NUEVO_JUGADOR_EN_SALA") ||
+                tipo.equals("ACTUALIZACION_SALA") ||
+                tipo.equals("OPONENTE_LISTO") ||
+                tipo.equals("AMBOS_LISTOS") ||
+                tipo.equals("INICIAR_COLOCACION") ||
+                // INICIAR_PARTIDA es obsoleto si INICIAR_COMBATE lo reemplaza
+                tipo.equals("OPONENTE_SALIO") || // Oponente sale de la sala de espera
+                tipo.equals("ERROR_SALA") ||
+                // Eventos de la fase de colocación que son manejados por el delegado de espera/colocación
+                tipo.equals("ESPERANDO_OPONENTE_FLOTA") ||
+                tipo.equals("OPONENTE_CONFIRMO_FLOTA") ||
+                tipo.equals("ERROR_CONFIRMAR_FLOTA")
+        );
+    }
+
+    private boolean esMensajeParaCrearUnir(String tipo) {
+        return tipo != null && (
+                tipo.startsWith("SALA_CREADA") || // Abarca SALA_CREADA_OK
+                tipo.startsWith("ERROR_CREAR_SALA") ||
+                tipo.startsWith("UNIDO_") || // Abarca UNIDO_OK
+                tipo.startsWith("ERROR_UNIRSE_SALA")
+        );
+    }
+    // --- FIN HELPERS ---
 
     @Override
     @SuppressWarnings("unchecked") // Para el casteo de List<String>
     public void onMensajeServidor(String tipo, Map<String, Object> datos) {
-        System.out.println("CONTROLLER [Inicio]: Mensaje del servidor recibido - Tipo: " + tipo + ", Datos: " + datos);
-
-        final controladorCrearPartida delegadoCrearUnir = this.controladorCrearPartidaActual;
-        final controladorPartidaEspera delegadoEspera = this.controladorEsperaActual;
-        final controladorTablero delegadoTablero = this.controladorTableroPartida;
-        // Podrías necesitar una referencia al controlador de la pantalla de colocación si es diferente de delegadoEspera
-        // final ControladorColocacionBarcos delegadoColocacion = this.controladorColocacionActual;
+      System.out.println("CONTROLLER [Inicio]: Mensaje del servidor recibido - Tipo: " + tipo + ", Datos: " + datos);
 
         final String finalTipo = tipo;
         final Map<String, Object> finalDatos = datos;
 
-        final boolean esParaEsperaOColocacion = esMensajeParaEsperaOColocacion(finalTipo);
-        final boolean esParaCrearUnir = esMensajeParaCrearUnir(finalTipo);
-        final boolean esParaEspera = esMensajeParaEspera(finalTipo);
-        final boolean esRegistro = finalTipo.equals("REGISTRO_OK") || finalTipo.equals("ERROR_REGISTRO");
-        final boolean esIniciarCombate = finalTipo.equals("INICIAR_COMBATE");
-                final boolean esEventoDeJuego = esEventoDeJuegoEnCurso(finalTipo); // Tu helper
-        
-        
         SwingUtilities.invokeLater(() -> {
-            System.out.println(">>> [EDT] Task START for " + finalTipo);
+            System.out.println(">>> [EDT] Task START for " + finalTipo + 
+                               " | controladorDePartidaActual: " + (this.controladorDePartidaActual != null) +
+                               " | controladorEsperaActual: " + (this.controladorEsperaActual != null) +
+                               " | controladorCrearPartidaActual: " + (this.controladorCrearPartidaActual != null));
             try {
-                if (esIniciarCombate) {
-                      System.out.println("   [EDT] Procesando INICIAR_COMBATE...");
+                // --- PRIORIDAD 1: Evento de transición a la partida ---
+                if (finalTipo.equals("INICIAR_COMBATE")) {
+                    System.out.println("    [EDT] Procesando INICIAR_COMBATE...");
                     String idSalaCombate = (String) finalDatos.get("idSala");
                     String partidaJsonBase64 = (String) finalDatos.get("partidaJsonBase64");
-                    // String mensajeServidor = (String) finalDatos.get("mensaje"); // Para el JOptionPane
 
                     if (partidaJsonBase64 != null && idSalaCombate != null) {
                         try {
@@ -281,352 +319,190 @@ private boolean esEventoDeJuegoEnCurso(String tipo) {
                             Gson gson = new Gson();
                             PartidaDTO partidaDTORecibida = gson.fromJson(partidaJson, PartidaDTO.class);
 
-System.out.println("CLIENTE " + this.nombreUsuarioRegistrado + 
-                   " - [controladorInicio] INICIAR_COMBATE: PartidaDTO deserializada. Sala: " + partidaDTORecibida.getIdPartida() +
-                   ", Estado DTO: " + partidaDTORecibida.getEstado() +
-                   ", Turno DTO: " + partidaDTORecibida.getNombreJugadorEnTurno());
+                            System.out.println("CLIENTE " + this.nombreUsuarioRegistrado + 
+                                               " - [controladorInicio] INICIAR_COMBATE: PartidaDTO deserializada. Sala: " + partidaDTORecibida.getIdPartida() +
+                                               ", Estado DTO: " + partidaDTORecibida.getEstado() +
+                                               ", Turno DTO: " + partidaDTORecibida.getNombreJugadorEnTurno());
 
-Partida entidadPartidaCliente = ModelConverter.toPartidaEntity(partidaDTORecibida);
-                            if (entidadPartidaCliente == null) {
-                                throw new IllegalStateException("ModelConverter.toPartidaEntity devolvió null para INICIAR_COMBATE.");
+                            Partida entidadPartidaCliente = ModelConverter.toPartidaEntity(partidaDTORecibida);
+                            if (entidadPartidaCliente == null || entidadPartidaCliente.getJugador1() == null || entidadPartidaCliente.getJugador2() == null || entidadPartidaCliente.obtenerJugadorEnTurno() == null) {
+                                 System.err.println("    [EDT] ERROR CRÍTICO en INICIAR_COMBATE: Partida entidad incompleta tras conversión. J1=" + (entidadPartidaCliente != null ? entidadPartidaCliente.getJugador1() : "partidaNull") + ", J2=" + (entidadPartidaCliente != null ? entidadPartidaCliente.getJugador2() : "partidaNull") + ", Turno=" + (entidadPartidaCliente != null ? entidadPartidaCliente.obtenerJugadorEnTurno() : "partidaNull"));
+                                 // Notificar error
+                                 return;
                             }
-                            partidasActivas.put(idSalaCombate, entidadPartidaCliente);
-                            System.out.println("   [EDT] Entidad Partida '" + idSalaCombate + "' CREADA/ACTUALIZADA en modelo cliente.");
+                            partidasActivas.put(idSalaCombate, entidadPartidaCliente); // Guardar la partida del modelo
+                            System.out.println("    [EDT] Entidad Partida '" + idSalaCombate + "' CREADA/ACTUALIZADA en modelo cliente.");
 
-                            // Limpiar vistas y controladores de fases anteriores
-                            if (delegadoEspera != null && delegadoEspera.getVista() != null && delegadoEspera.getVista().isDisplayable()) {
-                                delegadoEspera.getVista().dispose();
-                                System.out.println("   [EDT] Vista de Espera/Colocación cerrada.");
+                            if (controladorEsperaActual != null && controladorEsperaActual.getVista() != null && controladorEsperaActual.getVista().isDisplayable()) {
+                                controladorEsperaActual.getVista().dispose();
                             }
-                            if (delegadoCrearUnir != null && delegadoCrearUnir.getVista() != null && delegadoCrearUnir.getVista().isDisplayable()) {
-                                delegadoCrearUnir.getVista().dispose();
-                                System.out.println("   [EDT] Vista de Unirse/Jugar cerrada.");
+                            if (controladorCrearPartidaActual != null && controladorCrearPartidaActual.getVista() != null && controladorCrearPartidaActual.getVista().isDisplayable()) {
+                                controladorCrearPartidaActual.getVista().dispose();
                             }
                             clearControladorEsperaActual();
                             clearControladorCrearPartidaActual();
                             
-                            // --- ¡AQUÍ SE INSTANCIA Y USA TU controladorPartida! ---
-                            System.out.println("   [EDT] Instanciando controladorPartida para la partida: " + entidadPartidaCliente.getIdPartida());
-                            // Se le pasa el serverComunicacion, la entidadPartida ya convertida, y el nombre del jugador local
+                            System.out.println("    [EDT] Instanciando controladorPartida para la partida: " + entidadPartidaCliente.getIdPartida());
                             this.controladorDePartidaActual = new controladorPartida(
                                 this.serverComunicacion,
                                 entidadPartidaCliente,
                                 this.nombreUsuarioRegistrado
                             );
-                            // El constructor de controladorPartida ya crea y muestra su PantallaPartida.
-                            System.out.println("   [EDT] controladorPartida instanciado. La vista de partida debería estar ahora visible.");
-                            
-                            // Puedes quitar el JOptionPane si la pantalla de partida ya muestra la info de turno.
-                            // JOptionPane.showMessageDialog(null, mensajeServidor != null ? mensajeServidor : "¡El combate ha comenzado!", "Partida Iniciada", JOptionPane.INFORMATION_MESSAGE);
-
+                            System.out.println("    [EDT] controladorPartida instanciado.");
                         
                         } catch (Exception e) {
-                            System.err.println("   [EDT] Error al procesar datos de INICIAR_COMBATE: " + e.getMessage());
+                            System.err.println("    [EDT] Error CRÍTICO al procesar datos de INICIAR_COMBATE: " + e.getMessage());
                             e.printStackTrace();
-                            // Mostrar error en la vista que esté activa (podría ser la de espera/colocación)
-                             if (delegadoEspera != null && delegadoEspera.isVistaActiva()) {
-                                delegadoEspera.mostrarErrorColocacion("Error al iniciar la partida: " + e.getMessage());
-                            } else if (vistaUnirseJugar != null && vistaUnirseJugar.isDisplayable()) { // Fallback
-                                vistaUnirseJugar.mostrarError("Error al iniciar la partida: " + e.getMessage());
-                            } else {
-                                JOptionPane.showMessageDialog(null, "Error al iniciar la partida: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                            }
+                            // Notificar error a la vista activa
                         }
                     } else {
-                        System.err.println("   [EDT] Evento INICIAR_COMBATE no contenía datos de partidaJsonBase64 o idSala.");
-                         if (delegadoEspera != null && delegadoEspera.isVistaActiva()) {
-                                delegadoEspera.mostrarErrorColocacion("Error: Datos incompletos del servidor para iniciar partida.");
-                         } else {
-                             JOptionPane.showMessageDialog(null, "Datos incompletos del servidor para iniciar partida.", "Error", JOptionPane.ERROR_MESSAGE);
-                         }
+                        System.err.println("    [EDT] Evento INICIAR_COMBATE no contenía datos de partidaJsonBase64 o idSala.");
                     }
-
-                }else if (this.controladorDePartidaActual != null && esEventoDeJuego) {
-                    // --- DELEGACIÓN DE EVENTOS DE JUEGO AL CONTROLADOR DE PARTIDA ACTIVO ---
-                    System.out.println("   [EDT] Delegando evento de juego '" + finalTipo + "' a controladorDePartidaActual.");
+                // --- PRIORIDAD 2: Eventos durante una partida activa ---
+                } else if (this.controladorDePartidaActual != null && esEventoDeJuegoEnCurso(finalTipo)) {
+                    System.out.println("    [EDT] Delegando evento de juego '" + finalTipo + "' a controladorDePartidaActual.");
                     switch(finalTipo) {
                         case "RESULTADO_DISPARO":
                             controladorDePartidaActual.procesarResultadoDisparo(finalDatos);
                             break;
-                        case "CAMBIO_DE_TURNO":
-                            controladorDePartidaActual.procesarCambioDeTurno(finalDatos);
+                        case "ERROR_DISPARO":
+                             System.err.println("    [EDT] ERROR_DISPARO recibido del servidor: " + finalDatos.get("error"));
+                             if (controladorDePartidaActual.getVistaPartida() != null) {
+                                 controladorDePartidaActual.getVistaPartida().mostrarError("Info del juego: " + finalDatos.get("error"), false);
+                             }
                             break;
                         case "FIN_PARTIDA":
-                            controladorDePartidaActual.procesarFinDePartida(finalDatos);
-                            // Una vez que la partida termina, limpiamos la referencia y su vista
-                            limpiarControladorDePartidaActual();
-                            // Aquí podrías navegar a una pantalla de "Fin de Juego" o volver al menú (UnirseJugar)
-                            // Ejemplo:
-                            // if (vistaUnirseJugar == null || !vistaUnirseJugar.isDisplayable()) {
-                            //     vistaUnirseJugar = new UnirseJugar();
-                            //     controladorCrearPartidaActual = new controladorCrearPartida(serverComunicacion, vistaUnirseJugar, this);
-                            //     setControladorCrearPartidaActual(controladorCrearPartidaActual); // Registrar nuevo delegado
-                            //     vistaUnirseJugar.setControlador(controladorCrearPartidaActual);
-                            //     vistaUnirseJugar.setVisible(true);
-                            // } else {
-                            //    vistaUnirseJugar.setVisible(true);
-                            //    vistaUnirseJugar.toFront();
-                            // }
+                             System.out.println("    [EDT] Evento FIN_PARTIDA recibido. Delegando a controladorDePartidaActual...");
+                             controladorDePartidaActual.procesarFinDePartida(finalDatos);
+                            // La limpieza de controladorDePartidaActual se hará desde procesarFinDePartida si es necesario
                             break;
+                        // Añadir case "CAMBIO_DE_TURNO": si el servidor lo envía explícitamente y no solo con RESULTADO_DISPARO
+                        // case "CAMBIO_DE_TURNO":
+                        //     controladorDePartidaActual.procesarCambioDeTurno(finalDatos);
+                        //     break;
                         default:
-                            System.out.println("   [EDT] Evento de juego '" + finalTipo + "' no manejado explícitamente por switch en controladorInicio (delegado a controladorPartida).");
-                            // El controladorPartida podría tener su propio switch o manejo para otros eventos de juego
-                            if (controladorDePartidaActual.getVistaPartida() != null && finalDatos.containsKey("mensaje")) {
-                               controladorDePartidaActual.getVistaPartida().mostrarMensajeGeneral((String)finalDatos.get("mensaje"));
-                            }
+                            System.out.println("    [EDT] Evento de juego '" + finalTipo + "' sin case explícito en controladorInicio para controladorDePartidaActual.");
                             break;
                     }
-                  }                           
-                else if (delegadoEspera != null && esParaEspera) {
-                    System.out.println("   [EDT] Procesando para delegado ESPERA/COLOCACION tipo " + finalTipo);
-                    switch (finalTipo) {
+                // --- PRIORIDAD 3: Eventos de fases de espera/colocación ---
+                } else if (this.controladorEsperaActual != null && esMensajeParaEspera(finalTipo)) {
+                    System.out.println("    [EDT] Procesando para delegadoEspera tipo " + finalTipo);
+                    // (Tu switch existente para delegadoEspera)
+                     switch (finalTipo) {
                         case "NUEVO_JUGADOR_EN_SALA":
-                            
-                             System.out.println("    [EDT] Procesando NUEVO_JUGADOR_EN_SALA...");
-                            String idSalaNuevoJugador = (String) finalDatos.get("idSala");
-                            String nombreJugadorInfo = (String) finalDatos.get("jugadorInfo");
-
-                            if (idSalaNuevoJugador != null && nombreJugadorInfo != null && this.nombreUsuarioRegistrado != null) {
-                                String jugadorActualCliente = this.nombreUsuarioRegistrado;
-                                String otroJugadorInfo = nombreJugadorInfo;
-
-                                if (jugadorActualCliente.equals(otroJugadorInfo)) {
-                                    System.out.println("    [EDT] NUEVO_JUGADOR_EN_SALA informa sobre el jugador actual (" + jugadorActualCliente + "). No se crea Partida aquí. Esperando ACTUALIZACION_SALA con ambos nombres distintos.");
-                                    if (delegadoEspera != null) {
-                                         // Solo actualizar UI con el jugador conocido
-                                         Map<String, Object> datosUiUnJugador = new HashMap<>(finalDatos);
-                                         datosUiUnJugador.put("jugadores", List.of(jugadorActualCliente)); // Lista con un solo jugador
-                                         delegadoEspera.procesarActualizacionSala(datosUiUnJugador);
-                                    }
-                                } else {
-                                    // Tenemos dos nombres distintos: jugadorActualCliente y otroJugadorInfo
-                                    if (!partidasActivas.containsKey(idSalaNuevoJugador)) {
-                                        Partida nuevaPartida = Partida.crearJuego(idSalaNuevoJugador, jugadorActualCliente, otroJugadorInfo, DIMENSION_TABLERO_DEFAULT);
-                                        partidasActivas.put(idSalaNuevoJugador, nuevaPartida);
-                                        System.out.println("    [EDT] MODELO Partida '" + idSalaNuevoJugador + "' CREADA (NUEVO_JUGADOR_EN_SALA) con: " + jugadorActualCliente + " y " + otroJugadorInfo);
-                                    } else {
-                                        System.out.println("    [EDT] MODELO Partida '" + idSalaNuevoJugador + "' ya existía (verificado en NUEVO_JUGADOR_EN_SALA).");
-                                    }
-                                    if (delegadoEspera != null) {
-                                        Map<String, Object> datosUiAmbosJugadores = new HashMap<>(finalDatos);
-                                        datosUiAmbosJugadores.put("jugadores", List.of(jugadorActualCliente, otroJugadorInfo));
-                                        delegadoEspera.procesarActualizacionSala(datosUiAmbosJugadores);
-                                    }
-                                }
-                            } else {
-                                System.err.println("    [EDT] NUEVO_JUGADOR_EN_SALA: Datos insuficientes (idSala, jugadorInfo, o nombreUsuarioRegistrado es null).");
-                            }
-                            break;
                         case "ACTUALIZACION_SALA":
-                            
-                               System.out.println("    [EDT] Procesando ACTUALIZACION_SALA...");
-                            if (delegadoEspera != null) { // delegadoEspera ya fue chequeado por esParaEspera
-                                delegadoEspera.procesarActualizacionSala(finalDatos); // UI Update
-
-                                String idSalaActualizacion = (String) finalDatos.get("idSala");
-                                if (idSalaActualizacion == null && delegadoEspera.getIdSala() != null) {
-                                     idSalaActualizacion = delegadoEspera.getIdSala();
-                                }
-
-                                Object jugadoresObj = finalDatos.get("jugadores");
-                                if (idSalaActualizacion != null && jugadoresObj instanceof List) {
-                                    List<String> nombresJugadores = (List<String>) jugadoresObj;
-                                    System.out.println("    [EDT] ACTUALIZACION_SALA para '" + idSalaActualizacion + "'. Jugadores en datos: " + nombresJugadores);
-                                    if (nombresJugadores.size() == 2) {
-                                        if (!partidasActivas.containsKey(idSalaActualizacion)) {
-                                            String nombreJ1 = nombresJugadores.get(0);
-                                            String nombreJ2 = nombresJugadores.get(1);
-                                            if (nombreJ1 != null && !nombreJ1.isBlank() && nombreJ2 != null && !nombreJ2.isBlank() && !nombreJ1.equals(nombreJ2)) {
-                                                Partida nuevaPartida = Partida.crearJuego(idSalaActualizacion, nombreJ1, nombreJ2, DIMENSION_TABLERO_DEFAULT);
-                                                partidasActivas.put(idSalaActualizacion, nuevaPartida);
-                                                System.out.println("    [EDT] MODELO Partida '" + idSalaActualizacion + "' CREADA (desde ACTUALIZACION_SALA) con: " + nombreJ1 + ", " + nombreJ2);
-                                            } else {
-                                                 System.err.println("    [EDT] ACTUALIZACION_SALA: Nombres de jugador inválidos/duplicados. No se crea Partida. Nombres: " + nombresJugadores);
-                                            }
-                                        } else {
-                                            System.out.println("    [EDT] MODELO Partida '" + idSalaActualizacion + "' ya existía (verificado por ACTUALIZACION_SALA).");
-                                        }
-                                    } else {
-                                         System.out.println("    [EDT] ACTUALIZACION_SALA: No hay 2 jugadores distintos aún (" + nombresJugadores.size() + ") para formalizar Partida modelo.");
-                                    }
-                                } else {
-                                     System.out.println("    [EDT] ACTUALIZACION_SALA: Datos insuficientes para crear/verificar Partida (idSala o lista de jugadores).");
-                                }
-                            }
-                            break;
-                        case "OPONENTE_LISTO": // Puede ser útil para UI de espera de colocación
-                        case "AMBOS_LISTOS":   // Puede ser útil para UI de espera de colocación
-                            delegadoEspera.procesarActualizacionSala(finalDatos);
-                            // La lógica de crear Partida entidad que tenías aquí para NUEVO_JUGADOR_EN_SALA
-                            // y ACTUALIZACION_SALA es buena si necesitas el modelo local antes de INICIAR_COMBATE.
-                            // Si INICIAR_COMBATE siempre envía el PartidaDTO completo, esa creación local
-                            // podría simplificarse o hacerse solo cuando llega el DTO completo.
-                            // Por ahora, mantendré tu lógica original de creación de Partida en el cliente para estos eventos.
-                            // (Tu lógica de creación de Partida en NUEVO_JUGADOR_EN_SALA y ACTUALIZACION_SALA va aquí)
-                            String idSalaEvt = (String) finalDatos.get("idSala");
-                             if (idSalaEvt == null && delegadoEspera.getIdSala() != null) idSalaEvt = delegadoEspera.getIdSala();
-
-                             if (idSalaEvt != null) {
-                                 Object jugadoresObj = finalDatos.get("jugadores"); // Si el servidor envía esto
-                                 List<String> nombresJugadores = null;
-                                 if (jugadoresObj instanceof List) {
-                                     try { nombresJugadores = (List<String>) jugadoresObj; } catch (ClassCastException e) {}
-                                 }
-                                 if (nombresJugadores == null && finalTipo.equals("NUEVO_JUGADOR_EN_SALA")) {
-                                     // Reconstruir lista de jugadores para el modelo local
-                                     String jugadorInfo = (String) finalDatos.get("jugadorInfo");
-                                     if (this.nombreUsuarioRegistrado != null && jugadorInfo != null && !this.nombreUsuarioRegistrado.equals(jugadorInfo)) {
-                                         nombresJugadores = List.of(this.nombreUsuarioRegistrado, jugadorInfo);
-                                     } else if (this.nombreUsuarioRegistrado != null) {
-                                         nombresJugadores = List.of(this.nombreUsuarioRegistrado);
-                                     }
-                                 }
-
-                                 if (nombresJugadores != null && nombresJugadores.size() == 2) {
-                                     if (!partidasActivas.containsKey(idSalaEvt)) {
-                                         Partida pExistente = getPartidaActual(idSalaEvt);
-                                         if (pExistente == null){
-                                            Partida nuevaPartida = Partida.crearJuego(idSalaEvt, nombresJugadores.get(0), nombresJugadores.get(1), DIMENSION_TABLERO_DEFAULT);
-                                            partidasActivas.put(idSalaEvt, nuevaPartida);
-                                            System.out.println("    [EDT] MODELO Partida '" + idSalaEvt + "' CREADA ("+finalTipo+") con: " + nombresJugadores.get(0) + " y " + nombresJugadores.get(1));
-                                         } else {
-                                             System.out.println("    [EDT] MODELO Partida '" + idSalaEvt + "' YA EXISTÍA. ("+finalTipo+")");
-                                         }
+                             this.controladorEsperaActual.procesarActualizacionSala(finalDatos);
+                             String idSalaEvt = (String) finalDatos.get("idSala");
+                             if (idSalaEvt == null && this.controladorEsperaActual.getIdSala() != null) idSalaEvt = this.controladorEsperaActual.getIdSala();
+                             Object jugadoresObj = finalDatos.get("jugadores");
+                             List<String> nombresJugadores = null;
+                             if (jugadoresObj instanceof List) {
+                                 try { nombresJugadores = (List<String>) jugadoresObj; } catch (ClassCastException e) {}
+                             } else if (finalTipo.equals("NUEVO_JUGADOR_EN_SALA") && this.nombreUsuarioRegistrado != null && finalDatos.get("jugadorInfo") instanceof String) {
+                                 String otroJugador = (String)finalDatos.get("jugadorInfo");
+                                 if(!this.nombreUsuarioRegistrado.equals(otroJugador)) { 
+                                      nombresJugadores = List.of(this.nombreUsuarioRegistrado, otroJugador);
+                                 } else { nombresJugadores = List.of(this.nombreUsuarioRegistrado); }
+                             }
+                             if (idSalaEvt != null && nombresJugadores != null && nombresJugadores.size() == 2) {
+                                 if (!partidasActivas.containsKey(idSalaEvt)) {
+                                     String n1 = nombresJugadores.get(0); String n2 = nombresJugadores.get(1);
+                                     if (n1 != null && !n1.isBlank() && n2 != null && !n2.isBlank() && !n1.equals(n2)) {
+                                         Partida nuevaP = Partida.crearJuego(idSalaEvt, n1, n2, DIMENSION_TABLERO_DEFAULT);
+                                         partidasActivas.put(idSalaEvt, nuevaP);
+                                         System.out.println("    [EDT] MODELO Partida '" + idSalaEvt + "' CREADA ("+finalTipo+") con: " + n1 + " y " + n2);
                                      }
                                  }
                              }
-                            break;
+                             break;
                         case "INICIAR_COLOCACION":
-                              System.out.println("    [EDT] Procesando INICIAR_COLOCACION...");
-                            String idSalaColocacion = (String) finalDatos.get("idSala");
-                            Partida p = getPartidaActual(idSalaColocacion);
-
-                            if (p == null || p.getJugador1() == null || p.getJugador2() == null) {
-                                System.err.println("    [EDT] ERROR CRÍTICO: INICIAR_COLOCACION para sala '" + idSalaColocacion + "' pero Partida (" + p + ") o Jugadores no están listos en el modelo.");
-                                System.err.println("    Causa probable: Un evento anterior (NUEVO_JUGADOR_EN_SALA o ACTUALIZACION_SALA) no creó/completó la Partida en 'partidasActivas' con ambos jugadores.");
-                                if (delegadoEspera != null) {
-                                    delegadoEspera.procesarErrorSala(Map.of("error", "Error de sincronización de partida interna (faltan datos de jugadores)."));
-                                }
-                                return;
-                            }
-                            System.out.println("    [EDT] Partida para INICIAR_COLOCACION encontrada. J1: " + p.getJugador1().getNombre() + ", J2: " + p.getJugador2().getNombre());
-                            delegadoEspera.procesarInicioColocacion(finalDatos);
-                            break;
-                        // Los eventos de "IniciarCombateKS" llegan aquí si delegadoEspera es el activo
+                             Partida pCol = getPartidaActual((String) finalDatos.get("idSala"));
+                             if (pCol == null || pCol.getJugador1() == null || pCol.getJugador2() == null) {
+                                 System.err.println("    [EDT] ERROR INICIAR_COLOCACION: Partida no lista en modelo.");
+                                 this.controladorEsperaActual.procesarErrorSala(Map.of("error", "Error interno al iniciar colocación."));
+                                 return;
+                             }
+                             this.controladorEsperaActual.procesarInicioColocacion(finalDatos);
+                             break;
+                        case "OPONENTE_LISTO": 
+                        case "AMBOS_LISTOS":
+                             this.controladorEsperaActual.procesarActualizacionSala(finalDatos);
+                             break;
                         case "ESPERANDO_OPONENTE_FLOTA":
-                            System.out.println("   [EDT] Recibido ESPERANDO_OPONENTE_FLOTA.");
-                            if (delegadoEspera != null) { // O el controlador de la pantalla de colocación
-                                delegadoEspera.mostrarMensajeEsperaFlota((String)finalDatos.get("mensaje"));
-                            }
-                            break;
+                             this.controladorEsperaActual.mostrarMensajeEsperaFlota((String)finalDatos.get("mensaje"));
+                             break;
                         case "OPONENTE_CONFIRMO_FLOTA":
-                             System.out.println("   [EDT] Recibido OPONENTE_CONFIRMO_FLOTA.");
-                             if (delegadoEspera != null) { // O el controlador de la pantalla de colocación
-                                delegadoEspera.mostrarMensajeOponenteListo((String)finalDatos.get("mensaje"));
-                            }
-                            break;
+                             this.controladorEsperaActual.mostrarMensajeOponenteListo((String)finalDatos.get("mensaje"));
+                             break;
                         case "ERROR_CONFIRMAR_FLOTA":
-                            System.err.println("   [EDT] Recibido ERROR_CONFIRMAR_FLOTA: " + finalDatos.get("error"));
-                            if (delegadoEspera != null) { // O el controlador de la pantalla de colocación
-                                delegadoEspera.mostrarErrorColocacion((String)finalDatos.get("error"));
-                            }
-                            break;
-                        // ... (tus otros cases para delegadoEspera: INICIAR_PARTIDA (obsoleto aquí?), OPONENTE_SALIO, ERROR_SALA)
-                        case "INICIAR_PARTIDA": // Este probablemente será reemplazado por INICIAR_COMBATE
-                            System.out.println("   [EDT] ADVERTENCIA: Evento INICIAR_PARTIDA recibido, pero INICIAR_COMBATE es el preferido.");
-                            if (delegadoEspera != null) {
-                                delegadoEspera.procesarInicioPartida(finalDatos); // Podría llamar a la lógica de INICIAR_COMBATE
-                                clearControladorEsperaActual();
-                            }
-                            break;
-                         case "OPONENTE_SALIO":
-                             if (delegadoEspera != null) delegadoEspera.procesarSalidaOponente(finalDatos);
+                             this.controladorEsperaActual.mostrarErrorColocacion((String)finalDatos.get("error"));
+                             break;
+                        case "OPONENTE_SALIO":
+                             this.controladorEsperaActual.procesarSalidaOponente(finalDatos);
                              eliminarPartida((String) finalDatos.get("idSala"));
                              clearControladorEsperaActual();
                              break;
-                         case "ERROR_SALA":
-                             if (delegadoEspera != null) delegadoEspera.procesarErrorSala(finalDatos);
+                        case "ERROR_SALA":
+                             this.controladorEsperaActual.procesarErrorSala(finalDatos);
                              eliminarPartida((String) finalDatos.get("idSala"));
                              clearControladorEsperaActual();
                              break;
                         default:
-                            System.out.println("   [EDT] Tipo de Espera/Colocacion [" + finalTipo + "] no reconocido en switch interno.");
-                            break;
-                    }
-                } else if (delegadoCrearUnir != null && esParaCrearUnir) {
-                    
-                     boolean exito = !(finalTipo.startsWith("ERROR_"));
-                     System.out.println("    [EDT] Evento para Crear/Unir (" + finalTipo + ") detectado.");
+                             System.out.println("   [EDT] Tipo de Espera/Colocacion [" + finalTipo + "] no reconocido por switch interno para delegadoEspera.");
+                             break;
+                     }
+                } else if (this.controladorCrearPartidaActual != null && esMensajeParaCrearUnir(finalTipo)) {
+                    System.out.println("    [EDT] Procesando para delegadoCrearUnir tipo " + finalTipo);
+                    boolean exito = !(finalTipo.startsWith("ERROR_"));
                      if (finalTipo.equals("UNIDO_OK") && exito) {
                          String idSalaUnida = (String) finalDatos.get("idSala");
                          String nombreOponenteDelServidor = (String) finalDatos.get("nombreOponente");
                          String miNombreComoRetador = this.nombreUsuarioRegistrado;
-
-                         if (idSalaUnida != null && nombreOponenteDelServidor != null && miNombreComoRetador != null &&
-                             !miNombreComoRetador.equals(nombreOponenteDelServidor)) {
+                         if (idSalaUnida != null && nombreOponenteDelServidor != null && miNombreComoRetador != null && !miNombreComoRetador.equals(nombreOponenteDelServidor)) {
                              if (!partidasActivas.containsKey(idSalaUnida)) {
-                                 Partida pExistente = getPartidaActual(idSalaUnida);
-                                 if(pExistente == null) {
-                                    Partida nuevaPartida = Partida.crearJuego(idSalaUnida, nombreOponenteDelServidor, miNombreComoRetador, DIMENSION_TABLERO_DEFAULT);
-                                    partidasActivas.put(idSalaUnida, nuevaPartida);
-                                    System.out.println("    [EDT] MODELO Partida '" + idSalaUnida + "' CREADA (desde UNIDO_OK por retador) con J1=" + nombreOponenteDelServidor + ", J2=" + miNombreComoRetador);
-                                 } else {
-                                      System.out.println("    [EDT] MODELO Partida '" + idSalaUnida + "' YA EXISTÍA (UNIDO_OK).");
-                                 }
+                                 // Para UNIDO_OK, el orden de jugadores en Partida.crearJuego debería ser (anfitrión, retador)
+                                 // anfitrión = nombreOponenteDelServidor, retador = miNombreComoRetador
+                                 Partida nuevaPartida = Partida.crearJuego(idSalaUnida, nombreOponenteDelServidor, miNombreComoRetador, DIMENSION_TABLERO_DEFAULT);
+                                 partidasActivas.put(idSalaUnida, nuevaPartida);
+                                 System.out.println("    [EDT] MODELO Partida '" + idSalaUnida + "' CREADA (UNIDO_OK retador) con J1(Host)=" + nombreOponenteDelServidor + ", J2(Retador)=" + miNombreComoRetador);
                              }
                          }
                      }
-                     if (finalTipo.contains("CREAR_SALA")) {
-                         delegadoCrearUnir.procesarRespuestaCrearSala(exito, finalDatos);
-                     } else if (finalTipo.equals("UNIDO_OK") || finalTipo.equals("ERROR_UNIRSE_SALA") || finalTipo.contains("UNIRSE_SALA")) {
-                         delegadoCrearUnir.procesarRespuestaUnirseSala(exito, finalDatos);
-                     } else {
+                    if (finalTipo.contains("CREAR_SALA")) {
+                        this.controladorCrearPartidaActual.procesarRespuestaCrearSala(exito, finalDatos);
+                    } else if (finalTipo.equals("UNIDO_OK") || finalTipo.equals("ERROR_UNIRSE_SALA")) { // Ya no necesitas contains("UNIRSE_SALA")
+                        this.controladorCrearPartidaActual.procesarRespuestaUnirseSala(exito, finalDatos);
+                    } else {
                          System.out.println("    [EDT] Tipo de Crear/Unir [" + finalTipo + "] no reconocido específicamente para delegación.");
-                     }
-
-                } else if (esRegistro) {
-                    // ... (tu lógica existente para REGISTRO_OK y ERROR_REGISTRO) ...
-                     if (finalTipo.equals("REGISTRO_OK")) {
-                         this.nombreUsuarioRegistrado = (String) finalDatos.get("nombre");
-                         this.nombreUsuarioPendiente = null;
-                         if (vistaInicio != null && vistaInicio.isDisplayable()) {
-                             vistaInicio.navegarASiguientePantalla();
-                         }
-                     } else { // ERROR_REGISTRO
-                         this.nombreUsuarioPendiente = null;
-                         if (vistaInicio != null) {
-                             vistaInicio.mostrarError("Error de Registro: " + finalDatos.get("error"));
-                             vistaInicio.reactivarBotonPlay();
-                         }
-                         solicitarDesconexion();
-                     }
+                    }
+                } else if (finalTipo.equals("REGISTRO_OK") || finalTipo.equals("ERROR_REGISTRO")) {
+                    if (finalTipo.equals("REGISTRO_OK")) {
+                        this.nombreUsuarioRegistrado = (String) finalDatos.get("nombre");
+                        this.nombreUsuarioPendiente = null;
+                        if (vistaInicio != null && vistaInicio.isDisplayable()) {
+                            vistaInicio.navegarASiguientePantalla();
+                        }
+                    } else { 
+                        this.nombreUsuarioPendiente = null;
+                        if (vistaInicio != null) {
+                            vistaInicio.mostrarError("Error de Registro: " + finalDatos.get("error"));
+                            vistaInicio.reactivarBotonPlay();
+                        }
+                    }
                 } else {
-                    System.out.println("   [EDT] Mensaje tipo '" + finalTipo + "' NO MANEJADO o delegado es null.");
+                    System.out.println("    [EDT] Mensaje tipo '" + finalTipo + "' NO MANEJADO FINALMENTE o todos los delegados pertinentes son null.");
                 }
             } catch (Throwable t) {
-                // ... (tu manejo de errores Throwable existente) ...
-                 System.err.println("    [EDT] CATCH Throwable durante procesamiento de " + finalTipo + ": " + t.getMessage());
-                 t.printStackTrace();
-                 Component vistaActiva = null;
-                 if (vistaPartidaEspera != null && vistaPartidaEspera.isDisplayable()) vistaActiva = vistaPartidaEspera;
-                 else if (vistaUnirseJugar != null && vistaUnirseJugar.isDisplayable()) vistaActiva = vistaUnirseJugar;
-                 else vistaActiva = vistaInicio;
-                 final String errorMsg = "Error interno procesando respuesta: " + t.getMessage();
-                 if (vistaActiva instanceof PartidaEspera) { ((PartidaEspera)vistaActiva).mostrarError(errorMsg, true); }
-                 else if (vistaActiva instanceof UnirseJugar) { ((UnirseJugar)vistaActiva).mostrarError(errorMsg); ((UnirseJugar)vistaActiva).reactivarBotones(); }
-                 else if (vistaActiva instanceof PantallaInicio) { ((PantallaInicio)vistaActiva).mostrarError(errorMsg); ((PantallaInicio)vistaActiva).reactivarBotonPlay(); }
-                 else { JOptionPane.showMessageDialog(null, errorMsg, "Error Crítico", JOptionPane.ERROR_MESSAGE); }
+                System.err.println("    [EDT] CATCH Throwable GENERAL en onMensajeServidor procesando " + finalTipo + ": " + t.getMessage());
+                t.printStackTrace();
+                // Tu lógica de notificación de error global...
             } finally {
                 System.out.println("<<< [EDT] Task END for " + finalTipo);
             }
-        }); // Fin invokeLater
-    } // Fin onMensajeServidor
-
-    // --- Métodos privados Helper ---
-    private boolean esMensajeParaCrearUnir(String tipo) {
-        return tipo != null && (tipo.startsWith("SALA_CREADA") || tipo.startsWith("ERROR_CREAR_SALA") || // Abarca SALA_CREADA_OK
-                                tipo.startsWith("UNIDO_") || tipo.startsWith("ERROR_UNIRSE_SALA"));    // Abarca UNIDO_OK
+        });
     }
+    
+     // Fin onMensajeServidor
 
     
     private boolean esMensajeParaEsperaOColocacion(String tipo) { // Renombrado y ampliado
@@ -644,16 +520,5 @@ Partida entidadPartidaCliente = ModelConverter.toPartidaEntity(partidaDTORecibid
     
     
     
-    private boolean esMensajeParaEspera(String tipo) {
-        return tipo != null && (
-                tipo.equals("NUEVO_JUGADOR_EN_SALA") || // <<<--- AÑADIDO AQUÍ
-                tipo.equals("ACTUALIZACION_SALA") ||
-                tipo.equals("OPONENTE_LISTO") ||
-                tipo.equals("AMBOS_LISTOS") ||
-                tipo.equals("INICIAR_COLOCACION") ||
-                tipo.equals("INICIAR_PARTIDA") ||
-                tipo.equals("OPONENTE_SALIO") ||
-                tipo.equals("ERROR_SALA")
-        );
-    }
+   
 }
