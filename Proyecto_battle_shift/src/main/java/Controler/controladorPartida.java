@@ -183,9 +183,9 @@ public class controladorPartida {
         String siguienteTurno = (String) datos.get("turnoActualizado");
         if (siguienteTurno != null) {
             if (partidaActual.getJugador1().getNombre().equals(siguienteTurno)) {
-                partidaActual.SetJugadorEnTurno(partidaActual.getJugador1()); // Necesitas este setter en Partida
+                partidaActual.setJugadorEnTurno(partidaActual.getJugador1()); // Necesitas este setter en Partida
             } else if (partidaActual.getJugador2().getNombre().equals(siguienteTurno)) {
-                partidaActual.SetJugadorEnTurno(partidaActual.getJugador2()); // Necesitas este setter en Partida
+                partidaActual.setJugadorEnTurno(partidaActual.getJugador2()); // Necesitas este setter en Partida
             }
             actualizarInformacionDeTurno();
         }
@@ -210,9 +210,9 @@ public class controladorPartida {
         String nombreNuevoTurno = (String) datos.get("nombreJugadorEnTurno");
         if (nombreNuevoTurno != null) {
              if (partidaActual.getJugador1() != null && partidaActual.getJugador1().getNombre().equals(nombreNuevoTurno)) {
-                partidaActual.SetJugadorEnTurno(partidaActual.getJugador1());
+                partidaActual.setJugadorEnTurno(partidaActual.getJugador1());
             } else if (partidaActual.getJugador2() != null && partidaActual.getJugador2().getNombre().equals(nombreNuevoTurno)) {
-                partidaActual.SetJugadorEnTurno(partidaActual.getJugador2());
+                partidaActual.setJugadorEnTurno(partidaActual.getJugador2());
             }
             actualizarInformacionDeTurno();
         }

@@ -269,11 +269,12 @@ public class controladorInicio implements ServerEventListener {
                             Gson gson = new Gson();
                             PartidaDTO partidaDTORecibida = gson.fromJson(partidaJson, PartidaDTO.class);
 
-                            System.out.println("   [EDT] PartidaDTO deserializada para INICIAR_COMBATE: " + partidaDTORecibida.getIdPartida() +
-                                               ", Estado: " + partidaDTORecibida.getEstado() +
-                                               ", Turno de: " + partidaDTORecibida.getNombreJugadorEnTurno());
+System.out.println("CLIENTE " + this.nombreUsuarioRegistrado + 
+                   " - [controladorInicio] INICIAR_COMBATE: PartidaDTO deserializada. Sala: " + partidaDTORecibida.getIdPartida() +
+                   ", Estado DTO: " + partidaDTORecibida.getEstado() +
+                   ", Turno DTO: " + partidaDTORecibida.getNombreJugadorEnTurno());
 
-                            Partida entidadPartidaCliente = ModelConverter.toPartidaEntity(partidaDTORecibida);
+Partida entidadPartidaCliente = ModelConverter.toPartidaEntity(partidaDTORecibida);
                             if (entidadPartidaCliente == null) {
                                 throw new IllegalStateException("ModelConverter.toPartidaEntity devolvió null para INICIAR_COMBATE.");
                             }
@@ -541,8 +542,7 @@ public class controladorInicio implements ServerEventListener {
                             break;
                     }
                 } else if (delegadoCrearUnir != null && esParaCrearUnir) {
-                    // ... (tu lógica existente para delegadoCrearUnir: procesarRespuestaCrearSala, procesarRespuestaUnirseSala)
-                    // Asegúrate que tu lógica de UNIDO_OK para el retador también cree la Partida local si es necesario.
+                    
                      boolean exito = !(finalTipo.startsWith("ERROR_"));
                      System.out.println("    [EDT] Evento para Crear/Unir (" + finalTipo + ") detectado.");
                      if (finalTipo.equals("UNIDO_OK") && exito) {

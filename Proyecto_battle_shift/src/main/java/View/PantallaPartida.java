@@ -137,16 +137,15 @@ public class PantallaPartida extends javax.swing.JFrame {
                         .addComponent(btnAbandonar)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 57, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(oponenteTablero, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(48, 48, 48))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 148, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(188, 188, 188))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(lblMensajeTurno)
-                        .addGap(371, 371, 371))
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                            .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 86, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGap(249, 249, 249))
-                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                            .addComponent(oponenteTablero, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGap(47, 47, 47)))))
+                        .addComponent(lblMensajeTurno, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -256,7 +255,7 @@ public class PantallaPartida extends javax.swing.JFrame {
     final int f = fila;
     final int c = columna;
     celda.addActionListener(e -> {
-         System.out.println("VISTA DEBUG: ActionListener DISPARADO para celda (" + f + "," + c + ") del oponenteTablero"); 
+ System.out.println("VISTA DEBUG: ¡CLIC REGISTRADO EN BOTÓN! Celda (" + f + "," + c + ")");
     System.out.println("VISTA DEBUG: Clic! esTurnoDelJugadorLocal=" + esTurnoDelJugadorLocal + 
                        ", listenerTableroSeguimiento es null? " + (listenerTableroSeguimiento == null));
     if (esTurnoDelJugadorLocal && listenerTableroSeguimiento != null) {
@@ -282,6 +281,8 @@ public class PantallaPartida extends javax.swing.JFrame {
         panelTablero.revalidate();
         panelTablero.repaint();
     }
+     
+
 
      
      /**
@@ -356,6 +357,7 @@ public class PantallaPartida extends javax.swing.JFrame {
      * @param tableroSeguimiento La entidad TableroSeguimiento del jugador local.
      */
     public void dibujarTableroSeguimiento(TableroSeguimiento tableroSeguimiento) {
+        
         inicializarTableroVacio(oponenteTablero, true); // Redibuja el fondo y las celdas base (clickeables)
         // No se dibujan barcos aquí. Se actualizan las celdas con iconos de AGUA/IMPACTO/HUNDIDO
         // a medida que llegan los resultados de los disparos.
@@ -370,10 +372,11 @@ public class PantallaPartida extends javax.swing.JFrame {
         oponenteTablero.repaint();
     }
     
-     public void setTableroListener(TableroListener listener) {
-        this.listenerTableroSeguimiento = listener;
-    }
-
+public void setTableroListener(TableroListener listener) {
+    this.listenerTableroSeguimiento = listener;
+    System.out.println("VISTA DEBUG (setTableroListener): Listener establecido. Es null? " + (listener == null) + 
+                       (listener != null ? " Tipo: " + listener.getClass().getName() : ""));
+}
     public void setTurno(boolean esMiTurno) { // Este método ya lo tenías
         this.esTurnoDelJugadorLocal = esMiTurno;
         // Habilitar/deshabilitar las celdas del tablero de seguimiento
@@ -399,7 +402,7 @@ public class PantallaPartida extends javax.swing.JFrame {
     }
 
     private Image rotateImage(Image img) {
-        // ... (tu código de rotación se mantiene igual)
+       
         int w = img.getWidth(null);
         int h = img.getHeight(null);
         if (w <=0 || h <= 0) return img; // Evitar error con imágenes inválidas
@@ -496,25 +499,34 @@ public class PantallaPartida extends javax.swing.JFrame {
      * @param mensajeTurno El mensaje a mostrar (Ej: "Turno de Juan").
      * @param esMiTurno true si es el turno del jugador local, false en caso contrario.
      */
-    public void actualizarEstadoTurno(String mensajeTurno, boolean esMiTurno) {
-        System.out.println("DEBUG VISTA: actualizarEstadoTurno - Mensaje: " + mensajeTurno + ", esMiTurno: " + esMiTurno); // <<< LOG
-  
-        this.esTurnoDelJugadorLocal = esMiTurno;
-        if (lblMensajeTurno != null) {
-            lblMensajeTurno.setText(mensajeTurno);
-        }
-        System.out.println("VISTA [PantallaPartida]: Actualizando turno. Mensaje: " + mensajeTurno + ", EsMiTurno: " + esMiTurno);
 
-        // Habilitar/deshabilitar las celdas del tablero de seguimiento (oponenteTablero)
-        for (int i = 0; i < FILAS_TABLERO; i++) {
-            for (int j = 0; j < COLUMNAS_TABLERO; j++) {
-                if (celdasTableroSeguimiento[i][j] != null) {
-                    // Solo habilitar si es mi turno Y la celda no tiene ya un resultado (icono)
-                    celdasTableroSeguimiento[i][j].setEnabled(esMiTurno && celdasTableroSeguimiento[i][j].getIcon() == null);
-                }
+public void actualizarEstadoTurno(String mensajeTurno, boolean esMiTurno) {
+    System.out.println("VISTA [PantallaPartida] DEBUG (actualizarEstadoTurno): esMiTurno AHORA ES: " + esMiTurno + ". Mensaje: " + mensajeTurno);
+    
+    boolean eraMiTurnoAntes = this.esTurnoDelJugadorLocal; // Guardar estado anterior
+    this.esTurnoDelJugadorLocal = esMiTurno;
+
+    if (lblMensajeTurno != null) {
+        lblMensajeTurno.setText(mensajeTurno);
+    }
+
+    boolean algunaCeldaHabilitada = false;
+    for (int i = 0; i < FILAS_TABLERO; i++) {
+        for (int j = 0; j < COLUMNAS_TABLERO; j++) {
+            if (celdasTableroSeguimiento[i][j] != null) {
+                boolean deberiaEstarHabilitado = esMiTurno && celdasTableroSeguimiento[i][j].getIcon() == null;
+                celdasTableroSeguimiento[i][j].setEnabled(deberiaEstarHabilitado);
+                if (deberiaEstarHabilitado) algunaCeldaHabilitada = true;
             }
         }
     }
+    System.out.println("VISTA [PantallaPartida] DEBUG (actualizarEstadoTurno): ¿Alguna celda habilitada? " + algunaCeldaHabilitada);
+
+    // >>> NUEVO: JOptionPane para notificar el turno <<<
+    if (esMiTurno && !eraMiTurnoAntes) { // Mostrar solo si el turno acaba de cambiar a este jugador
+        JOptionPane.showMessageDialog(this, "¡ES TU TURNO DE DISPARAR!", "Tu Turno", JOptionPane.INFORMATION_MESSAGE);
+    }
+}
 
     /**
      * Muestra un mensaje general en la pantalla (ej. usando JOptionPane).

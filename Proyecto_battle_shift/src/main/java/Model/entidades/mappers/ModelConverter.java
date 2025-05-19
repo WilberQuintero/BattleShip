@@ -357,9 +357,9 @@ public class ModelConverter {
 
         if (dto.getNombreJugadorEnTurno() != null) {
             if (j1Entidad != null && dto.getNombreJugadorEnTurno().equals(j1Entidad.getNombre())) {
-                entidad.SetJugadorEnTurno(j1Entidad); // Requiere setter en Partida
+                entidad.setJugadorEnTurno(j1Entidad); // Requiere setter en Partida
             } else if (j2Entidad != null && dto.getNombreJugadorEnTurno().equals(j2Entidad.getNombre())) {
-                entidad.SetJugadorEnTurno(j2Entidad); // Requiere setter en Partida
+                entidad.setJugadorEnTurno(j2Entidad); // Requiere setter en Partida
             }
         }
         // Si los setters no existen en Partida para jugador1, jugador2, estado, jugadorEnTurno, esta conversión será incompleta

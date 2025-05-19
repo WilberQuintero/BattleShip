@@ -150,7 +150,9 @@ public class Partida {
     public Jugador getJugador2() { return jugador2; }
     public EstadoPartida getEstado() { return estado; }
 
-    // Setters (con precaución)
-         public void SetJugadorEnTurno(Jugador jugador) { this.jugadorEnTurno = jugadorEnTurno; }
+
+public void setJugadorEnTurno(Jugador jugador) { 
+    this.jugadorEnTurno = jugador;
+}
     public void setEstado(EstadoPartida estado) { this.estado = estado; }
 }

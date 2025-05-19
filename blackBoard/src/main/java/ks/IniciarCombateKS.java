@@ -180,7 +180,8 @@ public class IniciarCombateKS implements IKnowledgeSource {
             Random random = new Random();
             JugadorDTO jugadorConTurno = random.nextBoolean() ? jugador1 : jugador2;
             partida.setNombreJugadorEnTurno(jugadorConTurno.getNombre());
-            System.out.println("INICIAR_COMBATE_KS: Turno inicial para: " + jugadorConTurno.getNombre());
+            System.out.println("INICIAR_COMBATE_KS: Turno inicial para: " + jugadorConTurno.getNombre() + " en PartidaDTO (idSala: " + idSala + ")");
+System.out.println("INICIAR_COMBATE_KS: PartidaDTO ANTES de serializar - NombreJugadorEnTurno: " + partida.getNombreJugadorEnTurno());
 
             // Actualizar la partida final en el Blackboard
             blackboard.actualizarPartida(partida);
