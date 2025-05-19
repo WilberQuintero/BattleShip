@@ -230,6 +230,18 @@ public class controladorInicio implements ServerEventListener {
             }
         });
     }
+    
+    // En Controler.controladorInicio.java
+private boolean esEventoDeJuegoEnCurso(String tipo) {
+    return tipo != null && (
+            tipo.equals("INICIAR_COMBATE") || // Ya lo tenías
+            tipo.equals("RESULTADO_DISPARO") || // <<<--- AÑADIR
+            tipo.equals("ERROR_DISPARO") ||     // <<<--- AÑADIR (si quieres manejarlo en controladorPartida)
+            tipo.equals("CAMBIO_DE_TURNO") || // Si tienes un evento explícito para esto
+            tipo.equals("FIN_PARTIDA")        // Ya lo tenías
+            // Añade otros tipos de eventos específicos del juego aquí
+    );
+}
 
     @Override
     @SuppressWarnings("unchecked") // Para el casteo de List<String>
@@ -630,12 +642,7 @@ Partida entidadPartidaCliente = ModelConverter.toPartidaEntity(partidaDTORecibid
         );
     }
     
-     private boolean esEventoDeJuegoEnCurso(String tipo) {
-        return tipo != null && (
-                tipo.equals("INICIAR_COMBATE")  // <<<--- AÑADIDO AQUÍ
-               
-        );
-    }
+    
     
     private boolean esMensajeParaEspera(String tipo) {
         return tipo != null && (

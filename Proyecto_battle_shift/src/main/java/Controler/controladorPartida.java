@@ -140,64 +140,96 @@ public class controladorPartida {
      * Procesa el resultado de un disparo recibido del servidor.
      * @param datos Los datos del evento RESULTADO_DISPARO.
      */
-    public void procesarResultadoDisparo(Map<String, Object> datos) {
-        // Datos esperados: idSala, fila, columna, resultado (AGUA, IMPACTO, HUNDIDO),
-        //                  nombreJugadorQueDisparo, nombreJugadorImpactado, (opcional) nombreBarcoHundido,
-        //                  (opcional) turnoActualizado (quién tiene el siguiente turno)
-        System.out.println("CONTROLADOR_PARTIDA: Procesando RESULTADO_DISPARO: " + datos);
-        if (vistaPartida == null || partidaActual == null) return;
+    // En Controler.controladorPartida.java
 
-        String idSalaEvento = (String) datos.get("idSala");
-        if (!partidaActual.getIdPartida().equals(idSalaEvento)) {
-            System.err.println("CONTROLADOR_PARTIDA: Resultado de disparo para una sala incorrecta. Ignorando.");
-            return;
-        }
+public void procesarResultadoDisparo(Map<String, Object> datos) {
+    System.out.println("CONTROLADOR_PARTIDA: Procesando RESULTADO_DISPARO: " + datos);
+    if (vistaPartida == null || partidaActual == null || jugadorLocalEntidad == null) {
+        System.err.println("CONTROLADOR_PARTIDA ERROR: Vista o modelo nulo en procesarResultadoDisparo.");
+        return;
+    }
 
+    String idSalaEvento = (String) datos.get("idSala");
+    if (!partidaActual.getIdPartida().equals(idSalaEvento)) {
+        System.err.println("CONTROLADOR_PARTIDA: Resultado de disparo para una sala incorrecta ("+idSalaEvento+"). Esta sala es "+partidaActual.getIdPartida()+". Ignorando.");
+        return;
+    }
+
+    try {
         int fila = Integer.parseInt((String) datos.get("fila"));
         int columna = Integer.parseInt((String) datos.get("columna"));
         ResultadoDisparo resultado = ResultadoDisparo.valueOf(((String) datos.get("resultado")).toUpperCase());
         String nombreAtacante = (String) datos.get("nombreJugadorQueDisparo");
-        String nombreDefensor = (String) datos.get("nombreJugadorImpactado"); // El jugador que recibió el disparo
-
-        Posicion posDisparo = new Posicion(columna, fila); // Asumiendo X=columna, Y=fila
-
-        if (nombreAtacante.equals(nombreJugadorLocal)) {
-            // Yo fui quien disparó. Actualizar mi Tablero de Seguimiento.
-            jugadorLocalEntidad.getTableroSeguimiento().marcarDisparo(posDisparo, resultado);
-            vistaPartida.actualizarCasillaSeguimiento(fila, columna, resultado, false); // false porque no es mi flota
-        } else if (nombreDefensor.equals(nombreJugadorLocal)) {
-            // Me dispararon a mí. Actualizar mi Tablero de Flota.
-            // El servidor ya actualizó el estado del barco, nosotros actualizamos la entidad local
-            // y la UI. La entidad Barco debería tener un método para registrar el impacto
-            // y actualizar su estado (INTACTA, AVERIADA, HUNDIDA).
-            jugadorLocalEntidad.getTableroFlota().recibirDisparo(posDisparo); // Esto debería actualizar el estado del barco afectado
-            vistaPartida.actualizarCasillaFlotaPropia(fila, columna, resultado); // La vista necesita saber el resultado
-            // Si un barco fue hundido, la vista podría mostrarlo de forma especial.
-            String tipoBarcoHundido = (String) datos.get("tipoBarcoHundido");
-            if (resultado == ResultadoDisparo.HUNDIDO && tipoBarcoHundido != null) {
-                vistaPartida.mostrarMensajeGeneral("¡Han hundido tu " + tipoBarcoHundido + "!");
-            }
-        }
-
-        // Actualizar turno (el servidor SIEMPRE debería enviar quién tiene el siguiente turno)
-        String siguienteTurno = (String) datos.get("turnoActualizado");
-        if (siguienteTurno != null) {
-            if (partidaActual.getJugador1().getNombre().equals(siguienteTurno)) {
-                partidaActual.setJugadorEnTurno(partidaActual.getJugador1()); // Necesitas este setter en Partida
-            } else if (partidaActual.getJugador2().getNombre().equals(siguienteTurno)) {
-                partidaActual.setJugadorEnTurno(partidaActual.getJugador2()); // Necesitas este setter en Partida
-            }
-            actualizarInformacionDeTurno();
-        }
-
-        // Verificar si hay un ganador
+        // String nombreDefensor = (String) datos.get("nombreJugadorImpactado"); // El que recibió
+        String turnoActualizado = (String) datos.get("turnoActualizado");
+        String tipoBarcoHundido = (String) datos.get("tipoBarcoHundido"); // Puede ser null
+        String estadoNaveImpactadaStr = (String) datos.get("estadoNaveImpactada"); // Puede ser null
+        boolean partidaTerminada = "true".equalsIgnoreCase((String) datos.get("partidaTerminada"));
         String ganador = (String) datos.get("ganador");
-        if (ganador != null) {
-            partidaActual.setEstado(ganador.equals(nombreJugadorLocal) ? EstadoPartida.FINALIZADA_GANA_J1 : EstadoPartida.FINALIZADA_GANA_J2); // Ajustar si J1 no siempre es local
-            vistaPartida.mostrarFinDePartida("¡Partida Terminada! Ganador: " + ganador);
-            // Deshabilitar más interacciones
+        String mensajeFin = (String) datos.get("mensajeFin");
+
+
+        Posicion posDisparo = new Posicion(columna, fila);
+
+        if (nombreAtacante.equals(this.nombreJugadorLocal)) {
+            // Es el resultado de MI disparo
+            System.out.println("CONTROLADOR_PARTIDA: Es resultado de MI disparo en (" + fila + "," + columna + ")");
+            jugadorLocalEntidad.getTableroSeguimiento().marcarDisparo(posDisparo, resultado);
+            vistaPartida.actualizarCasillaSeguimiento(fila, columna, resultado, false); // El 'false' final no se usa
+            
+            String mensajeUi = "Disparo en ("+fila+","+columna+"): " + resultado;
+            if(resultado == ResultadoDisparo.HUNDIDO && tipoBarcoHundido != null) {
+                mensajeUi += " - ¡Hundiste un " + tipoBarcoHundido + "!";
+            }
+            vistaPartida.mostrarMensajeGeneral(mensajeUi);
+
+        } else {
+            // Es un disparo del oponente en MI tablero
+            System.out.println("CONTROLADOR_PARTIDA: Es resultado de un disparo del OPONENTE en (" + fila + "," + columna + ") de mi tablero.");
+            // El modelo TableroFlota local se actualiza aquí para reflejar el impacto
+            // (asumiendo que el servidor es la fuente de verdad y nos dice el resultado en nuestro barco)
+            // Necesitamos encontrar el barco en nuestro TableroFlota y registrar el impacto
+            Barco barcoMioImpactado = jugadorLocalEntidad.getTableroFlota().getBarcoEn(posDisparo);
+            if (barcoMioImpactado != null) {
+                boolean fueImpactoNuevo = barcoMioImpactado.registrarImpacto(posDisparo); // Esto actualiza el estado del barco
+                 System.out.println("CONTROLADOR_PARTIDA: Barco propio " + barcoMioImpactado.getTipo() + " impactado. Nuevo estado: " + barcoMioImpactado.getEstado());
+            }
+            vistaPartida.actualizarCasillaFlotaPropia(fila, columna, resultado);
+            
+            String mensajeUiOponente = "El oponente disparó en ("+fila+","+columna+"): " + resultado;
+             if(resultado == ResultadoDisparo.HUNDIDO && tipoBarcoHundido != null) {
+                mensajeUiOponente += " - ¡Tu " + tipoBarcoHundido + " ha sido hundido!";
+            }
+            // Considera mostrar este mensaje de forma diferente, quizás en un log de eventos de la partida en la UI
+            // JOptionPane puede ser muy intrusivo para cada disparo del oponente.
+            // vistaPartida.mostrarMensajeGeneral(mensajeUiOponente); 
+            System.out.println("INFO PARA UI: " + mensajeUiOponente); // Log para que luego decidas cómo mostrarlo
         }
+
+        // Actualizar el turno para AMBOS jugadores
+        if (turnoActualizado != null && partidaActual.getJugadorPorNombre(turnoActualizado) != null) {
+            partidaActual.setJugadorEnTurno(partidaActual.getJugadorPorNombre(turnoActualizado));
+            System.out.println("CONTROLADOR_PARTIDA: Turno del modelo Partida actualizado a: " + partidaActual.obtenerJugadorEnTurno().getNombre());
+            actualizarInformacionDeTurno(); // Esto llamará a vistaPartida.actualizarEstadoTurno(...)
+        } else {
+            System.err.println("CONTROLADOR_PARTIDA: No se pudo actualizar el turno, 'turnoActualizado' es nulo o jugador no encontrado: " + turnoActualizado);
+            // Si el turno no se actualiza, la UI podría quedarse bloqueada o permitir disparos incorrectos.
+            // Considera solicitar estado al servidor o manejar este error.
+        }
+
+        // Verificar si la partida terminó (basado en la info del servidor)
+        if (partidaTerminada) {
+            System.out.println("CONTROLADOR_PARTIDA: La partida ha terminado. Ganador: " + ganador);
+            partidaActual.setEstado(EstadoPartida.FINALIZADA); // O un estado más específico si lo tienes
+            vistaPartida.mostrarFinDePartida(mensajeFin != null ? mensajeFin : "La partida ha terminado. Ganador: " + ganador);
+        }
+
+    } catch (Exception e) {
+        System.err.println("CONTROLADOR_PARTIDA ERROR: Excepción procesando ResultadoDisparo: " + e.getMessage());
+        e.printStackTrace();
+        if (vistaPartida != null) vistaPartida.mostrarError("Error procesando resultado del disparo: " + e.getMessage(), false);
     }
+}
 
     /**
      * Procesa un cambio de turno general (si no viene con RESULTADO_DISPARO).
