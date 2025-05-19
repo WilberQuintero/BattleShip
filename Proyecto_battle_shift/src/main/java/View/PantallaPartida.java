@@ -225,62 +225,86 @@ public class PantallaPartida extends javax.swing.JFrame {
     actualizarEstadoTurno("Esperando inicio de turno...", false);
 }
     }
-     private void inicializarTableroVacio(JPanel panelTablero, boolean esClickeable) {
-        panelTablero.removeAll();
-        panelTablero.setLayout(null); // Usar null layout para posicionar con setBounds
+     
+private void inicializarTableroVacio(JPanel panelTablero, boolean esClickeable) {
+    panelTablero.removeAll(); // Limpiar el panel de cualquier contenido anterior
+    panelTablero.setLayout(null); // Mantienes tu layout nulo para el panel principal del tablero
 
-        int anchoTotal = (COLUMNAS_TABLERO + 1) * DIMENSION_CELDA;
-        int altoTotal = (FILAS_TABLERO + 1) * DIMENSION_CELDA;
-        panelTablero.setPreferredSize(new Dimension(anchoTotal, altoTotal));
+    int anchoTotalConOffset = (COLUMNAS_TABLERO + 1) * DIMENSION_CELDA;
+    int altoTotalConOffset = (FILAS_TABLERO + 1) * DIMENSION_CELDA;
+    panelTablero.setPreferredSize(new Dimension(anchoTotalConOffset, altoTotalConOffset));
+    // Es buena práctica también setear el tamaño si el layout es nulo
+    panelTablero.setSize(anchoTotalConOffset, altoTotalConOffset); 
 
-        ImageIcon fondoOriginal = cargarIcono("/Images/Board.png"); // Asegúrate que esta ruta sea correcta
-        Image imagenEscalada = fondoOriginal.getImage().getScaledInstance(anchoTotal, altoTotal, Image.SCALE_SMOOTH);
-        JLabel fondoLabel = new JLabel(new ImageIcon(imagenEscalada));
-        fondoLabel.setBounds(0, 0, anchoTotal, altoTotal);
-        fondoLabel.setLayout(null); // Para que los botones se posicionen correctamente sobre el fondo
-
-        for (int fila = 0; fila < FILAS_TABLERO; fila++) {
-            for (int columna = 0; columna < COLUMNAS_TABLERO; columna++) {
-                JButton celda = new JButton();
-                celda.setText(""); // Sin texto inicial
-                celda.setBounds((columna + 1) * DIMENSION_CELDA, (fila + 1) * DIMENSION_CELDA, DIMENSION_CELDA, DIMENSION_CELDA);
-                celda.setContentAreaFilled(false); // Hacer el botón transparente
-                celda.setOpaque(false);
-                celda.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1)); // Borde sutil
-                celda.setFocusable(false);
-
-               if (esClickeable) { // Esto se ejecuta para oponenteTablero
-    celda.setEnabled(this.esTurnoDelJugadorLocal); // Habilitar solo si es mi turno
-    celda.setActionCommand(fila + "," + columna);
-    final int f = fila;
-    final int c = columna;
-    celda.addActionListener(e -> {
- System.out.println("VISTA DEBUG: ¡CLIC REGISTRADO EN BOTÓN! Celda (" + f + "," + c + ")");
-    System.out.println("VISTA DEBUG: Clic! esTurnoDelJugadorLocal=" + esTurnoDelJugadorLocal + 
-                       ", listenerTableroSeguimiento es null? " + (listenerTableroSeguimiento == null));
-    if (esTurnoDelJugadorLocal && listenerTableroSeguimiento != null) {
-        listenerTableroSeguimiento.onCeldaSeleccionada(f, c, (JButton) e.getSource());
-            // >>> PUNTO CRÍTICO DE DEBUG #2 <<<
-            System.out.println("DEBUG VISTA: Llamando a listenerTableroSeguimiento.onCeldaSeleccionada...");
-            listenerTableroSeguimiento.onCeldaSeleccionada(f, c, (JButton) e.getSource());
-        } else {
-            System.out.println("DEBUG VISTA: Clic ignorado. EsTurno=" + esTurnoDelJugadorLocal + ", Listener=" + (listenerTableroSeguimiento != null));
-            if (!esTurnoDelJugadorLocal) {
-                JOptionPane.showMessageDialog(this, "No es tu turno.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
-            } else if (listenerTableroSeguimiento == null) {
-                System.err.println("ERROR VISTA: listenerTableroSeguimiento es NULL al hacer clic!");
-            }
-            
-        }
-    });
-    celdasTableroSeguimiento[fila][columna] = celda; // Guardar referencia
-}
-            }
-        }
-        panelTablero.add(fondoLabel);
-        panelTablero.revalidate();
-        panelTablero.repaint();
+    // --- Manejo del Fondo ---
+    // Creamos el JLabel para el fondo
+    ImageIcon fondoOriginal = cargarIcono("/Images/Board.png"); // Tu ruta
+    JLabel fondoLabel = null;
+    if (fondoOriginal.getImage() != null && fondoOriginal.getIconWidth() > 0) {
+        Image imagenEscalada = fondoOriginal.getImage().getScaledInstance(anchoTotalConOffset, altoTotalConOffset, Image.SCALE_SMOOTH);
+        fondoLabel = new JLabel(new ImageIcon(imagenEscalada));
+        fondoLabel.setBounds(0, 0, anchoTotalConOffset, altoTotalConOffset);
+        panelTablero.add(fondoLabel); // Añadir el fondo PRIMERO, estará en la capa más baja (mayor Z-order)
+    } else {
+        System.err.println("VISTA [PantallaPartida] ADVERTENCIA: No se pudo cargar la imagen de fondo para " + panelTablero.getName());
+        panelTablero.setBackground(new Color(200, 220, 255)); // Un color de fallback si la imagen falla
     }
+
+    // --- Crear y Añadir Botones (Celdas) DIRECTAMENTE AL panelTablero ---
+    // Estos se añadirán DESPUÉS del fondoLabel, por lo que por defecto estarán encima en el orden Z.
+    for (int fila = 0; fila < FILAS_TABLERO; fila++) {
+        for (int columna = 0; columna < COLUMNAS_TABLERO; columna++) {
+            JButton celda = new JButton();
+            // Posición relativa al panelTablero (el offset de DIMENSION_CELDA es para las etiquetas A-J, 1-10)
+            celda.setBounds((columna + 1) * DIMENSION_CELDA, (fila + 1) * DIMENSION_CELDA, DIMENSION_CELDA, DIMENSION_CELDA);
+            
+            // Hacer el botón transparente para que se vea el fondo
+            celda.setContentAreaFilled(false); 
+            celda.setOpaque(false); 
+            celda.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1)); // Borde para ver la celda
+            celda.setFocusable(false);
+
+            if (esClickeable) { // Para oponenteTablero
+                // La habilitación inicial dependerá de 'esTurnoDelJugadorLocal' al momento de la creación
+                // Y se actualizará con 'actualizarEstadoTurno'
+                celda.setEnabled(this.esTurnoDelJugadorLocal); 
+                celda.setActionCommand(fila + "," + columna);
+                final int f = fila; // Variables finales para usar en lambda
+                final int c = columna;
+                
+                celda.addActionListener(e -> {
+                    // Log incondicional para saber si el listener del botón se ejecuta
+                    System.out.println("VISTA DEBUG: ¡CLIC EN CELDA (" + f + "," + c + ")! esTurno=" + 
+                                       this.esTurnoDelJugadorLocal + ", listener=" + 
+                                       (this.listenerTableroSeguimiento != null));
+                    
+                    if (this.esTurnoDelJugadorLocal && this.listenerTableroSeguimiento != null) {
+                        System.out.println("VISTA DEBUG: Llamando a listener.onCeldaSeleccionada para (" + f + "," + c + ")");
+                        this.listenerTableroSeguimiento.onCeldaSeleccionada(f, c, (JButton) e.getSource());
+                    } else if (!this.esTurnoDelJugadorLocal) {
+                        JOptionPane.showMessageDialog(PantallaPartida.this, "No es tu turno.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+                    } else { // listener es null
+                         System.err.println("VISTA ERROR: listenerTableroSeguimiento es NULL para celda (" + f + "," + c + ")");
+                         JOptionPane.showMessageDialog(PantallaPartida.this, "Error interno: Controlador de tablero no configurado.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+                celdasTableroSeguimiento[fila][columna] = celda; // Guardar referencia para futuras actualizaciones
+            } else { // Para miTablero (el propio)
+                celda.setEnabled(false); // No clickeable
+            }
+            panelTablero.add(celda); // Añadir la celda al panelTablero
+            // Al añadir después del fondoLabel, las celdas deberían estar encima.
+            // Si aún hay problemas, puedes forzar el orden Z:
+            // if (fondoLabel != null) {
+            //     panelTablero.setComponentZOrder(celda, 0); // Poner celda en la capa superior
+            //     panelTablero.setComponentZOrder(fondoLabel, panelTablero.getComponentCount() - 1); // Fondo abajo
+            // }
+        }
+    }
+
+    panelTablero.revalidate();
+    panelTablero.repaint();
+}
      
 
 
