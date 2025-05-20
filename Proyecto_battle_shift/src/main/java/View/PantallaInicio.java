@@ -4,20 +4,36 @@
  */
 package View;
 
-import javax.swing.ImageIcon;
+// Importa el NUEVO controlador
+import Controler.controladorInicio;
+
+// Importa utilidades de Swing para actualizaciones seguras de UI
+import javax.swing.SwingUtilities;
+import javax.swing.JOptionPane; // Para mostrar errores simples
 
 /**
- *
+ * Vista inicial de la aplicación.
  * @author javie
  */
 public class PantallaInicio extends javax.swing.JFrame {
 
+    // Referencia al controlador principal
+    private final controladorInicio controlador;
+
     /**
-     * Creates new form PantallaInicio
+     * Constructor de PantallaInicio.
      */
     public PantallaInicio() {
-        initComponents();
-        this.setLocationRelativeTo(null);
+        System.out.println("VIEW [PantallaInicio]: Inicializando componentes UI...");
+        initComponents(); // Generado por NetBeans
+        this.setLocationRelativeTo(null); // Centrar
+
+        System.out.println("VIEW [PantallaInicio]: Creando instancia del controladorInicio...");
+        // Crear la única instancia del controlador principal aquí
+        controlador = new controladorInicio();
+        // Pasar una referencia de esta vista al controlador
+        controlador.setVistaInicio(this);
+        System.out.println("VIEW [PantallaInicio]: Controlador creado y vista asignada al controlador.");
     }
 
     /**
@@ -34,6 +50,8 @@ public class PantallaInicio extends javax.swing.JFrame {
         jPanel2 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
+        txtNombreUsu = new javax.swing.JTextField();
+        jLabel2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -82,34 +100,46 @@ public class PantallaInicio extends javax.swing.JFrame {
             .addGap(0, 53, Short.MAX_VALUE)
         );
 
+        jLabel2.setFont(new java.awt.Font("Viner Hand ITC", 1, 14)); // NOI18N
+        jLabel2.setText("Coloca tu username");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(357, 357, 357)
-                                .addComponent(playButton, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(336, 336, 336)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel2)
+                                    .addComponent(txtNombreUsu, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)))
                             .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(307, 307, 307)
-                                .addComponent(jLabel1)))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addGap(317, 317, 317)
+                                .addComponent(jLabel1))
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addGap(359, 359, 359)
+                                .addComponent(playButton, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(115, 115, 115)
+                .addGap(71, 71, 71)
                 .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 97, Short.MAX_VALUE)
+                .addGap(31, 31, 31)
+                .addComponent(jLabel2)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(txtNombreUsu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(29, 29, 29)
                 .addComponent(playButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(67, 67, 67)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 107, Short.MAX_VALUE)
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -120,11 +150,86 @@ public class PantallaInicio extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void playButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playButtonActionPerformed
-        // TODO add your handling code here:
-        UnirseJugar uJ=new UnirseJugar();
-        uJ.show();
-        this.dispose();
+ System.out.println("VIEW [PantallaInicio]: Botón Jugar presionado.");
+System.out.println("VIEW [PantallaInicio]: Botón Jugar presionado.");
+
+        String nombreUsuario = txtNombreUsu.getText().trim();
+        if (nombreUsuario.isBlank()) {
+            System.out.println("VIEW [PantallaInicio]: Nombre de usuario vacío.");
+            JOptionPane.showMessageDialog(this, "Por favor, ingresa un nombre de usuario.", "Nombre Requerido", JOptionPane.WARNING_MESSAGE);
+            return; // Detener si no hay nombre
+        }
+        System.out.println("VIEW [PantallaInicio]: Nombre de usuario ingresado: " + nombreUsuario);
+
+        // Deshabilitar botón y llamar al controlador
+        playButton.setEnabled(false);
+        playButton.setText("Conectando...");
+        System.out.println("VIEW [PantallaInicio]: Botón deshabilitado. Llamando a controlador.intentarConectarYRegistrar().");
+        if (controlador != null) {
+            controlador.intentarConectarYRegistrar(nombreUsuario);
+        } else {
+             System.err.println("VIEW [PantallaInicio] ERROR: Controlador es nulo.");
+             mostrarError("Error interno: Controlador no disponible."); // Llama a método helper
+             reactivarBotonPlay();
+        }
     }//GEN-LAST:event_playButtonActionPerformed
+
+
+      /**
+     * Navega a la pantalla UnirseJugar.
+     * Llamado por controladorInicio desde onMensajeServidor -> REGISTRO_OK.
+     */
+    public void navegarASiguientePantalla() {
+        // Asegurarse de que se ejecute en el hilo de eventos de Swing
+        SwingUtilities.invokeLater(() -> {
+            System.out.println("VIEW [PantallaInicio]: Navegando a la pantalla Unirse/Jugar...");
+            // Crear la siguiente vista y pasarle el controlador INICIAL
+            UnirseJugar pantallaUnirse = new UnirseJugar(this.controlador);
+            // Mostrar la nueva pantalla
+            pantallaUnirse.setVisible(true);
+            // Cerrar esta ventana de inicio
+            this.dispose();
+        });
+    }
+
+    
+/**
+     * Muestra un mensaje de error al usuario.
+     * Llamado por el Controlador desde onError() o si falla el registro.
+     */
+    public void mostrarError(String mensaje) {
+        // Este método puede ser llamado desde otro hilo (listener), usar invokeLater
+        SwingUtilities.invokeLater(() -> {
+            System.out.println("VIEW [PantallaInicio]: Mostrando error: " + mensaje);
+            JOptionPane.showMessageDialog(this, mensaje, "Error", JOptionPane.ERROR_MESSAGE);
+            // reactivarBotonPlay(); // Reactivar aquí o en onDesconectado/onError
+        });
+    }
+
+    /**
+     * Muestra un estado de desconexión.
+     */
+     public void mostrarEstadoDesconectado(String motivo) {
+          SwingUtilities.invokeLater(() -> {
+               System.out.println("VIEW [PantallaInicio]: Mostrando estado desconectado: " + motivo);
+               // Podrías tener un JLabel para mostrar esto o usar un diálogo
+               JOptionPane.showMessageDialog(this, "Desconectado: " + motivo, "Desconexión", JOptionPane.WARNING_MESSAGE);
+          });
+     }
+
+
+    /**
+     * Reactiva el botón 'Jugar' y restaura su texto.
+     * Llamado por el Controlador si la conexión/registro falla o se desconecta.
+     */
+    public void reactivarBotonPlay() {
+        SwingUtilities.invokeLater(() -> {
+            System.out.println("VIEW [PantallaInicio]: Reactivando botón Jugar.");
+            playButton.setEnabled(true);
+            playButton.setText("JUGAR");
+        });
+    }
+
 
     /**
      * @param args the command line arguments
@@ -132,9 +237,6 @@ public class PantallaInicio extends javax.swing.JFrame {
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -142,13 +244,7 @@ public class PantallaInicio extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(PantallaInicio.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(PantallaInicio.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(PantallaInicio.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (Exception ex) {
             java.util.logging.Logger.getLogger(PantallaInicio.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
@@ -163,9 +259,11 @@ public class PantallaInicio extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JButton playButton;
+    private javax.swing.JTextField txtNombreUsu;
     // End of variables declaration//GEN-END:variables
 }
