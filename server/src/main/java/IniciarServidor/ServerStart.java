@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package testDeServercomprobar;
+package IniciarServidor;
 
 
 
@@ -23,7 +23,7 @@ import server.Server;
  * de conexión inicial usando la estructura adaptada al estilo Dominó
  * y con interfaces para evitar dependencias cíclicas.
  */
-public class ServerTest {
+public class ServerStart {
 
     public static void main(String[] args) {
         int serverPort = 5000; // Puerto para el servidor

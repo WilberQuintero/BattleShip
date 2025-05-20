@@ -5,7 +5,6 @@ enums\EstadoPartida.class
 enums\TipoNave.class
 dto\ResultadoDisparoEventoDTO.class
 enums\EstadoNave.class
-com\mycompany\battleship\commons\IBlackboard.class
 dto\PartidaDTO.class
 dto\JugadorDTO.class
 dto\UnirseAPartidaRequestDTO.class
@@ -19,3 +18,4 @@ dto\RegistroDisparoSeguimientoDTO.class
 dto\CrearPartidaRequestDTO.class
 dto\DisparoRealizadoDTO.class
 dto\TableroSeguimientoDTO.class
+com\mycompany\battleship\commons\IHandlerCommons.class
